@@ -1,0 +1,1859 @@
+/* ============================================================
+   Apex Exteriors — design tokens
+   ============================================================ */
+:root {
+  --ink: #1c1e24;
+  --ink-soft: #262932;
+  --slate: #454a57;
+  --mist: #9195a1;
+  --cloud: #f3f4f6;
+  --paper: #ffffff;
+  --signal: #ff8200;
+  --signal-dim: #d96e00;
+  --signal-light: #ff9426;
+  --line-on-dark: rgba(255, 255, 255, 0.1);
+  --line-on-light: rgba(28, 30, 36, 0.1);
+
+  --font-display: "Space Grotesk", "Arial Narrow", sans-serif;
+  --font-body: "Switzer", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --container: 1180px;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+  --space-64: 64px;
+  --space-80: 80px;
+
+  /* Logo (60px) plus the nav's 1.6rem vertical padding, unscrolled — the
+     fixed nav's real height, used to clear it before counting off a gap. */
+  --nav-height: 111px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+.wrap {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin: 0 0 1.1rem;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid currentColor;
+  flex: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+h3 {
+  font-size: 1.35rem;
+}
+
+p {
+  margin: 0;
+}
+
+.lede {
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  color: var(--slate);
+  max-width: 46ch;
+}
+
+section {
+  position: relative;
+}
+
+.section-pad {
+  padding-block: clamp(4rem, 9vw, 7.5rem);
+}
+
+/* triangle marker, echoes the brand mark's peak */
+.tri {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--signal);
+  flex: none;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.95rem 1.5rem;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn .tri {
+  transition: transform 0.2s ease;
+  transform: translateX(-4px) rotate(90deg);
+  opacity: 0;
+}
+
+.btn:hover .tri,
+.btn:focus-visible .tri {
+  transform: translateX(0) rotate(90deg);
+  opacity: 1;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  transform: translateY(-1px);
+}
+
+.btn-solid {
+  background: var(--signal);
+  color: #000000;
+}
+
+.btn-solid:hover,
+.btn-solid:focus-visible {
+  background: var(--signal-light);
+  color: #000000;
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.btn-outline:hover,
+.btn-outline:focus-visible {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #000000;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.btn-sans {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* ============================================================
+   Nav
+   ============================================================ */
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  padding-block: 1.6rem;
+  transition: background 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
+}
+
+.nav.is-scrolled {
+  padding-block: 1.1rem;
+}
+
+.nav .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--paper);
+}
+
+.logo-lockup {
+  display: block;
+  height: 60px;
+  width: auto;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 2vw, 2.2rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--mist);
+  transition: color 0.2s ease;
+}
+
+.nav-links a:hover,
+.nav-links a:focus-visible {
+  color: var(--paper);
+}
+
+.nav-links a.is-active {
+  color: var(--signal);
+}
+
+.nav-call {
+  display: none;
+}
+
+.nav.is-scrolled {
+  background: rgba(28, 30, 36, 0.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 1px 0 var(--line-on-dark);
+}
+
+@media (min-width: 720px) {
+  .nav-call {
+    display: inline-flex;
+  }
+}
+
+.nav-toggle {
+  display: none;
+}
+
+.mobile-menu {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .nav-links {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    flex: none;
+  }
+
+  .nav-toggle-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--paper);
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .mobile-menu {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto 0;
+    padding-top: 7rem;
+    padding-bottom: 2rem;
+    background: rgba(28, 30, 36, 0.98);
+    backdrop-filter: blur(10px);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 0.35s ease, opacity 0.3s ease;
+    z-index: 45;
+  }
+
+  .nav.is-scrolled .mobile-menu {
+    padding-top: 6rem;
+  }
+
+  .mobile-menu.is-open {
+    max-height: 100vh;
+    min-height: 100vh;
+    opacity: 1;
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+
+  .mobile-menu-links {
+    list-style: none;
+    margin: 0;
+    padding: 0 var(--gutter) 1.5rem;
+    display: grid;
+    gap: 1.5rem;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 1.15rem;
+  }
+
+  .mobile-menu-links a {
+    color: var(--paper);
+    text-decoration: none;
+  }
+
+  .mobile-menu-call {
+    margin: 0 var(--gutter);
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+  position: relative;
+  /* Establishes a stacking context so .hero-video-wrap's z-index: -2 paints
+     above THIS element's own background instead of below it. clip-path used
+     to do this as a side effect; removing the angled cut for a straight
+     bottom edge took that with it and left the ink background covering the
+     video entirely. z-index on its own, with no visual effect otherwise,
+     restores the same containment. */
+  z-index: 0;
+  background: var(--ink);
+  color: var(--paper);
+  padding-top: clamp(7rem, 16vw, 10rem);
+  padding-bottom: clamp(6rem, 14vw, 9rem);
+  overflow: hidden;
+}
+
+/* Dissolves the video into the storm section's own background rather than
+   cutting to it — the end color has to match .storm-check's background
+   exactly or this just trades one hard seam for another. z-index: 0 sits
+   above the video/overlay (-2/-1) and below the actual hero content (1). */
+.hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  z-index: 0;
+  background: #ffffff;
+  /* Eased, not a flat 2-stop linear-gradient — the same fix as the
+     between-section fades: a uniform ramp reads as a visible smudge, an
+     eased one (slow start, fast finish) reads as a clean dissolve. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.15) 45%, rgba(0, 0, 0, 0.6) 75%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.15) 45%, rgba(0, 0, 0, 0.6) 75%, black 100%);
+  pointer-events: none;
+}
+
+.hero-video-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  /* Same frame as the <video poster>. Only visible once .hero-video is
+     hidden below — on top of it during normal playback either way. */
+  background-image: url("/images/hero-poster.jpg");
+  background-size: cover;
+  /* The source frame is dark roofline in the lower frame, sky and treeline
+     across the top — biasing up keeps some of that in view instead of
+     cropping straight to a wall of dark shingles on a tall viewport. */
+  background-position: center 15%;
+  transform: translateY(var(--parallax-video, 0px));
+}
+
+.hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: heroVideoZoom 20s ease-in-out infinite alternate;
+}
+
+/* Below 768px and under reduced motion, the poster frame stands in for the
+   video entirely rather than just covering its load time — cheaper on a
+   phone connection and no auto-playing motion for anyone who's asked not
+   to see it. */
+@media (max-width: 767px) {
+  .hero-video {
+    display: none;
+  }
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.55) 100%);
+  z-index: -1;
+}
+
+@keyframes heroVideoZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-video {
+    display: none;
+  }
+}
+
+.hero .wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-mark {
+  position: absolute;
+  right: clamp(-4rem, -2vw, 1rem);
+  top: 50%;
+  transform: translateY(calc(-50% + var(--parallax, 0px)));
+  width: clamp(16rem, 34vw, 30rem);
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+@media (min-width: 960px) {
+  .hero-mark {
+    right: clamp(20rem, 32vw, 34rem);
+  }
+}
+
+.hero-mark-p1,
+.hero-mark-p2,
+.hero-mark-p3 {
+  fill: var(--paper);
+  opacity: 0;
+}
+
+.hero-mark-p1 {
+  transform: translateX(-30px);
+  animation: heroMarkInLeft 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.5s;
+}
+
+.hero-mark-p2 {
+  transform: translateX(30px);
+  animation: heroMarkInRight 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.62s;
+}
+
+.hero-mark-p3 {
+  transform: scale(0.5);
+  transform-origin: 115px 167px;
+  animation: heroMarkPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 1.05s;
+}
+
+@keyframes heroMarkInLeft {
+  to { opacity: 0.05; transform: translateX(0); }
+}
+
+@keyframes heroMarkInRight {
+  to { opacity: 0.05; transform: translateX(0); }
+}
+
+@keyframes heroMarkPop {
+  to { opacity: 0.05; transform: scale(1); }
+}
+
+@keyframes heroUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-in {
+  opacity: 0;
+  animation: heroUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(150ms + var(--d, 0) * 100ms);
+}
+
+.hero-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+}
+
+.hero-word {
+  display: inline-block;
+}
+
+.hero-word--accent {
+  color: var(--signal);
+}
+
+.scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+  color: var(--mist);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.scroll-cue:hover,
+.scroll-cue:focus-visible {
+  color: var(--paper);
+}
+
+.scroll-cue-arrow {
+  position: relative;
+  width: 1px;
+  height: 26px;
+  background: var(--line-on-dark);
+  overflow: hidden;
+}
+
+.scroll-cue-arrow::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -30%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--signal);
+  animation: scrollCueDrop 1.8s ease-in-out infinite;
+}
+
+@keyframes scrollCueDrop {
+  0% { top: -10%; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue-arrow::after {
+    animation: none;
+    top: 40%;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-in {
+    animation: none;
+    opacity: 1;
+  }
+  .hero-mark-p1,
+  .hero-mark-p2,
+  .hero-mark-p3 {
+    animation: none;
+    opacity: 0.05;
+    transform: none;
+  }
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  align-items: center;
+  gap: 64px;
+}
+
+@media (max-width: 959px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+.hero-content {
+  max-width: 46rem;
+}
+
+.hero-headline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.4rem;
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+}
+
+.hero .lede {
+  color: #c7cad2;
+  /* Widened from 42ch — the longer copy wrapped to 4-5 lines and crowded
+     the headline below it. In practice the binding constraint at wide
+     viewports is the hero grid's 55% column, not this ch value, which is
+     why the font-size below is doing the real work up there. */
+  max-width: 68ch;
+  /* Shared .lede clamps up to 1.25rem (20px) — measured empirically against
+     the actual copy at the hero's column width: 18px wraps to 4 lines,
+     17px holds 3. Capped one notch below that break point. */
+  font-size: clamp(1rem, 1.4vw, 1.0625rem);
+  margin-bottom: 2.4rem;
+}
+
+.trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 12px;
+  column-gap: 24px;
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.trust-row li {
+  position: relative;
+}
+
+.trust-row li:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.hero-form-card {
+  max-width: 460px;
+  width: 100%;
+  justify-self: end;
+}
+
+@media (max-width: 959px) {
+  .hero-form-card {
+    max-width: none;
+    justify-self: stretch;
+  }
+}
+
+.hero-form-heading {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 1.5rem;
+}
+
+.hero-form .field {
+  margin-bottom: 1rem;
+}
+
+.hero-form .field label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.hero-form .field input,
+.hero-form .field select {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0;
+  color: #ffffff;
+  padding: 12px 0;
+}
+
+.hero-form .field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+  background-size: 12px 8px;
+  padding-right: 20px;
+}
+
+.hero-form .field input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.hero-form .field input:focus,
+.hero-form .field select:focus {
+  outline: 2px solid #ff8200;
+  outline-offset: 3px;
+  border-bottom-color: #ff8200;
+}
+
+.hero-form-card .form-submit {
+  width: 100%;
+  font-family: var(--font-body);
+  font-weight: 600;
+  text-transform: none;
+}
+
+.hero-form-note {
+  margin-top: 1rem;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+
+/* ============================================================
+   Services
+   ============================================================ */
+.services {
+  /* Flipped dark as part of restoring hero/storm/services/process/...
+     alternation — storm-check moved to light, so this has to move to dark
+     or two light sections would now sit back to back instead. */
+  background: var(--ink);
+  color: var(--paper);
+  /* Smaller than section-pad's shared bottom value — the cards' own
+     padding plus this together read as a card-height of empty air below
+     the grid before the fade into .process even started. */
+  padding-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.services-head .lede {
+  color: #c7cad2;
+}
+
+.services-head {
+  max-width: 40rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.services-head .lede {
+  margin-top: 1rem;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .service-grid--four {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1000px) {
+  .service-grid--four {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.service-tile {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ink-soft);
+  border: 1px solid var(--line-on-dark);
+  border-radius: 4px;
+  padding: clamp(1.5rem, 2.5vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
+}
+
+/* .reveal's own opacity/transform pair is left alone everywhere else on
+   the site; overridden here (higher-specificity compound selector, so it
+   wins regardless of source order between the two rules) to move the
+   entrance off translateY and onto the separate `translate` property —
+   `transform` is needed free for the hover lift below, and one property
+   can't run two different transitions (a slow staggered entrance, a fast
+   uniform hover) at once. */
+.service-tile.reveal {
+  opacity: 0;
+  transform: none;
+  translate: 0 18px;
+  transition:
+    opacity 200ms ease-out,
+    translate 200ms ease-out,
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out,
+    border-color 200ms ease-out;
+}
+
+.service-tile.reveal.is-visible {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* Staggered 80ms apart — only opacity/translate (the entrance) carry a
+   delay; transform/box-shadow/border-color (hover) always fire at 0ms so
+   hovering a card never feels laggy. */
+.service-tile:nth-child(1) { transition-delay: 0ms, 0ms, 0ms, 0ms, 0ms; }
+.service-tile:nth-child(2) { transition-delay: 80ms, 80ms, 0ms, 0ms, 0ms; }
+.service-tile:nth-child(3) { transition-delay: 160ms, 160ms, 0ms, 0ms, 0ms; }
+.service-tile:nth-child(4) { transition-delay: 240ms, 240ms, 0ms, 0ms, 0ms; }
+
+/* A 3px signal strip along the top, present but invisible by default so
+   it never shifts layout — hover reveals it with a color fade rather
+   than adding a border that would push the content down. */
+.service-tile::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--signal);
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+
+.service-tile:hover,
+.service-tile:focus-within {
+  transform: translateY(-4px);
+  border-color: var(--signal);
+  box-shadow: 0 16px 32px -14px rgba(0, 0, 0, 0.6);
+}
+
+.service-tile:hover::before,
+.service-tile:focus-within::before {
+  opacity: 1;
+}
+
+.service-tile-icon {
+  margin-bottom: 0.25rem;
+  flex: none;
+}
+
+.service-tile h3 {
+  font-size: 1.15rem;
+}
+
+.service-tile p {
+  color: var(--mist);
+  flex: 1;
+}
+
+.service-tile a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--signal);
+  text-decoration: none;
+}
+
+.service-tile a:hover,
+.service-tile a:focus-visible {
+  color: var(--signal-dim);
+}
+
+.service-tile a .arrow {
+  display: inline-block;
+  transition: transform 200ms ease-out;
+}
+
+.service-tile:hover a .arrow,
+.service-tile:focus-within a .arrow {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   Process
+   ============================================================ */
+
+/* Standalone page header — process.html only, not used on the homepage. */
+.process-intro {
+  background: var(--paper);
+  padding-top: clamp(7rem, 14vw, 9rem);
+  padding-bottom: clamp(3rem, 6vw, 4.5rem);
+}
+
+.process-intro .lede {
+  margin-top: 1rem;
+  max-width: 56ch;
+}
+
+.process {
+  background: var(--cloud);
+}
+
+.process-head {
+  max-width: 34rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.process-list {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line-on-light);
+}
+
+.process-item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: 1.5rem;
+  padding-block: 1.75rem;
+  border-bottom: 1px solid var(--line-on-light);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.process-item.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.process-num {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--signal);
+}
+
+.process-item h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.4rem;
+}
+
+.process-item p {
+  color: var(--slate);
+  max-width: 52ch;
+}
+
+@media (min-width: 700px) {
+  .process-item {
+    grid-template-columns: 5rem 1fr;
+  }
+}
+
+/* ============================================================
+   Why Us
+   ============================================================ */
+.why-us {
+  /* Explicit #FFFFFF, not var(--cloud) — this section and .services were
+     the same dark value and blending together is exactly what's being
+     fixed here, so it gets the strict light value spelled out for it. */
+  background: #ffffff;
+  color: #000000;
+}
+
+.why-us-head {
+  max-width: 36rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 780px) {
+  .badge-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.badge-card {
+  /* A subtle border, not a lighter fill — the section is already white,
+     so a lighter card background would have nothing to read against. */
+  background: transparent;
+  border: 1px solid rgba(75, 85, 99, 0.25);
+  border-radius: 4px;
+  padding: clamp(1.5rem, 2.5vw, 2rem);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.badge-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--signal);
+  box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.2);
+}
+
+.badge-card h3 {
+  font-size: 1.05rem;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.badge-card p {
+  color: #4b5563;
+}
+
+.why-us-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+
+/* ============================================================
+   Founder
+   ============================================================ */
+.founder {
+  /* Flipped dark — restoring alternation now that why-us moved to light. */
+  background: var(--ink);
+  color: var(--paper);
+  /* Extra clearance below why-us's cards: the CTAs plus why-us's own
+     bottom padding already read as a large gap on that side, and this
+     section's heading arriving right at the standard top padding made
+     the far side of the same boundary feel abrupt by comparison. Adding
+     it here evens the two sides out instead of shrinking the other. */
+  padding-top: calc(clamp(4rem, 9vw, 7.5rem) + 64px);
+}
+
+.founder .wrap {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 860px) {
+  .founder .wrap {
+    grid-template-columns: 0.8fr 1.2fr;
+    align-items: center;
+  }
+}
+
+.founder-photo {
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line-on-dark);
+  border-radius: 4px;
+  background: var(--ink-soft);
+  overflow: hidden;
+}
+
+.founder-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Source photo is a tall portrait crop into a 4:3 landscape frame —
+     anchoring to the top keeps the faces in frame and crops from the
+     legs/feet down instead of off the top of his head. */
+  object-position: center top;
+  /* Base zoom so the scroll parallax (script.js, [data-parallax]) has
+     cropped-but-hidden edges to draw from — without this a vertical
+     shift would reveal empty space at the top or bottom of the frame. */
+  transform: scale(1.12);
+}
+
+.founder-copy h2 {
+  margin-bottom: 0.5rem;
+}
+
+.founder-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 1.25rem;
+}
+
+.founder-copy .lede {
+  color: #c7cad2;
+  max-width: 54ch;
+}
+
+/* ============================================================
+   Area
+   ============================================================ */
+.area {
+  /* Flipped light — restoring alternation now that founder is dark. */
+  background: var(--cloud);
+}
+
+.area-head {
+  max-width: 42rem;
+  margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+}
+
+.area-head .lede {
+  margin-top: 1rem;
+}
+
+.area-groups {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 700px) {
+  .area-groups {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.area-group-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 1rem;
+}
+
+.area-cities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.area-cities span {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--line-on-light);
+  border-radius: 2px;
+  color: var(--slate);
+  background: var(--paper);
+}
+
+.area-note {
+  color: var(--slate);
+}
+
+.area-note a {
+  color: var(--signal);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.area-note a:hover,
+.area-note a:focus-visible {
+  color: var(--signal-dim);
+}
+
+/* ============================================================
+   Contact / estimate
+   ============================================================ */
+.contact {
+  /* Flipped dark — restoring alternation now that area is light. */
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.contact .wrap {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4rem);
+}
+
+@media (min-width: 900px) {
+  .contact .wrap {
+    grid-template-columns: 1fr 1.15fr;
+    align-items: start;
+  }
+}
+
+.contact-side .lede {
+  color: var(--mist);
+  margin-top: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.contact-phone {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  color: var(--paper);
+  text-decoration: none;
+  margin-bottom: 0.4rem;
+}
+
+.contact-phone:hover,
+.contact-phone:focus-visible {
+  color: var(--signal);
+}
+
+.contact-phone-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.form-card {
+  background: var(--ink-soft);
+  border: 1px solid var(--line-on-dark);
+  border-radius: 6px;
+  padding: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.form-row {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 560px) {
+  .form-row.two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.field label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.field input,
+.field select,
+.field textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--paper);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line-on-dark);
+  padding: 0.65rem 0.1rem;
+  border-radius: 0;
+  transition: border-color 0.2s ease;
+}
+
+.field select {
+  color: var(--paper);
+}
+
+.field select option {
+  color: var(--ink);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--mist);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-bottom-color: var(--signal);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.hidden-field {
+  position: absolute;
+  left: -9999px;
+}
+
+.form-submit {
+  margin-top: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+@media (min-width: 420px) {
+  .form-submit {
+    width: auto;
+  }
+}
+
+.form-note {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--mist);
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+  background: var(--ink);
+  color: var(--mist);
+  border-top: 1px solid var(--line-on-dark);
+  padding-block: clamp(3rem, 6vw, 4.5rem) 2rem;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+@media (min-width: 700px) {
+  .footer-grid {
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  color: var(--paper);
+  margin-bottom: 1rem;
+}
+
+.logo-lockup--full {
+  height: 64px;
+}
+
+.footer-col--brand p {
+  max-width: 32ch;
+  color: var(--mist);
+}
+
+.footer-col-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--paper);
+  margin-bottom: 1rem;
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.footer-col a {
+  color: var(--mist);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-col a:hover,
+.footer-col a:focus-visible {
+  color: var(--paper);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--line-on-dark);
+  padding-top: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.footer-bottom a {
+  color: var(--mist);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.footer-bottom a:hover,
+.footer-bottom a:focus-visible {
+  color: var(--paper);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
+   Address autocomplete widget
+   Shared by the homepage storm-history teaser and the full storm-history
+   tool. storm-autocomplete.js hardcodes these class names, so they live
+   here rather than in either page's own stylesheet.
+   ============================================================ */
+.sh-lookup-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sh-combo {
+  position: relative;
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+.sh-combo input {
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.9rem 1rem;
+}
+
+.sh-combo input::placeholder {
+  color: var(--slate);
+}
+
+.sh-combo input:focus {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.sh-suggest {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--paper);
+  border-radius: 4px;
+  box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.18);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.sh-suggestion {
+  display: grid;
+  gap: 1px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  align-content: center;
+}
+
+.sh-suggestion.is-active,
+.sh-suggestion:hover {
+  background: var(--cloud);
+  box-shadow: inset 2px 0 0 var(--signal);
+}
+
+.sh-suggestion-name {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.sh-suggestion-context {
+  color: var(--slate);
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   Storm history teaser (homepage)
+   ============================================================ */
+.storm-check {
+  /* Two dark sections in a row (hero, storm) is what made the page feel
+     heavy — this one flips to light so hero/storm/services/process/...
+     actually alternates instead of running two-then-one. A faint grid
+     brings back the "modern squares" texture the black version had,
+     just in dark-on-white instead of white-on-black. */
+  background:
+    repeating-linear-gradient(0deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
+    #ffffff;
+  color: #000000;
+  /* The 90px fade above now fits comfortably inside this on its own —
+     no extra padding needed just to clear it. */
+  padding-top: clamp(4rem, 9vw, 7.5rem);
+  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.storm-check-grid {
+  display: grid;
+  gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: center;
+}
+
+.storm-check-map-frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #4b5563;
+  border: 1px solid rgba(75, 85, 99, 0.25);
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+
+.storm-check-map-frame:hover {
+  transform: scale(1.015);
+  border-color: var(--signal);
+}
+
+.storm-check-map-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Same reasoning as .founder-photo img — buffer for the scroll parallax. */
+  transform: scale(1.12);
+}
+
+/* A radar ping over Memphis on the static preview — /images/storm-map-preview.png
+   is a Mapbox Static Images API export (dark-v11, centered on Memphis at
+   zoom 8.6), regenerate it with the same center if this image is ever
+   swapped so the ping's position keeps lining up. */
+.storm-check-map-frame::before,
+.storm-check-map-frame::after {
+  content: "";
+  position: absolute;
+  left: 48%;
+  top: 60%;
+  width: 10px;
+  height: 10px;
+  margin: -5px;
+  border-radius: 50%;
+  background: var(--signal);
+  animation: stormCheckPing 2.8s ease-out infinite;
+}
+
+.storm-check-map-frame::after {
+  animation-delay: 1.4s;
+}
+
+@keyframes stormCheckPing {
+  0% { transform: scale(1); opacity: 0.85; }
+  70% { opacity: 0.12; }
+  100% { transform: scale(7); opacity: 0; }
+}
+
+/* Children step in one after another instead of the block arriving as one
+   flat piece — .reveal still drives the trigger (IntersectionObserver adds
+   .is-visible once), this just re-times what happens under it. Compound
+   selectors so this beats the shared .reveal rule regardless of source
+   order between the two stylesheet sections. */
+.storm-check-inner.reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.storm-check-inner > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.storm-check-inner.is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+
+.storm-check-inner > *:nth-child(1) { transition-delay: 0.05s; }
+.storm-check-inner > *:nth-child(2) { transition-delay: 0.15s; }
+.storm-check-inner > *:nth-child(3) { transition-delay: 0.25s; }
+.storm-check-inner > *:nth-child(4) { transition-delay: 0.35s; }
+
+.storm-check-inner h2 {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+}
+
+.storm-check-inner .lede {
+  color: #4b5563;
+  /* ~60 characters, so the shortened copy wraps to two lines instead of
+     stretching thin across three. */
+  max-width: 60ch;
+  margin-top: 1rem;
+}
+
+.storm-check-form {
+  margin-top: var(--space-32);
+}
+
+/* The shared .sh-combo input (white fill, transparent border) is right for
+   the storm-history page's dark .sh-tool section, but on this now-light
+   section a transparent border leaves it with no visible edge at all — a
+   real border stands in for the underline treatment used on dark. */
+.storm-check-combo .sh-combo input {
+  border: 1px solid rgba(75, 85, 99, 0.35);
+}
+
+.storm-check-combo .sh-combo input:focus {
+  border-color: var(--signal);
+}
+
+.storm-check-note {
+  margin-top: var(--space-16);
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.storm-check-note a {
+  color: var(--signal);
+  text-decoration: underline;
+}
+
+@media (min-width: 960px) {
+  .storm-check-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================================
+   Section transitions
+   A short fade at the top of each section, from the section above's
+   color into transparent — softens the hard color-block cut between
+   ink and cloud sections without any angled edge or notch shape.
+   Straight edges throughout.
+
+   A plain 2-stop linear-gradient here read as a smudge: the eye picks
+   out the gradient's visible midpoint as a band rather than seeing a
+   clean blend. The mask below eases out instead (fast at first, long
+   trailing tail) and stays short, so it reads as a quick blend rather
+   than a shadow cast across the section.
+   ============================================================ */
+.services::before,
+.process::before,
+.why-us::before,
+.founder::before,
+.area::before,
+.contact::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(28px, 4vw, 48px);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.18) 60%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.18) 60%,
+    transparent 100%
+  );
+}
+
+.services::before {
+  background: #ffffff;
+}
+
+/* Now sits right after .contact, which is dark again. */
+.process::before {
+  background: var(--ink);
+}
+
+/* Sits right after .services (dark) — correctly alternating again now
+   that why-us itself is light. */
+.why-us::before {
+  background: var(--ink);
+}
+
+/* why-us is #ffffff, not var(--cloud) — match it exactly or this fade
+   trades one seam for a slightly-off one. */
+.founder::before {
+  background: #ffffff;
+}
+
+.area::before {
+  background: var(--ink);
+}
+
+.contact::before {
+  background: var(--cloud);
+}
+
+/* ============================================================
+   Sticky hero reveal
+   Hero pins at top:0 with <main> as its containing block, so it never
+   explicitly "releases" — it just stays pinned for the rest of the
+   page's scroll. That's fine: storm-check (normal flow, right after
+   hero, painting on top since it's later in DOM order) slides up from
+   the bottom over a long stretch of scroll and permanently covers it,
+   and everything after storm-check keeps covering it in turn. Once
+   covered it's invisible, so whether it's technically still "sticky"
+   underneath never matters visually.
+
+   This also gives the actual reveal its length: storm-check's own
+   height plus a full viewport of scroll passes while hero sits frozen
+   underneath, so the "curtain sliding over a still hero" motion reads
+   as deliberate rather than a brief hitch. An earlier version bounded
+   hero's pin to a wrapper sized just past storm-check's arrival —
+   that collapsed hero's release and storm's arrival into nearly the
+   same scroll position, so there was no window where you could
+   actually see storm slide over a frozen hero.
+
+   storm-check itself must stay non-sticky: giving it position: sticky
+   too (tried and rejected) made it pin in place for its own full
+   height before releasing, reading as a second, unwanted "stuck"
+   section rather than a normal section passing over the hero.
+
+   Desktop only: mobile browsers resize the viewport as chrome shows
+   and hides, which makes sticky/100vh math unreliable, and the effect
+   matters least on a screen already scrolling through content fast.
+   Also off under reduced motion — a full-viewport pin-and-cover is a
+   bigger vestibular ask than the fades it sits alongside.
+   ============================================================ */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .hero {
+    position: sticky;
+    top: 0;
+  }
+
+  .storm-check {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* ============================================================
+   Scroll reveal
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   Sticky mobile call bar
+   ============================================================ */
+.mobile-call-bar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Bar height (56px, confirmed against the rendered element, not assumed)
+     plus 24px of actual clearance — at exactly 56px of padding the last
+     line of page content sat flush against the bar with no breathing room,
+     which read as the bar covering it. */
+  body {
+    padding-bottom: 80px;
+  }
+
+  .mobile-call-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 56px;
+    background: var(--signal);
+    color: #000000;
+    font-family: var(--font-body);
+    font-weight: 600;
+    text-decoration: none;
+    z-index: 40;
+  }
+}

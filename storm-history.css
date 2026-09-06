@@ -1,0 +1,526 @@
+/* ============================================================
+   Storm History Lookup — page-specific styles
+   Ported from riseroofingms.com's storm history tool and restyled
+   to the Apex palette. Only loaded on storm-history.html.
+   ============================================================ */
+
+.sh-intro {
+  background: var(--ink);
+  color: var(--paper);
+  /* Clears the fixed nav, then 80px of the actual gap the header asks for. */
+  padding-top: calc(var(--nav-height) + var(--space-80));
+  /* The only source of "subhead to search bar" — .sh-tool below adds none
+     of its own, so this one value is the whole 48px. */
+  padding-bottom: var(--space-48);
+}
+
+.sh-intro .eyebrow {
+  color: var(--signal);
+  /* Not on the 12/16/24/32/48/64/80 scale — this one is a type-relationship
+     adjustment (eyebrow baseline to headline cap-height), not a layout gap. */
+  margin-bottom: 20px;
+}
+
+.sh-intro h1 {
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  color: var(--paper);
+  margin-bottom: var(--space-24);
+}
+
+.sh-intro .lede {
+  color: #c7cad2;
+  max-width: 56ch;
+  /* Tighter than the inherited 1.5: at this font size that line-height put
+     enough half-leading above the first line that the subhead read as
+     detached from the headline even with a correct margin between them. */
+  line-height: 1.4;
+}
+
+/* ---- the address form -------------------------------------------------- */
+
+.sh-tool {
+  background: var(--ink);
+  color: var(--paper);
+  padding-bottom: clamp(3rem, 6vw, 4.5rem);
+}
+
+.sh-lookup {
+  /* Data-currency line to map. */
+  margin-bottom: var(--space-64);
+}
+
+/* .sh-lookup-row, .sh-combo and .sh-suggest* live in styles.css now — the
+   address-autocomplete widget (storm-autocomplete.js) hardcodes those class
+   names and is shared with the homepage's storm-history teaser search. */
+
+.sh-consent {
+  /* Search bar to privacy note. */
+  margin-top: var(--space-16);
+  font-size: 0.9rem;
+  color: var(--mist);
+  max-width: 60ch;
+}
+
+.sh-consent a {
+  color: var(--signal);
+  text-decoration: underline;
+}
+
+.sh-error {
+  margin-top: 0.85rem;
+  color: var(--signal);
+  font-size: 0.9rem;
+}
+
+.sh-currency {
+  /* Privacy note to data-currency line. */
+  margin-top: var(--space-12);
+  font-size: 0.82rem;
+  color: var(--mist);
+}
+
+/* ---- collapsed intro, after a successful lookup (mobile) --------------- */
+
+.sh-collapsed {
+  display: none;
+}
+
+/* ---- map + result panel ------------------------------------------------ */
+
+.sh-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.sh-mapwrap {
+  position: relative;
+  min-height: 480px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ink-soft);
+}
+
+.sh-map {
+  position: absolute;
+  inset: 0;
+}
+
+.sh-chips {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 14px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--paper);
+  background: rgba(28, 30, 36, 0.75);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.sh-chip.is-on {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.sh-chip-basemap {
+  margin-left: 4px;
+}
+
+.sh-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.sh-chip-hail .sh-dot {
+  background: #8340d2;
+}
+
+.sh-chip-wind .sh-dot {
+  background: #6b8299;
+}
+
+.sh-legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 10px 14px;
+  background: rgba(28, 30, 36, 0.75);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: var(--paper);
+}
+
+.sh-legend h2 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px;
+}
+
+.sh-legend-second {
+  margin-top: 8px;
+}
+
+.sh-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+}
+
+.sh-swatch {
+  display: block;
+  width: 34px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.sh-swatch-hail {
+  background: linear-gradient(90deg, #cdb6ee, #6b21c0);
+}
+
+.sh-swatch-wind {
+  background: linear-gradient(90deg, #c9d3dc, #4b5563);
+}
+
+.sh-legend-label {
+  color: var(--mist);
+}
+
+.sh-legend-note {
+  margin-top: 6px;
+  font-size: 0.68rem;
+  color: var(--mist);
+}
+
+/* A floating pill, not a full-bleed cover: the map behind it is real and
+   already loaded (initMap runs on page load, before any address is typed),
+   so hiding it behind an opaque scrim just to show this line of text made
+   the whole tool look broken before a search. pointer-events: none lets a
+   reader pan and zoom the map immediately, address or not. */
+.sh-mapnote {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  margin: 0;
+  padding: 0.6rem 1.1rem;
+  max-width: calc(100% - 32px);
+  text-align: center;
+  color: var(--paper);
+  background: rgba(28, 30, 36, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.sh-mapnote[hidden] {
+  display: none;
+}
+
+/* ---- Mapbox zoom control, restyled to match the page ------------------- */
+
+.mapboxgl-ctrl-group {
+  background: rgba(28, 30, 36, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.mapboxgl-ctrl-group button {
+  background: transparent;
+  width: 32px;
+  height: 32px;
+}
+
+.mapboxgl-ctrl-group button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* The default icon is a dark PNG/SVG meant for a light control — there is no
+   currentColor hook to recolor directly, so inverting it is the only way to
+   get a light icon on this dark control without shipping our own glyphs. */
+.mapboxgl-ctrl-icon {
+  filter: invert(1) brightness(2);
+}
+
+.mapboxgl-ctrl-group button:focus {
+  box-shadow: none;
+}
+
+.mapboxgl-ctrl-group button:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+}
+
+/* ---- the single-address result ----------------------------------------- */
+
+.sh-panel {
+  background: var(--ink-soft);
+  border: 1px solid var(--line-on-dark);
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.sh-panel-head h2 {
+  font-size: 1.2rem;
+  color: var(--paper);
+  margin-bottom: 0.35rem;
+}
+
+.sh-panel-head p {
+  color: var(--mist);
+  font-size: 0.9rem;
+}
+
+.sh-events {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.sh-event {
+  width: 100%;
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  background: transparent;
+  color: var(--paper);
+  border: 1px solid var(--line-on-dark);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.sh-event:hover,
+.sh-event:focus-visible {
+  border-color: var(--signal);
+}
+
+.sh-event.is-selected {
+  border-color: var(--signal);
+  background: rgba(255, 130, 0, 0.1);
+}
+
+.sh-event-date {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--signal);
+}
+
+.sh-event.is-selected .sh-event-date {
+  color: var(--signal);
+}
+
+.sh-event-value {
+  font-size: 0.9rem;
+}
+
+.sh-event-source {
+  font-size: 0.75rem;
+  color: var(--mist);
+}
+
+.sh-empty {
+  margin-top: 1.25rem;
+  color: var(--mist);
+  font-size: 0.9rem;
+}
+
+.sh-freshness {
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line-on-dark);
+}
+
+.sh-freshness-lead {
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 0.35rem;
+}
+
+.sh-freshness-detail {
+  font-size: 0.82rem;
+  color: var(--mist);
+}
+
+.sh-panel-cta {
+  margin-top: 1.5rem;
+}
+
+.sh-panel-cta .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.sh-disclaimer {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  padding-top: clamp(1.5rem, 3vw, 2rem);
+  border-top: 1px solid var(--line-on-dark);
+  color: var(--mist);
+  font-size: 0.85rem;
+  max-width: 80ch;
+}
+
+/* ---- responsive --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .sh-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .sh-mapwrap {
+    min-height: 360px;
+  }
+
+  .sh-lookup-row {
+    flex-direction: column;
+  }
+
+  /* .sh-combo's flex-basis: 20rem sizes its WIDTH in the desktop row
+     layout. In a column flex container the main axis is vertical, so the
+     same 20rem basis becomes a HEIGHT instead — inflating the address
+     input to a 320px-tall box (with room to spare below the text) whether
+     or not the suggestions dropdown is open. Reset to auto so height
+     tracks the input's own content again. */
+  .sh-combo {
+    flex-basis: auto;
+  }
+
+  .sh-lookup-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .sh-chips {
+    gap: 5px;
+  }
+
+  .sh-chip {
+    min-height: 32px;
+    gap: 5px;
+    padding: 5px 9px;
+    font-size: 0.7rem;
+  }
+
+  .sh-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .sh-legend {
+    padding: 7px 9px;
+  }
+
+  .sh-legend h2 {
+    font-size: 0.62rem;
+  }
+
+  .sh-legend-note {
+    display: none;
+  }
+
+  .sh-mapwrap {
+    min-height: 260px;
+  }
+
+  /* Once a lookup has succeeded, the heading/lead/search row are
+     instructions already followed — on a phone they are most of a screen
+     standing between the reader and the answer. */
+  .sh-has-results .sh-intro .eyebrow,
+  .sh-has-results .sh-intro h1,
+  .sh-has-results .sh-intro .lede,
+  .sh-has-results .sh-lookup-row,
+  .sh-has-results .sh-consent,
+  .sh-has-results .sh-currency {
+    display: none;
+  }
+
+  /* With everything above hidden, .sh-intro is an empty box — its padding
+     (sized to space out a headline that is no longer there) otherwise
+     leaves a dead gap the height of the collapsed content before the
+     address bar. Collapse it to just enough to clear the fixed nav. */
+  .sh-has-results .sh-intro {
+    padding-top: calc(var(--nav-height) + var(--space-16));
+    padding-bottom: 0;
+  }
+
+  .sh-has-results .sh-collapsed {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--ink-soft);
+    border: 1px solid var(--line-on-dark);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+
+  .sh-collapsed-address {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--paper);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sh-collapsed-change {
+    flex: none;
+    min-height: 44px;
+    padding: 0 0.5rem;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--signal);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
