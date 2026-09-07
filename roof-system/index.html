@@ -63,10 +63,23 @@
 <main id="top">
 
   <header class="rs-hero">
-    <div class="wrap">
-      <h1>What's actually in a roof system</h1>
-      <p class="lede">Every roof is built from the same nine components, whether it's a budget re-cover or a full tear-off. Knowing what they are is how you tell a real estimate from a shortcut.</p>
-      <div class="rs-hero-ctas">
+    <div class="rs-hero-bg" aria-hidden="true">
+      <div class="rs-hero-grid"></div>
+      <!-- Same three paths as /images/apex-mark.svg, inlined (rather than
+           <img>-referenced) so a single opacity and a single white fill can
+           be applied from CSS — the homepage watermark looked broken when
+           its three shapes settled at different opacities, so this one
+           deliberately has no per-path styling at all. -->
+      <svg class="rs-hero-mark" viewBox="0 0 232 200">
+        <path d="M115.47 0 L137.99 39 L45.05 200 L0 200 Z"/>
+        <path d="M154 66 L231.36 200 L184 200 L130.33 107 Z"/>
+        <path d="M115.47 134 L153.57 200 L77.37 200 Z"/>
+      </svg>
+    </div>
+    <div class="wrap rs-hero-inner">
+      <h1 class="reveal">What's actually in a roof system</h1>
+      <p class="lede reveal">Every roof is built from the same nine components, whether it's a budget re-cover or a full tear-off. Knowing what they are is how you tell a real estimate from a shortcut.</p>
+      <div class="rs-hero-ctas reveal">
         <a class="btn btn-solid btn-sans" href="/#estimate">Get My Free Inspection</a>
         <a class="btn btn-outline btn-sans btn-outline--on-dark" href="tel:19014947506">Call (901) 494-7506</a>
       </div>
@@ -120,7 +133,7 @@
               </g>
             </svg>
           </div>
-          <p class="rs-diagram-caption">Illustration of a typical roof system, for reference only.</p>
+          <p class="rs-diagram-caption">Illustration of a typical roof system, for reference only. Drip edge and flashing are part of the system but aren't marked here.</p>
         </div>
 
         <div class="rs-accordion">
@@ -204,7 +217,7 @@
           <div class="rs-accordion-item" data-layer="8">
             <button class="rs-accordion-trigger" type="button" aria-expanded="false" id="layer-8-trigger" aria-controls="layer-8-panel">
               <span class="rs-accordion-num">8</span>
-              <span class="rs-accordion-title">Drip Edge</span>
+              <span class="rs-accordion-title">Drip Edge <span class="rs-accordion-qualifier">(not shown)</span></span>
               <span class="rs-accordion-chevron" aria-hidden="true"></span>
             </button>
             <div class="rs-accordion-panel" id="layer-8-panel" role="region" aria-labelledby="layer-8-trigger" hidden>
@@ -215,7 +228,7 @@
           <div class="rs-accordion-item" data-layer="9">
             <button class="rs-accordion-trigger" type="button" aria-expanded="false" id="layer-9-trigger" aria-controls="layer-9-panel">
               <span class="rs-accordion-num">9</span>
-              <span class="rs-accordion-title">Flashing</span>
+              <span class="rs-accordion-title">Flashing <span class="rs-accordion-qualifier">(not shown)</span></span>
               <span class="rs-accordion-chevron" aria-hidden="true"></span>
             </button>
             <div class="rs-accordion-panel" id="layer-9-panel" role="region" aria-labelledby="layer-9-trigger" hidden>
