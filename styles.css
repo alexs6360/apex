@@ -208,6 +208,16 @@ section {
   color: #000000;
 }
 
+/* .btn-outline's default orange-on-transparent text measures ~2.5:1 on a
+   white/light section — fails contrast there regardless of what backdrop
+   it was fine against elsewhere. This modifier is for the opposite case:
+   a dark section where even white text needs to stand in for the orange
+   at rest. Border stays orange; hover still fills orange with black text
+   either way, since that combination passes on any backdrop. */
+.btn-outline--on-dark {
+  color: #ffffff;
+}
+
 .btn:focus-visible {
   outline: 2px solid var(--signal);
   outline-offset: 3px;
@@ -836,19 +846,31 @@ section {
    Services
    ============================================================ */
 .services {
-  /* Flipped dark as part of restoring hero/storm/services/process/...
-     alternation — storm-check moved to light, so this has to move to dark
-     or two light sections would now sit back to back instead. */
-  background: var(--ink);
-  color: var(--paper);
+  /* Full-bleed orange (tried first) stopped reading as an accent and
+     started reading as the section's whole personality — with the
+     "Start here" links also orange, nothing stood out anymore. Black
+     instead: white heading, translucent-white subhead, and the cards
+     get lifted off it with their own fill/border so the section isn't
+     just cards floating on identical-color background. Same faint grid
+     as .storm-check, inverted (white lines on black instead of grey on
+     white) — ties the two sections together and keeps the black from
+     reading as an empty void behind the cards. Lower opacity than
+     storm-check's version: white-on-black reads more prominently than
+     grey-on-white at the same alpha. */
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    #000000;
+  color: #ffffff;
+  /* Raises the floor on .section-pad's shared clamp — this boundary is
+     white-to-black, the highest-contrast cut on the page, so it leans
+     on generous space rather than a fade to keep from feeling abrupt.
+     Paired with .storm-check's matching bottom-padding floor below. */
+  padding-top: clamp(6rem, 9vw, 7.5rem);
   /* Smaller than section-pad's shared bottom value — the cards' own
      padding plus this together read as a card-height of empty air below
-     the grid before the fade into .process even started. */
+     the grid before the fade into .founder even started. */
   padding-bottom: clamp(2rem, 4vw, 3rem);
-}
-
-.services-head .lede {
-  color: #c7cad2;
 }
 
 .services-head {
@@ -857,6 +879,7 @@ section {
 }
 
 .services-head .lede {
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 1rem;
 }
 
@@ -884,8 +907,13 @@ section {
   position: relative;
   height: 100%;
   overflow: hidden;
-  background: var(--ink-soft);
-  border: 1px solid var(--line-on-dark);
+  /* Literal values, not --ink-soft/--line-on-dark — those tokens are
+     shared with other components (the contact form card, etc.) tuned
+     for a dark-ink backdrop. .services is now flat black, so the cards
+     need their own, slightly lighter fill and a more visible border to
+     actually lift off it rather than blend in. */
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   padding: clamp(1.5rem, 2.5vw, 2rem);
   display: flex;
@@ -961,6 +989,12 @@ section {
 
 .service-tile h3 {
   font-size: 1.15rem;
+  /* "Wind or hail damage" wraps to two lines while the other three
+     titles fit on one — without this, its body copy sits a whole line
+     lower than the other three cards'. Fixed height for two lines at
+     this size/line-height keeps every card's body starting at the
+     same y regardless of how many lines its own title needs. */
+  min-height: 2.5rem;
 }
 
 .service-tile p {
@@ -1251,6 +1285,13 @@ section {
 .founder-copy .lede {
   color: #c7cad2;
   max-width: 54ch;
+}
+
+.founder-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.75rem;
 }
 
 /* ============================================================
@@ -1736,7 +1777,11 @@ section {
   /* The 90px fade above now fits comfortably inside this on its own —
      no extra padding needed just to clear it. */
   padding-top: clamp(4rem, 9vw, 7.5rem);
-  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  /* Raised floor to 96px, paired with .services' matching top-padding
+     floor — this boundary went from a fade to a hard white-to-black
+     edge, so the two sides lean on generous space instead to keep the
+     cut from feeling abrupt. */
+  padding-bottom: clamp(6rem, 6vw, 7rem);
 }
 
 .storm-check-grid {
@@ -1880,7 +1925,6 @@ section {
    trailing tail) and stays short, so it reads as a quick blend rather
    than a shadow cast across the section.
    ============================================================ */
-.services::before,
 .why-us::before,
 .founder::before,
 .area::before,
@@ -1909,24 +1953,22 @@ section {
   );
 }
 
-.services::before {
-  background: #ffffff;
-}
-
-/* Sits right after .services (dark) — correctly alternating again now
-   that why-us itself is light. */
+/* Only used on storm-history.html now — index.html no longer has a
+   .why-us section. Sits right after .sh-tool (dark) there. */
 .why-us::before {
   background: var(--ink);
 }
 
-/* why-us is #ffffff, not var(--cloud) — match it exactly or this fade
-   trades one seam for a slightly-off one. */
-.founder::before {
-  background: #ffffff;
-}
-
 .area::before {
   background: var(--ink);
+}
+
+/* .services is solid black now, not dark ink — fading into .founder
+   from that instead. Kept (unlike .services' own removed fade) since
+   black-to-ink is a much smaller jump than white-to-black and still
+   benefits from a soft blend rather than space alone. */
+.founder::before {
+  background: #000000;
 }
 
 .contact::before {

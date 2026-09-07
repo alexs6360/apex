@@ -507,16 +507,17 @@
     map.addSource("reports", { type: "geojson", data: EMPTY });
     map.addSource("addr-glow", { type: "geojson", data: EMPTY });
 
-    /* Wind first, so it is the backdrop the hail sits on. A cool blue-gray
-       keeps it from competing with the purple hail bands or the orange
-       reserved for UI. */
+    /* Wind first, so it is the backdrop the hail sits on. Gold rather than
+       a bright yellow — bright yellow washed out against both the satellite
+       imagery and the dark style at the low opacity this needs to stay
+       under the hail bands. */
     map.addLayer({
       id: "wind-env",
       type: "fill",
       source: "wind-env",
       slot: "top",
       paint: {
-        "fill-color": "#6b8299",
+        "fill-color": "#d4a017",
         /* Fades with the FIRST hail band, not on its own schedule: it is the
            ground the swath sits on, so it has to be there as the swath arrives
            rather than turning up under it. */
@@ -531,7 +532,7 @@
       source: "wind-env",
       slot: "top",
       paint: {
-        "line-color": "#6b8299",
+        "line-color": "#d4a017",
         "line-width": b.windLine.width,
         "line-opacity": 0,
         "line-opacity-transition": { duration: FADE_MS, delay: 0 },
@@ -602,12 +603,17 @@
           45, 4,
           95, 9,
         ],
+        /* Yellow/gold instead of the previous blue-gray — that read as too
+           close to the map's own imagery colors at a glance. Darker at the
+           top of the range (weaker reports are more common, so keeping
+           those the brightest keeps the whole layer from reading as an
+           undifferentiated wall of dark gold). */
         "circle-color": [
           "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
-          45, "#c9d3dc",
-          58, "#9fb0c2",
-          70, "#6b8299",
-          85, "#4b5563",
+          45, "#fde047",
+          58, "#facc15",
+          70, "#eab308",
+          85, "#a16207",
         ],
         "circle-stroke-width": 1.5,
         "circle-stroke-color": "#ffffff",
