@@ -79,6 +79,15 @@
   color: var(--mist);
 }
 
+.sh-stale {
+  /* Only shown when the automated refresh has fallen behind — see
+     showStaleness() in storm-history.js. Reuses .sh-error's warning tone
+     rather than the muted .sh-currency color so it doesn't read as routine. */
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--signal);
+}
+
 /* ---- collapsed intro, after a successful lookup (mobile) --------------- */
 
 .sh-collapsed {
@@ -398,6 +407,49 @@
   border-top: 1px solid var(--line-on-dark);
   color: var(--mist);
   font-size: 0.85rem;
+  max-width: 80ch;
+}
+
+.sh-methodology {
+  margin-top: var(--space-24);
+  font-size: 0.85rem;
+  color: var(--mist);
+}
+
+.sh-methodology summary {
+  cursor: pointer;
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.sh-methodology summary:hover {
+  color: var(--signal);
+}
+
+.sh-methodology-table {
+  margin-top: var(--space-16);
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 90ch;
+  font-size: 0.82rem;
+}
+
+.sh-methodology-table th,
+.sh-methodology-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border-bottom: 1px solid var(--line-on-dark);
+  vertical-align: top;
+}
+
+.sh-methodology-table th {
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.sh-methodology-attribution {
+  margin-top: var(--space-16);
   max-width: 80ch;
 }
 

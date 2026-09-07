@@ -1,0 +1,133 @@
+name: Update storm data
+
+# Keeps data/*.json (storm-history.html's hail, wind, and warning archive)
+# current for the Apex service area — bbox 34.4-35.6N, -90.8--89.0W, set in
+# tools/build-storm-data.mjs — without a backend or a build step on Netlify.
+# Netlify's GitHub integration deploys automatically once this pushes to main.
+#
+# Two schedules share one script — tools/build-storm-data.mjs decides what to
+# do based on MODE, computed below from which cron fired:
+#   09:00 UTC daily   full pass: SWDI backfill, Storm Events, LSR, CoCoRaHS,
+#                     ASOS gusts.
+#   every 4 hours     MRMS MESH + the NWS warnings poll only — both describe
+#                     conditions that are only hours old and would be stale
+#                     well before the next daily run otherwise.
+# A third, manual-only mode (verify-mesh-fixture) decodes a known historical
+# hail date and checks the result against what that file is expected to
+# contain — see tools/verify-mesh-fixture.mjs. Run it after touching MESH
+# decoding, or any time the eccodes install below changes, to catch a
+# regression here instead of in production three weeks from now. It does
+# not touch data/ or commit anything.
+#
+# Attribution (NOAA open data terms require this be stated somewhere on the
+# page — see the methodology note in storm-history.html, not just here):
+# NOAA NCEI SWDI, NOAA MRMS via NOAA Open Data Dissemination, NWS Storm
+# Events, NWS Local Storm Reports, NWS active alerts (api.weather.gov) — all
+# NOAA/NWS. Iowa Environmental Mesonet mirrors LSR and provides ASOS/AWOS
+# gust data. CoCoRaHS is an independent volunteer network.
+
+on:
+  schedule:
+    - cron: "0 9 * * *"    # daily — see MODE below
+    - cron: "0 */4 * * *"  # frequent — MRMS MESH + warnings only
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Which pass to run"
+        type: choice
+        options: [daily, frequent, verify-mesh-fixture]
+        default: daily
+
+# No API keys are configured here because none are needed: every source
+# (NOAA NCEI SWDI, NOAA MRMS/NODD, NWS Storm Events and active alerts, Iowa
+# Environmental Mesonet, CoCoRaHS) is free and keyless. If a future source
+# needs one, add it as a repository secret (Settings > Secrets and variables
+# > Actions) and reference it as ${{ secrets.NAME }} in an env: block below —
+# never inline the value here.
+
+permissions:
+  contents: write
+
+# A cron run and a manual run landing at the same time would race to push;
+# this serializes them instead of letting the second fail on a stale ref.
+concurrency:
+  group: update-storm-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # eccodeslib (the compiled decoder eccodes wraps) ships manylinux
+      # wheels for cp310-cp314 — pinning 3.11 here guarantees a wheel install
+      # on ubuntu-latest, no compiling from source. Confirmed against PyPI's
+      # file listing for eccodeslib; not yet confirmed on an actual Actions
+      # runner, which is exactly what the verify-mesh-fixture dispatch mode
+      # below is for.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # No continue-on-error: a missing decoder is not an optional-layer
+      # problem to shrug off, it's the exact failure mode this workflow
+      # exists to catch loudly (see MAKE ZERO LOUD, NOT SILENT in the PR that
+      # added this comment) — tools/build-storm-data.mjs's own hasEccodes()
+      # check will hard-fail the run either way, but failing here first
+      # gives a clearer error than tracing it through the generator's log.
+      - name: Install eccodes (MRMS GRIB2 decoding)
+        run: pip install eccodes
+
+      - name: Determine mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 9 * * *" ]; then
+            echo "mode=daily" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=frequent" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify MESH decoding against known fixture
+        if: steps.mode.outputs.mode == 'verify-mesh-fixture'
+        run: node tools/verify-mesh-fixture.mjs
+
+      - name: Regenerate storm data
+        if: steps.mode.outputs.mode != 'verify-mesh-fixture'
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+          # Incremental in both modes: refetches the last 2 calendar months
+          # and merges into the committed archive, instead of a full 10-year
+          # rebuild. Required in frequent mode specifically — the generator
+          # refuses to run frequent without it (see build-storm-data.mjs).
+          # The generator fails the step rather than writing partial data if
+          # a source comes back empty after retries, so there's nothing
+          # further to check here.
+          WINDOW_MONTHS: 2
+        run: node tools/build-storm-data.mjs data
+
+      - name: Commit if changed
+        if: steps.mode.outputs.mode != 'verify-mesh-fixture'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/; then
+            echo "No storm data changes — nothing to commit."
+            exit 0
+          fi
+          git add data/
+          git commit -m "Update storm data (${{ steps.mode.outputs.mode }}, $(date -u +%F))"
+          git push

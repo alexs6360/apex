@@ -78,6 +78,7 @@
   var chips = Array.prototype.slice.call(document.querySelectorAll(".sh-chip"));
   var listEl = document.getElementById("sh-suggest");
   var currencyEl = document.getElementById("sh-currency");
+  var staleEl = document.getElementById("sh-stale");
   var collapsedEl = document.getElementById("sh-collapsed");
   var collapsedAddrEl = document.getElementById("sh-collapsed-address");
   var collapsedChangeEl = document.getElementById("sh-collapsed-change");
@@ -89,6 +90,18 @@
      outside it get told so rather than returning a confident "nothing found"
      for somewhere we have no data. */
   var AREA = { minLon: -90.8, minLat: 34.4, maxLon: -89.0, maxLat: 35.6 };
+  /* The daily workflow refetches every morning; four days of slack covers a
+     missed run or two before this says anything, so a normal weekend gap
+     between fixes doesn't read as broken. */
+  var STALE_DAYS = 4;
+  /* MRMS MESH polls every 4 hours, not daily — a failure there (eccodes
+     missing, a decode error) blocks every write this file makes, including
+     hail.through and wind.through, so STALE_DAYS above would eventually
+     catch a dead MESH pipeline too, but only after four full days of
+     silence. This catches it within a day instead, which matters because
+     MESH is specifically what covers the last few hours a homeowner is most
+     likely to be asking about right after a storm. */
+  var MESH_STALE_DAYS = 1;
   var CENTER = [-89.9, 35.0];
   /* Proximity bias for address search. CENTER is the centroid of the whole
      bbox, which sits in open country between towns; biasing to it ranked rural
@@ -116,6 +129,7 @@
   var hail = null;
   var reports = null;
   var index = null;
+  var warnings = null;
   /* The address's own bucket, from the shared grid module. Set on every
      lookup and used for containment. */
   var addrBucket = null;
@@ -167,6 +181,41 @@
     return miles.toFixed(1) + " mi " + bearingFrom(lon, lat, toLon, toLat);
   }
 
+  /* Standard ray-casting, one ring at a time. NWS warning polygons come as
+     GeoJSON [lon, lat] rings — a lookup either falls inside the storm-based
+     polygon a warning was issued for, or it does not; there is no proximity
+     radius here the way there is for cells and reports; being 200 feet
+     outside a tornado warning polygon is a materially different thing than
+     being inside it. */
+  function pointInRing(x, y, ring) {
+    var inside = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      var xi = ring[i][0], yi = ring[i][1];
+      var xj = ring[j][0], yj = ring[j][1];
+      var intersect = (yi > y) !== (yj > y) &&
+        x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  function pointInGeometry(lon, lat, geometry) {
+    if (!geometry) return false;
+    var polys = geometry.type === "Polygon" ? [geometry.coordinates]
+      : geometry.type === "MultiPolygon" ? geometry.coordinates
+      : [];
+    for (var p = 0; p < polys.length; p++) {
+      var rings = polys[p];
+      if (!rings.length || !pointInRing(lon, lat, rings[0])) continue;
+      var inHole = false;
+      for (var h = 1; h < rings.length; h++) {
+        if (pointInRing(lon, lat, rings[h])) { inHole = true; break; }
+      }
+      if (!inHole) return true;
+    }
+    return false;
+  }
+
   function prettyDate(iso) {
     var d = new Date(iso.length > 10 ? iso : iso + "T12:00:00Z");
     if (isNaN(d)) return iso;
@@ -189,9 +238,17 @@
           jobs.push(fetch("data/hail-" + y + ".json").then(function (r) { return r.json(); }));
           jobs.push(fetch("data/reports-" + y + ".json").then(function (r) { return r.json(); }));
         });
-        return Promise.all(jobs);
+        /* Not year-split — see the generator's comment above nwsWarnings().
+           Missing entirely (a deploy from before this existed) reads as "no
+           warnings on file" rather than a broken page. */
+        var warningsJob = fetch("data/warnings.json")
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .catch(function () { return []; });
+        return Promise.all([warningsJob, Promise.all(jobs)]);
       })
-      .then(function (parts) {
+      .then(function (results) {
+        warnings = results[0];
+        var parts = results[1];
         var cells = [];
         var reps = [];
         parts.forEach(function (p) {
@@ -226,6 +283,44 @@
     if (index.wind && index.wind.through) bits.push("wind through " + prettyDate(index.wind.through));
     currencyEl.textContent = bits.join(" \u00b7 ") + ".";
     currencyEl.hidden = false;
+    showStaleness();
+  }
+
+  /* If the daily refresh has stopped running \u2014 a failed workflow, a source
+     gone dark \u2014 the line above would otherwise keep citing an old date as if
+     it were still current, and a homeowner would read an empty result as "no
+     storms" instead of "no recent data". This checks the newest date either
+     layer actually reached against today's date and says so once it is more
+     than STALE_DAYS behind. */
+  function daysSince(iso) {
+    return Math.floor((Date.now() - new Date(iso + "T00:00:00Z").getTime()) / 86400000);
+  }
+
+  function showStaleness() {
+    if (!staleEl || !index) return;
+
+    /* Checked first and separately from hail/wind below: MESH runs every 4
+       hours specifically so a homeowner asking about last night's storm gets
+       an answer, so its own automation going quiet is worth calling out on
+       a tighter clock than the once-a-day sources further down. */
+    var meshSuccess = index.mesh && index.mesh.last_success;
+    if (meshSuccess && daysSince(meshSuccess) > MESH_STALE_DAYS) {
+      staleEl.textContent = "Our recent-hail radar feed (MRMS) hasn't updated since " +
+        prettyDate(meshSuccess) + " \u2014 the automated refresh may be down. Older hail and " +
+        "wind data below is still current; a storm from the last day or two may just not be here yet.";
+      staleEl.hidden = false;
+      return;
+    }
+
+    var hail = index.hail && index.hail.through;
+    var wind = index.wind && index.wind.through;
+    var newest = [hail, wind].filter(Boolean).sort().pop();
+    if (!newest) { staleEl.hidden = true; return; }
+    var ageDays = daysSince(newest);
+    if (ageDays <= STALE_DAYS) { staleEl.hidden = true; return; }
+    staleEl.textContent = "Our storm data hasn't refreshed since " + prettyDate(newest) +
+      " (" + ageDays + " days ago). Recent storms may be missing \u2014 we're aware and working on it.";
+    staleEl.hidden = false;
   }
 
   /* ---- map -------------------------------------------------------------- */
@@ -722,6 +817,10 @@
   function eventsAt(lon, lat) {
     var out = [];
 
+    /* Radar-estimated vs. observed, everywhere a number shows up: MESH runs
+       high against a ruler, and an adjuster's own measurement is what a claim
+       actually turns on. Overstating a radar figure as a measurement is worse
+       than not showing it, so the two are never allowed to look the same. */
     hail.cells.forEach(function (c) {
       /* Containment, not proximity. A cell is ~5.6 x 4.6km, so its centroid
          can sit 3.6km from an address the cell still covers — the old 1.5km
@@ -731,16 +830,18 @@
       var near = !here && distanceKm(lon, lat, c[2], c[3]) <= REPORT_RADIUS_KM;
       if (!here && !near) return;
       var size = c[1].toFixed(2).replace(/0$/, "");
+      var isMesh = c[4] === "MRMS";
       out.push({
         date: c[0],
-        /* "in your area" is what the data supports: radar estimated hail
+        /* "in your area" is what the data supports: radar-estimated hail
            somewhere in the cell containing this address. Not "on your roof". */
-        label: here
-          ? size + '" hail estimated in your area'
-          : size + '" hail estimated ' + awayFrom(lon, lat, c[2], c[3]),
-        source: "NEXRAD radar" + (c[4] ? " (" + c[4] + ")" : ""),
+        label: (here
+          ? size + '" hail (radar estimate) in your area'
+          : size + '" hail (radar estimate) ' + awayFrom(lon, lat, c[2], c[3])),
+        source: isMesh ? "NOAA MRMS MESH" : "NEXRAD radar" + (c[4] ? " (" + c[4] + ")" : ""),
         here: !!here,
         size: c[1],
+        estimated: true,
       });
     });
 
@@ -750,18 +851,43 @@
       var p = f.properties;
       var label;
       var where = awayFrom(lon, lat, g[0], g[1]);
+      /* CoCoRaHS and ASOS/AWOS are ground truth same as Storm Events and LSR
+         — a volunteer's ruler, a station's anemometer — so they share this
+         branch rather than getting their own. What differs by source is only
+         the label text below. */
       if (p.kind === "hail") {
-        label = (p.val ? p.val + '" ' : "") + "hail reported " + where;
+        label = (p.val ? p.val + '" ' : "") + "hail observed " + where;
       } else if (p.val) {
-        /* Already mph — the generator normalises Storm Events' knots, so
-           converting here would turn a 66 mph gust into 76. */
-        label = p.val + " mph wind reported " + where;
+        /* Already mph — the generator normalises Storm Events' and ASOS's
+           knots, so converting again here would turn a 66 mph gust into 76. */
+        label = p.val + " mph gust observed " + where;
       } else {
         /* A real report with no measured gust. Saying nothing hides a storm;
            saying 0 mph invents a reading. */
-        label = "wind damage reported " + where;
+        label = "wind damage observed " + where;
       }
-      out.push({ date: (p.date || "").slice(0, 10), label: label, source: p.src });
+      out.push({
+        date: (p.date || "").slice(0, 10), label: label, source: p.src,
+        estimated: false,
+      });
+    });
+
+    /* Point-in-polygon, not proximity: an address is either inside the storm-
+       based polygon a Severe Thunderstorm or Tornado Warning was issued for,
+       or it is not, and that is a materially different fact from "nearby". */
+    (warnings || []).forEach(function (w) {
+      if (!pointInGeometry(lon, lat, w.geometry)) return;
+      var bits = [];
+      if (w.hail_in_estimated) bits.push(w.hail_in_estimated.toFixed(2).replace(/0$/, "") + '" hail');
+      if (w.gust_mph_estimated) bits.push(w.gust_mph_estimated + " mph gusts");
+      out.push({
+        date: (w.effective || w.expires || "").slice(0, 10),
+        label: "Address was inside a " + w.event + " polygon" +
+          (bits.length ? " — forecaster estimate at issuance: " + bits.join(", ") + " (radar estimate)" : ""),
+        source: "NWS active alerts",
+        here: true,
+        estimated: true,
+      });
     });
 
     out.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });

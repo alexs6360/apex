@@ -112,6 +112,7 @@
         </p>
         <p class="sh-error" id="sh-error" role="alert" hidden></p>
         <p class="sh-currency" id="sh-currency" hidden></p>
+        <p class="sh-stale" id="sh-stale" hidden></p>
       </form>
 
       <div class="sh-workspace">
@@ -138,7 +139,7 @@
               <span class="sh-swatch sh-swatch-wind"></span>
               <span class="sh-legend-label">58 &rarr; 80+</span>
             </div>
-            <p class="sh-legend-note">Hail radar-estimated &middot; wind NWS reports</p>
+            <p class="sh-legend-note">Hail shading is radar-estimated (SWDI/MRMS) &middot; wind and point markers are observed reports</p>
           </div>
           <p class="sh-mapnote" id="sh-mapnote">Enter an address to begin.</p>
         </div>
@@ -165,13 +166,74 @@
       </div>
 
       <p class="sh-disclaimer">
-        Hail locations are radar-estimated from NEXRAD Level-III data, not
-        verified damage. Wind reports come from the National Weather Service
-        and trained spotters. A storm can pass over a home without appearing
-        here, and an event shown nearby doesn't mean your specific roof was
-        hit. The only way to know what a storm did to your roof is to have
-        someone look at it.
+        Hail locations are radar-estimated from NEXRAD and MRMS data, not
+        verified damage — radar can run high compared to what's actually on
+        the ground. Wind and ground-truth hail come from the National
+        Weather Service, trained spotters, and volunteer/station networks. A
+        storm can pass over a home without appearing here, and an event
+        shown nearby doesn't mean your specific roof was hit. The only way
+        to know what a storm did to your roof is to have someone look at it.
       </p>
+
+      <details class="sh-methodology">
+        <summary>Data sources &amp; methodology</summary>
+        <table class="sh-methodology-table">
+          <thead>
+            <tr><th>Source</th><th>What It Provides</th><th>Nature</th><th>Update Cadence</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>NOAA NCEI SWDI (NEXRAD Level-III)</td>
+              <td>Historical hail cells, ~5&ndash;10&nbsp;year archive</td>
+              <td>Radar-estimated</td>
+              <td>Daily; finalizes 60&ndash;90 days behind</td>
+            </tr>
+            <tr>
+              <td>NOAA MRMS MESH, via NOAA Open Data Dissemination</td>
+              <td>Recent hail cells only &mdash; short retention</td>
+              <td>Radar-estimated</td>
+              <td>Polled every 4 hours; ~2 hour lag</td>
+            </tr>
+            <tr>
+              <td>NWS Storm Events</td>
+              <td>Verified historical hail &amp; wind reports</td>
+              <td>Observed</td>
+              <td>Daily; finalizes ~4 months behind</td>
+            </tr>
+            <tr>
+              <td>NWS Local Storm Reports, via Iowa Environmental Mesonet</td>
+              <td>Recent spotter hail &amp; wind reports</td>
+              <td>Observed</td>
+              <td>Daily; ~1 day lag</td>
+            </tr>
+            <tr>
+              <td>NWS active alerts (api.weather.gov)</td>
+              <td>Severe Thunderstorm &amp; Tornado Warning polygons</td>
+              <td>Forecaster judgment, radar-informed</td>
+              <td>Polled every 4 hours; archive begins when this system went live</td>
+            </tr>
+            <tr>
+              <td>CoCoRaHS</td>
+              <td>Volunteer-measured hail size</td>
+              <td>Observed</td>
+              <td>Daily</td>
+            </tr>
+            <tr>
+              <td>ASOS/AWOS, via Iowa Environmental Mesonet</td>
+              <td>Station-measured wind gusts &ge; 40&nbsp;mph</td>
+              <td>Observed</td>
+              <td>Daily</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="sh-methodology-attribution">
+          Weather data provided by NOAA and the National Weather Service.
+          Additional data from the Iowa Environmental Mesonet (Iowa State
+          University) and CoCoRaHS. All sources are public and free; none of
+          them are altered beyond the unit conversions and deduplication
+          described above.
+        </p>
+      </details>
     </div>
   </section>
 
