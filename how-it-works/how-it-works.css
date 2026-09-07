@@ -1,0 +1,722 @@
+/* ============================================================
+   How It Works — page-specific styles
+   Loaded after /styles.css. Reuses shared tokens, .wrap,
+   .section-pad, .reveal, .btn/.btn-sans (sentence case, body
+   font — already exists sitewide, no new button variant needed),
+   and the sh-combo/sh-suggest address-lookup components;
+   everything else here is scoped to this page's own hiw-*
+   classes so it can't leak elsewhere (the exact bug this page's
+   own build fixed on process.html).
+   ============================================================ */
+
+/* ============================================================
+   Section transition fades
+   Same eased-mask technique as the homepage: a short fade at the
+   top of a section, colored to match whatever precedes it, so a
+   dark/light cut doesn't read as a hard edge. Only added between
+   sections that actually change shade — two light sections next
+   to each other (signs/worn, contact/disclaimer) are close enough
+   in tone that a fade would add a seam rather than remove one.
+   ============================================================ */
+.hiw-paths::before,
+.hiw-lookup::before,
+.hiw-signs::before,
+.hiw-repair::before,
+.hiw-after::before,
+.hiw-claim::before,
+.hiw-estimates::before,
+.hiw-service-area::before,
+.hiw-contact::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(28px, 4vw, 48px);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.18) 60%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.18) 60%,
+    transparent 100%
+  );
+}
+
+.hiw-paths::before { background: var(--ink); }
+.hiw-lookup::before { background: #ffffff; }
+.hiw-signs::before { background: var(--ink); }
+.hiw-repair::before { background: var(--cloud); }
+.hiw-after::before { background: var(--ink); }
+.hiw-claim::before { background: #ffffff; }
+.hiw-estimates::before { background: var(--ink); }
+.hiw-service-area::before { background: var(--cloud); }
+.hiw-contact::before { background: var(--ink); }
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hiw-hero {
+  background: var(--ink);
+  color: var(--paper);
+  padding-top: clamp(7rem, 14vw, 9rem);
+  padding-bottom: clamp(4rem, 8vw, 6rem);
+}
+
+.hiw-hero h1 {
+  font-size: clamp(2.4rem, 5.5vw, 3.75rem);
+  max-width: 20ch;
+}
+
+.hiw-hero .lede {
+  color: #c7cad2;
+  max-width: 62ch;
+  margin-top: 1.1rem;
+}
+
+.hiw-hero .trust-row {
+  margin-top: 1.75rem;
+}
+
+.hiw-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* ============================================================
+   Two paths
+   ============================================================ */
+.hiw-paths {
+  background: #ffffff;
+  color: #000000;
+}
+
+.hiw-paths-head {
+  max-width: 40rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.hiw-paths-head .lede {
+  color: #4b5563;
+  margin-top: 0.75rem;
+}
+
+.hiw-path-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 720px) {
+  .hiw-path-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hiw-path-card {
+  display: block;
+  padding: clamp(1.75rem, 3vw, 2.5rem);
+  background: var(--cloud);
+  border: 1px solid rgba(75, 85, 99, 0.2);
+  border-radius: 6px;
+  text-decoration: none;
+  color: #000000;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hiw-path-card:hover,
+.hiw-path-card:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--signal);
+  box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.2);
+}
+
+.hiw-path-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.hiw-path-card p {
+  color: #4b5563;
+  margin-bottom: 1.25rem;
+}
+
+.hiw-path-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--signal);
+}
+
+.hiw-path-link span {
+  display: inline-block;
+  transition: transform 200ms ease-out;
+}
+
+.hiw-path-card:hover .hiw-path-link span,
+.hiw-path-card:focus-visible .hiw-path-link span {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   Storm history lookup
+   ============================================================ */
+.hiw-lookup {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hiw-lookup-inner {
+  max-width: 42rem;
+}
+
+.hiw-lookup-inner h2 {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+}
+
+.hiw-lookup-inner .lede {
+  color: #c7cad2;
+  margin-top: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+
+.hiw-lookup-note {
+  margin-top: var(--space-16);
+  font-size: 0.85rem;
+  color: #c7cad2;
+}
+
+.hiw-lookup-note a {
+  color: var(--signal);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   Signs (storm damage) — two cards, orange top border
+   ============================================================ */
+.hiw-signs {
+  background: #ffffff;
+  color: #000000;
+}
+
+.hiw-signs-head {
+  max-width: 40rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.hiw-signs-head .lede {
+  color: #4b5563;
+  margin-top: 0.75rem;
+}
+
+.hiw-sign-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 720px) {
+  .hiw-sign-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hiw-sign-card {
+  padding: clamp(1.75rem, 3vw, 2.25rem);
+  background: var(--cloud);
+  border-top: 3px solid #ff8200;
+  border-radius: 4px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hiw-sign-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.2);
+}
+
+.hiw-sign-card h3 {
+  font-size: 1.25rem;
+  margin: 0.9rem 0 1rem;
+}
+
+.hiw-sign-card ul {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.hiw-sign-card li {
+  position: relative;
+  padding-left: 1.1rem;
+  color: #000000;
+}
+
+.hiw-sign-card li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  background: #4b5563;
+  border-radius: 50%;
+}
+
+.hiw-sign-note {
+  font-size: 0.9rem;
+  color: #4b5563;
+  border-top: 1px solid rgba(75, 85, 99, 0.2);
+  padding-top: 1rem;
+  margin: 0;
+}
+
+/* ============================================================
+   Worn-out roof signs
+   ============================================================ */
+.hiw-worn {
+  background: var(--cloud);
+  color: #000000;
+}
+
+.hiw-worn-head {
+  max-width: 40rem;
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
+}
+
+.hiw-worn-head .lede {
+  color: #4b5563;
+  margin-top: 0.75rem;
+}
+
+.hiw-worn-list {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0 0 clamp(2rem, 4vw, 2.75rem);
+  padding: 0;
+  list-style: none;
+  max-width: 44rem;
+}
+
+.hiw-worn-list li {
+  position: relative;
+  padding-left: 1.4rem;
+  font-size: 1.05rem;
+}
+
+.hiw-worn-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 8px;
+  height: 8px;
+  background: #ff8200;
+  border-radius: 50%;
+}
+
+.hiw-worn-point {
+  max-width: 48rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 1.5rem clamp(1.5rem, 3vw, 2rem);
+  background: #ffffff;
+  border-left: 3px solid #ff8200;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   Repair or replace
+   ============================================================ */
+.hiw-repair {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hiw-repair-inner {
+  max-width: 42rem;
+}
+
+.hiw-repair-inner .lede {
+  color: #c7cad2;
+  margin-top: 0.9rem;
+}
+
+.hiw-repair-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.75rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hiw-repair-list li {
+  position: relative;
+  padding-left: 1.2rem;
+  color: var(--paper);
+}
+
+.hiw-repair-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  background: #ff8200;
+  border-radius: 50%;
+}
+
+.hiw-repair-note {
+  color: #c7cad2;
+  max-width: 46rem;
+}
+
+/* ============================================================
+   What to do after a storm
+   ============================================================ */
+.hiw-after {
+  background: #ffffff;
+  color: #000000;
+}
+
+.hiw-after-head {
+  max-width: 40rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.hiw-after-head .lede {
+  color: #4b5563;
+  margin-top: 0.75rem;
+}
+
+.hiw-after-list {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0 0 clamp(2rem, 4vw, 2.75rem);
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+  max-width: 46rem;
+}
+
+.hiw-after-list li {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: 1.25rem;
+  align-items: baseline;
+}
+
+/* Staggered reveal — each step lags the previous by 100ms so a list
+   about doing things "in order" actually arrives in order. */
+.hiw-after-list li:nth-child(1) { transition-delay: 0ms; }
+.hiw-after-list li:nth-child(2) { transition-delay: 100ms; }
+.hiw-after-list li:nth-child(3) { transition-delay: 200ms; }
+.hiw-after-list li:nth-child(4) { transition-delay: 300ms; }
+.hiw-after-list li:nth-child(5) { transition-delay: 400ms; }
+
+.hiw-after-num {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--signal);
+}
+
+.hiw-after-list p {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.hiw-after-note {
+  color: #4b5563;
+  font-size: 0.9rem;
+  max-width: 46rem;
+}
+
+/* ============================================================
+   What Apex does on a claim
+   ============================================================ */
+.hiw-claim {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hiw-claim-head {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.hiw-claim-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .hiw-claim-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1000px) {
+  .hiw-claim-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.hiw-claim-item {
+  padding: 1.5rem;
+  border: 1px solid var(--line-on-dark);
+  border-radius: 4px;
+}
+
+/* Same staggered reveal as .hiw-after-list — this is also a sequence. */
+.hiw-claim-item:nth-child(1) { transition-delay: 0ms; }
+.hiw-claim-item:nth-child(2) { transition-delay: 100ms; }
+.hiw-claim-item:nth-child(3) { transition-delay: 200ms; }
+.hiw-claim-item:nth-child(4) { transition-delay: 300ms; }
+
+.hiw-claim-num {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--signal);
+  margin-bottom: 0.75rem;
+}
+
+.hiw-claim-item p {
+  margin: 0;
+  color: var(--paper);
+}
+
+/* ============================================================
+   How estimates work
+   ============================================================ */
+.hiw-estimates {
+  background: var(--cloud);
+  color: #000000;
+}
+
+.hiw-estimates-inner {
+  max-width: 46rem;
+}
+
+.hiw-estimates-inner .lede {
+  color: #000000;
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+
+.hiw-estimates-inner p {
+  color: #4b5563;
+  margin-top: 1.1rem;
+}
+
+.hiw-estimates-inner .hiw-estimates-point {
+  margin-top: 1.5rem;
+  color: #000000;
+  font-weight: 600;
+  padding: 1.5rem clamp(1.5rem, 3vw, 2rem);
+  background: #ffffff;
+  border-left: 3px solid #ff8200;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   Service area
+   ============================================================ */
+.hiw-service-area {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hiw-service-area-head {
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.hiw-service-area-head .lede {
+  color: #c7cad2;
+  margin-top: 0.75rem;
+}
+
+.hiw-service-area-cities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.hiw-service-area-cities span {
+  font-size: 0.95rem;
+  color: var(--paper);
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--line-on-dark);
+  border-radius: 999px;
+}
+
+.hiw-service-area-note {
+  color: #c7cad2;
+}
+
+.hiw-service-area-note a {
+  color: var(--signal);
+}
+
+/* ============================================================
+   Contact
+   ============================================================ */
+.hiw-contact {
+  background: #ffffff;
+  color: #000000;
+}
+
+.hiw-contact-grid {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4rem);
+}
+
+@media (min-width: 900px) {
+  .hiw-contact-grid {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+}
+
+.hiw-contact-side .lede {
+  color: #4b5563;
+  margin-top: 1.1rem;
+  margin-bottom: 1.75rem;
+}
+
+.hiw-contact-phone-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+}
+
+.hiw-contact-phone {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  color: #000000;
+  text-decoration: none;
+}
+
+.hiw-contact-phone:hover,
+.hiw-contact-phone:focus-visible {
+  color: var(--signal);
+}
+
+.hiw-contact-meta {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.hiw-form-card {
+  background: var(--cloud);
+  border: 1px solid rgba(75, 85, 99, 0.2);
+  border-radius: 6px;
+  padding: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.hiw-form-row {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 560px) {
+  .hiw-form-row.two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hiw-field {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.hiw-field label {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.hiw-field input,
+.hiw-field textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: #000000;
+  background: #ffffff;
+  border: 1px solid rgba(75, 85, 99, 0.35);
+  border-radius: 4px;
+  padding: 0.8rem 0.9rem;
+}
+
+.hiw-field input::placeholder,
+.hiw-field textarea::placeholder {
+  color: #8a8f99;
+}
+
+.hiw-field input:focus,
+.hiw-field textarea:focus {
+  outline: none;
+  border-color: var(--signal);
+}
+
+.hiw-field textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.hiw-form-submit {
+  margin-top: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+@media (min-width: 480px) {
+  .hiw-form-submit {
+    width: auto;
+  }
+}
+
+.hiw-form-consent {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  color: #4b5563;
+}
+
+.hiw-form-consent a {
+  color: var(--signal);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   Insurance disclaimer
+   ============================================================ */
+.hiw-disclaimer {
+  background: var(--cloud);
+  padding-block: clamp(1.5rem, 3vw, 2rem);
+}
+
+.hiw-disclaimer p {
+  max-width: 60rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0;
+}

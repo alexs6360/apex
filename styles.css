@@ -292,6 +292,35 @@ section {
   box-shadow: 0 1px 0 var(--line-on-dark);
 }
 
+/* For pages that open on a light section instead of a dark hero
+   (process.html) — the transparent-until-scrolled nav above assumes a
+   dark backdrop to read against, which isn't there on this page at
+   any scroll position. Solid and dark-on-light from the start instead
+   of transitioning, since there's no dark hero here to transition
+   away from. */
+.nav--light {
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(75, 85, 99, 0.18);
+}
+
+.nav--light.is-scrolled {
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(75, 85, 99, 0.18);
+}
+
+.nav--light .nav-links a {
+  color: #000000;
+}
+
+.nav--light .nav-links a:hover,
+.nav--light .nav-links a:focus-visible {
+  color: #4b5563;
+}
+
+.nav--light .nav-links a.is-active {
+  color: var(--signal);
+}
+
 @media (min-width: 720px) {
   .nav-call {
     display: inline-flex;
@@ -332,6 +361,17 @@ section {
     height: 2px;
     background: var(--paper);
     transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+
+  /* Bars need to be dark against .nav--light's white bar, but the
+     dropdown they open is still the dark mobile menu panel — so they
+     flip back to light the moment the menu is open. */
+  .nav--light .nav-toggle-bar {
+    background: #000000;
+  }
+
+  .nav--light .nav-toggle[aria-expanded="true"] .nav-toggle-bar {
+    background: var(--paper);
   }
 
   .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
@@ -958,11 +998,14 @@ section {
    Process
    ============================================================ */
 
-/* Standalone page header — process.html only, not used on the homepage. */
+/* Standalone page header — process.html only, not used on the homepage.
+   No padding-bottom of its own: the 64px gap to the first step is
+   owned entirely by .process's padding-top below, rather than split
+   across both sides of the section boundary. */
 .process-intro {
   background: var(--paper);
   padding-top: clamp(7rem, 14vw, 9rem);
-  padding-bottom: clamp(3rem, 6vw, 4.5rem);
+  padding-bottom: 0;
 }
 
 .process-intro .lede {
@@ -974,27 +1017,56 @@ section {
   background: var(--cloud);
 }
 
+/* Two-class selector to outrank .section-pad's shared clamp() without
+   !important — this section's top spacing is now deliberately fixed,
+   not fluid, since .process-intro no longer contributes any of its own. */
+.process.section-pad {
+  padding-top: 64px;
+}
+
 .process-head {
   max-width: 34rem;
   margin-bottom: clamp(2.5rem, 5vw, 4rem);
 }
 
 .process-list {
+  position: relative;
   display: grid;
   gap: 0;
-  border-top: 1px solid var(--line-on-light);
+}
+
+/* Connector line reading the steps as one sequence rather than four
+   separate hairline-divided rows. Inset top/bottom to roughly the
+   vertical center of the first and last step numbers rather than the
+   full list height, so it visually connects number-to-number instead
+   of overshooting into the padding above/below them. */
+.process-list::before {
+  content: "";
+  position: absolute;
+  top: 2.75rem;
+  bottom: 2.75rem;
+  left: 1.75rem;
+  width: 2px;
+  background: rgba(75, 85, 99, 0.3);
 }
 
 .process-item {
+  position: relative;
   display: grid;
   grid-template-columns: 3.5rem 1fr;
   gap: 1.5rem;
   padding-block: 1.75rem;
-  border-bottom: 1px solid var(--line-on-light);
   opacity: 0;
   transform: translateY(14px);
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
+
+/* Staggered reveal — each step lags the previous by 100ms rather than
+   all four fading in together. */
+.process-item:nth-child(1) { transition-delay: 0ms; }
+.process-item:nth-child(2) { transition-delay: 100ms; }
+.process-item:nth-child(3) { transition-delay: 200ms; }
+.process-item:nth-child(4) { transition-delay: 300ms; }
 
 .process-item.is-visible {
   opacity: 1;
@@ -1002,9 +1074,13 @@ section {
 }
 
 .process-num {
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
   color: var(--signal);
+  text-align: center;
 }
 
 .process-item h3 {
@@ -1017,9 +1093,35 @@ section {
   max-width: 52ch;
 }
 
+/* The actual reason this section exists: how long each step takes. */
+.process-time {
+  margin-top: 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.process-cta {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  text-align: center;
+}
+
 @media (min-width: 700px) {
   .process-item {
-    grid-template-columns: 5rem 1fr;
+    grid-template-columns: 5.5rem 1fr;
+  }
+
+  .process-list::before {
+    left: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process-item {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 
@@ -1368,6 +1470,75 @@ section {
 }
 
 /* ============================================================
+   Process teaser
+   A three-second summary, not the full explanation — that now
+   lives at /how-it-works/. Sits between .contact and .footer
+   (both dark), so it's the light section alternation needs here
+   without touching anything before it.
+   ============================================================ */
+.process-teaser {
+  background: var(--cloud);
+}
+
+.process-teaser-head {
+  max-width: 34rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.process-teaser-head .lede {
+  margin-top: 0.5rem;
+}
+
+.process-teaser-row {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+@media (min-width: 720px) {
+  .process-teaser-row {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.process-teaser-step {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.process-teaser-num {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+  color: var(--signal);
+}
+
+.process-teaser-step p {
+  font-weight: 600;
+}
+
+.process-teaser-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--signal);
+  text-decoration: none;
+}
+
+.process-teaser-link span {
+  display: inline-block;
+  transition: transform 200ms ease-out;
+}
+
+.process-teaser-link:hover span,
+.process-teaser-link:focus-visible span {
+  transform: translateX(4px);
+}
+
+/* ============================================================
    Footer
    ============================================================ */
 .footer {
@@ -1710,11 +1881,11 @@ section {
    than a shadow cast across the section.
    ============================================================ */
 .services::before,
-.process::before,
 .why-us::before,
 .founder::before,
 .area::before,
-.contact::before {
+.contact::before,
+.process-teaser::before {
   content: "";
   position: absolute;
   top: 0;
@@ -1742,11 +1913,6 @@ section {
   background: #ffffff;
 }
 
-/* Now sits right after .contact, which is dark again. */
-.process::before {
-  background: var(--ink);
-}
-
 /* Sits right after .services (dark) — correctly alternating again now
    that why-us itself is light. */
 .why-us::before {
@@ -1765,6 +1931,11 @@ section {
 
 .contact::before {
   background: var(--cloud);
+}
+
+/* Sits right after .contact (dark). */
+.process-teaser::before {
+  background: var(--ink);
 }
 
 /* ============================================================
