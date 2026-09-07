@@ -134,7 +134,6 @@
      lookup and used for containment. */
   var addrBucket = null;
   var map = null;
-  var marker = null;
   var submitted = {};
   /* Set while prefillFromQuery()'s synthetic submit is in flight. A typed
      submission that fails to geocode is the reader's own mistake and gets
@@ -415,17 +414,52 @@
   /* The address is a point, not a parcel. A drawn rectangle invited the
      reading that the box is "your property" and that its edges mean
      something; they are grid bounds, an artefact of how the radar data is
-     binned. A soft glow says "here" without claiming an extent. */
-  function addressGlow() {
-    if (!current) return EMPTY;
-    return {
-      type: "FeatureCollection",
-      features: [{
-        type: "Feature",
-        properties: {},
-        geometry: { type: "Point", coordinates: [current.lon, current.lat] },
-      }],
-    };
+     binned. A sweeping radar marker says "here" — the thing the reader
+     actually came to a radar page to see — without claiming an extent.
+
+     A DOM marker rather than a GL circle layer: the sweep is a rotating
+     CSS animation, and GL paint properties have no equivalent. It sits in
+     its own fixed position on top of the map (mapboxgl.Marker repositions
+     it on pan/zoom automatically) rather than scaling to a constant ground
+     radius the way addr-glow used to — a minor trade for an effect this
+     kind of animation can't do any other way. */
+  var radarMarker = null;
+
+  function ensureRadarMarker() {
+    if (radarMarker) return radarMarker;
+    var el = document.createElement("div");
+    el.className = "sh-radar";
+    el.innerHTML =
+      '<div class="sh-radar-ring"></div>' +
+      '<div class="sh-radar-sweep"></div>' +
+      '<div class="sh-radar-dot"></div>';
+    radarMarker = new mapboxgl.Marker({ element: el, anchor: "center" });
+    return radarMarker;
+  }
+
+  /* Called every drawGeometry, same as addressGlow's setData used to be —
+     current.lon/lat do not change between one date and the next for the
+     same address, so re-setting the position each time is a no-op in
+     practice, not a real repaint. */
+  function positionRadarMarker() {
+    if (!map || !current) return;
+    var m = ensureRadarMarker();
+    m.setLngLat([current.lon, current.lat]);
+    if (!m.getElement().isConnected) m.addTo(map);
+  }
+
+  /* Visibility only — separate from positioning so it can follow the same
+     stagger/delay/duration timing setGeomOpacity already applies to the GL
+     layers, via a CSS transition-duration set here rather than fixed in
+     the stylesheet, since that duration varies (staggered reveal vs. an
+     instant reduced-motion swap vs. the quick fade-out between dates). */
+  function showRadarMarker(on, delay, duration) {
+    var m = ensureRadarMarker();
+    var el = m.getElement();
+    el.style.transitionDuration = (duration || 0) + "ms";
+    setTimeout(function () {
+      el.classList.toggle("is-visible", !!(on && current));
+    }, delay || 0);
   }
 
   function hailBands(dayCells) {
@@ -482,13 +516,6 @@
       hailLine: { width: 2, opacity: 1, lo: "#ffffff", hi: "#d19bff" },
       windFill: 0.13,
       windLine: { width: 1.8, opacity: 0.9 },
-      /* White on white: over a bright roof or a parking lot the pale glow
-         disappeared entirely. Charcoal reads as a shadow against every surface
-         in the imagery, and the core keeps a ring so it never sits on its own
-         value. */
-      glow: "#000000",
-      glowOpacity: 0.55,
-      coreStroke: "#000000",
     },
     dark: {
       label: "Map",
@@ -498,9 +525,6 @@
       hailLine: { width: 1, opacity: 0.7, lo: "#d4cbe2", hi: "#a53dff" },
       windFill: 0.18,
       windLine: { width: 1, opacity: 0.45 },
-      glow: "#e5e7eb",
-      glowOpacity: 0.5,
-      coreStroke: "#4b5563",
     },
   };
   var basemap = "satellite";
@@ -600,7 +624,6 @@
     map.addSource("hail-bands", { type: "geojson", data: EMPTY });
     map.addSource("wind-env", { type: "geojson", data: EMPTY });
     map.addSource("reports", { type: "geojson", data: EMPTY });
-    map.addSource("addr-glow", { type: "geojson", data: EMPTY });
 
     /* Wind first, so it is the backdrop the hail sits on. Gold rather than
        a bright yellow — bright yellow washed out against both the satellite
@@ -714,48 +737,6 @@
         "circle-stroke-color": "#ffffff",
       },
     });
-
-    /* On top of everything: a glow locating the address. The radius is
-       interpolated exponentially on base 2, which is exactly how web mercator
-       scales, so it holds a constant ~5km on the ground at every zoom instead
-       of swelling as you zoom in. */
-    map.addLayer({
-      id: "addr-glow",
-      type: "circle",
-      source: "addr-glow",
-      slot: "top",
-      paint: {
-        "circle-color": b.glow,
-        "circle-blur": 1,
-        /* Last in, once the bands have settled — it answers "and here is you",
-           which only means something after the shape exists. */
-        "circle-opacity": 0,
-        "circle-opacity-transition": { duration: GLOW_MS, delay: GLOW_DELAY },
-        "circle-emissive-strength": 1,
-        "circle-radius": [
-          "interpolate", ["exponential", 2], ["zoom"],
-          7, 4.9,
-          12, 157.8,
-        ],
-      },
-    });
-    map.addLayer({
-      id: "addr-core",
-      type: "circle",
-      source: "addr-glow",
-      slot: "top",
-      paint: {
-        "circle-color": "#ffffff",
-        "circle-radius": 3.5,
-        "circle-opacity": 0,
-        "circle-opacity-transition": { duration: GLOW_MS, delay: GLOW_DELAY },
-        "circle-stroke-opacity": 0,
-        "circle-stroke-opacity-transition": { duration: GLOW_MS, delay: GLOW_DELAY },
-        "circle-stroke-width": 1.5,
-        "circle-stroke-color": b.coreStroke,
-        "circle-emissive-strength": 1,
-      },
-    });
   }
 
   /* One chip, several layers: a hazard is a band plus its outline, or an
@@ -779,8 +760,9 @@
   function setBasemap(next) {
     if (!map || next === basemap || !BASEMAPS[next]) return;
     basemap = next;
-    /* setStyle keeps the camera. Sources, layers and the marker's DOM element
-       are handled by the style.load rebuild above. */
+    /* setStyle keeps the camera. Sources and layers are handled by the
+       style.load rebuild above; the radar marker's DOM element is not part
+       of the GL style at all, so it survives a setStyle untouched. */
     map.setStyle(BASEMAPS[next].style);
     if (styleChip) {
       styleChip.textContent = BASEMAPS[next === "satellite" ? "dark" : "satellite"].label;
@@ -911,12 +893,12 @@
          should fade straight in rather than fading out an empty map first. */
       cancelFade();
       drawnDate = null;
-      ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
+      ["hail-bands", "wind-env", "reports"].forEach(function (id) {
         var src = map.getSource(id);
         if (src) src.setData(EMPTY);
       });
+      showRadarMarker(false, 0);
     }
-    if (marker) { marker.remove(); marker = null; }
     if (mapNote) { mapNote.textContent = "Select a date to see that storm."; mapNote.hidden = false; }
   }
 
@@ -1139,10 +1121,11 @@
       if (map) {
         cancelFade();
         drawnDate = null;
-        ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
+        ["hail-bands", "wind-env", "reports"].forEach(function (id) {
           var src = map.getSource(id);
           if (src) src.setData(EMPTY);
         });
+        showRadarMarker(false, 0);
       }
       if (mapNote) {
         mapNote.textContent = "Select a date to see that storm.";
@@ -1196,17 +1179,7 @@
     set("reports", "circle-stroke-opacity", on ? 1 : 0, 0);
 
     var glowDur = stagger ? GLOW_MS : dur;
-    var glowT = { duration: glowDur, delay: stagger ? GLOW_DELAY : 0 };
-    ["addr-glow", "addr-core"].forEach(function (id) {
-      if (!map.getLayer(id)) return;
-      map.setPaintProperty(id, "circle-opacity-transition", glowT);
-      map.setPaintProperty(id, "circle-opacity",
-        on ? (id === "addr-glow" ? b.glowOpacity : 0.95) : 0);
-      if (id === "addr-core") {
-        map.setPaintProperty(id, "circle-stroke-opacity-transition", glowT);
-        map.setPaintProperty(id, "circle-stroke-opacity", on ? 1 : 0);
-      }
-    });
+    showRadarMarker(on, stagger ? GLOW_DELAY : 0, glowDur);
   }
 
   /* Drawing only — no camera. Called by selectDate, and again after a basemap
@@ -1247,7 +1220,7 @@
        date's panel. That exact failure shipped a map showing 2.0" cores on a
        day whose largest stone was 1.5" — the panel had updated and the
        drawing had not, and nothing on screen said so. */
-    ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
+    ["hail-bands", "wind-env", "reports"].forEach(function (id) {
       var src = map.getSource(id);
       if (src) src.setData(EMPTY);
     });
@@ -1259,8 +1232,7 @@
       var bandSrc = map.getSource("hail-bands");
       if (bandSrc) bandSrc.setData(hailBands(cells));
 
-      var glowSrc = map.getSource("addr-glow");
-      if (glowSrc) glowSrc.setData(addressGlow());
+      positionRadarMarker();
 
       var dayReports = reports.features.filter(function (f) {
         if (f.properties.date !== date) return false;
@@ -1355,8 +1327,6 @@
     var topDate = events.length ? events[0].date : "";
 
     if (map) {
-      if (marker) marker.remove();
-      marker = new mapboxgl.Marker({ color: "#9db9dc" }).setLngLat([lon, lat]).addTo(map);
       if (mapNote) mapNote.hidden = true;
       if (events.length) {
         selectDate(topDate);

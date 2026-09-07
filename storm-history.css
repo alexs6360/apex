@@ -116,6 +116,65 @@
   inset: 0;
 }
 
+/* Address marker — a sweeping radar line rather than a static glow, so the
+   page that answers "what did radar see here" opens with something that
+   reads as radar. Visibility (the .is-visible toggle and its transition-
+   duration) is driven from storm-history.js so it can follow the same
+   staggered reveal timing as the hail/wind layers; the spin itself is a
+   plain CSS animation, since mapboxgl.Marker is a DOM element and Mapbox's
+   GL paint properties have no rotation equivalent. */
+.sh-radar {
+  width: 72px;
+  height: 72px;
+  opacity: 0;
+  transition-property: opacity;
+  pointer-events: none;
+}
+
+.sh-radar.is-visible {
+  opacity: 1;
+}
+
+.sh-radar-ring,
+.sh-radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.sh-radar-ring {
+  border: 1px solid rgba(255, 130, 0, 0.35);
+}
+
+.sh-radar-sweep {
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 130, 0, 0) 0deg,
+    rgba(255, 130, 0, 0.7) 18deg,
+    rgba(255, 130, 0, 0) 60deg
+  );
+  animation: sh-radar-spin 2.4s linear infinite;
+}
+
+.sh-radar-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--signal);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.55);
+}
+
+@keyframes sh-radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .sh-chips {
   position: absolute;
   top: 12px;
