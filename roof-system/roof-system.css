@@ -1,0 +1,357 @@
+/* ============================================================
+   Roof System — page-specific styles
+   Loaded after /styles.css. Reuses shared tokens, .wrap,
+   .section-pad, .reveal, and .btn/.btn-sans; everything else is
+   scoped to this page's own rs-* classes.
+   ============================================================ */
+
+/* ============================================================
+   Section boundaries
+   Adjacent sections in the same family (dark→dark, light→light)
+   use a slightly different exact background — see each section's
+   own rule — plus a thin centered orange divider here, since the
+   value shift alone is subtle. Adjacent sections in different
+   families (dark→light) skip the divider; the value jump is
+   already the boundary, softened by the eased-mask fade below.
+   ============================================================ */
+.rs-layers::before,
+.rs-cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 130, 0, 0.45) 25%,
+    rgba(255, 130, 0, 0.45) 75%,
+    transparent 100%
+  );
+}
+
+.rs-intro::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(28px, 4vw, 48px);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.18) 60%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.18) 60%,
+    transparent 100%
+  );
+  background: #232529;
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.rs-hero {
+  background: #1c1c1c;
+  color: var(--paper);
+  padding-block: clamp(96px, 9vw, 120px);
+}
+
+.rs-hero h1 {
+  font-size: clamp(2.4rem, 5.5vw, 3.75rem);
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.rs-hero .lede {
+  color: #c7cad2;
+  max-width: 62ch;
+  margin-top: 24px;
+}
+
+.rs-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 40px;
+}
+
+/* ============================================================
+   Intro
+   ============================================================ */
+.rs-intro {
+  background: #ffffff;
+  color: #000000;
+  padding-block: clamp(96px, 9vw, 120px);
+}
+
+.rs-intro h2 {
+  max-width: 30ch;
+}
+
+.rs-intro p {
+  color: #4b5563;
+  max-width: 62ch;
+  margin-top: 1.1rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+}
+
+/* ============================================================
+   Layers
+   ============================================================ */
+.rs-layers {
+  background: #232529;
+  color: var(--paper);
+  padding-block: clamp(96px, 9vw, 120px);
+}
+
+.rs-layers-head {
+  max-width: 34rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.rs-layers-head h2 {
+  text-wrap: balance;
+}
+
+.rs-layers-head .lede {
+  color: #c7cad2;
+  margin-top: 0.75rem;
+}
+
+/* Wider than the site's default 1180px container, just for this
+   section — the diagram needs the room and the accordion reads
+   fine wider too. Same specificity as .wrap's own max-width; wins
+   on load order since this file loads after styles.css. */
+.rs-layers-wrap {
+  max-width: 1360px;
+}
+
+/* Diagram + accordion, side by side on desktop */
+.rs-diagram-grid {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 860px) {
+  .rs-diagram-grid {
+    grid-template-columns: 1.35fr 1fr;
+    gap: 2.5rem;
+  }
+}
+
+/* Sticky only once the layout is actually side-by-side — in the
+   stacked single-column layout below 860px this pinned the diagram
+   over the first couple of accordion items as they scrolled past. */
+@media (min-width: 860px) {
+  .rs-diagram {
+    position: sticky;
+    top: 96px;
+  }
+}
+
+.rs-diagram-media {
+  position: relative;
+}
+
+.rs-diagram-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.rs-diagram-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rs-diagram-caption {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--mist);
+  text-align: center;
+}
+
+.rs-marker {
+  cursor: pointer;
+  outline: none;
+}
+
+.rs-marker-leader {
+  stroke: #8a8f99;
+  stroke-width: 1.5;
+  transition: stroke 0.2s ease;
+}
+
+.rs-marker-dot {
+  fill: #ffffff;
+  stroke: #1c1e24;
+  stroke-width: 3;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.rs-marker-text {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 26px;
+  fill: #1c1e24;
+  transition: fill 0.2s ease;
+}
+
+.rs-marker:hover .rs-marker-dot,
+.rs-marker:focus-visible .rs-marker-dot,
+.rs-marker.is-item-hovered .rs-marker-dot {
+  stroke: var(--signal);
+}
+
+.rs-marker.is-active .rs-marker-leader {
+  stroke: var(--signal);
+}
+
+.rs-marker.is-active .rs-marker-dot {
+  fill: var(--signal);
+  stroke: var(--signal);
+}
+
+.rs-marker.is-active .rs-marker-text {
+  fill: #000000;
+}
+
+/* Accordion */
+.rs-accordion {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.rs-accordion-item {
+  background: #2a2d33;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: background-color 200ms ease-out, border-color 200ms ease-out,
+    transform 200ms ease-out;
+}
+
+.rs-accordion-item:not(.is-open):hover,
+.rs-accordion-item:not(.is-open).is-marker-hovered {
+  background: #33373e;
+  transform: translateY(-2px);
+}
+
+.rs-accordion-item.is-open {
+  background: #2a2d33;
+  border: 2px solid var(--signal);
+}
+
+.rs-accordion-trigger {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rs-accordion-trigger:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.rs-accordion-num {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.85rem;
+  transition: background-color 200ms ease-out, color 200ms ease-out;
+}
+
+.rs-accordion-item.is-open .rs-accordion-num {
+  background: var(--signal);
+  color: #000000;
+}
+
+.rs-accordion-title {
+  flex: 1;
+}
+
+.rs-accordion-chevron {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(255, 255, 255, 0.6);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
+  transform: rotate(45deg);
+  transition: transform 200ms ease-out;
+  margin-top: -4px;
+}
+
+.rs-accordion-item.is-open .rs-accordion-chevron {
+  transform: rotate(-135deg);
+  margin-top: 4px;
+}
+
+.rs-accordion-panel {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.rs-accordion-eyebrow {
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.rs-accordion-panel p:last-child {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ============================================================
+   Closing CTA
+   ============================================================ */
+.rs-cta {
+  background: #f7f7f8;
+  color: #000000;
+  padding-block: clamp(96px, 9vw, 120px);
+}
+
+.rs-cta-inner {
+  max-width: 40rem;
+}
+
+.rs-cta-inner .lede {
+  color: #4b5563;
+  margin-top: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+
+.rs-cta-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
