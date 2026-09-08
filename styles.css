@@ -507,16 +507,6 @@ section {
   animation: heroVideoZoom 20s ease-in-out infinite alternate;
 }
 
-/* Below 768px and under reduced motion, the poster frame stands in for the
-   video entirely rather than just covering its load time — cheaper on a
-   phone connection and no auto-playing motion for anyone who's asked not
-   to see it. */
-@media (max-width: 767px) {
-  .hero-video {
-    display: none;
-  }
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -1656,6 +1646,46 @@ section {
 .footer-bottom a:hover,
 .footer-bottom a:focus-visible {
   color: var(--paper);
+}
+
+/* Stacked single-column footer ran four full-height blocks back to back
+   with the same 2.5rem gap desktop uses to separate side-by-side columns —
+   on a phone that's a lot of scrolling before the copyright line. Tighter
+   gaps/padding throughout, plus wrapping the link/city lists into rows
+   instead of tall single-item-per-line stacks, which is where most of the
+   height was actually going. Placed after the base footer rules (rather
+   than right below .footer-grid's own min-width:700px block) so it wins
+   the cascade against them — same selectors, and a media-wrapped rule
+   doesn't automatically outrank a later unconditional one of equal
+   specificity. */
+@media (max-width: 699px) {
+  .footer {
+    padding-block: 2.5rem 1.5rem;
+  }
+
+  .footer-grid {
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .footer-brand {
+    margin-bottom: 0.6rem;
+  }
+
+  .footer-col-label {
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-col ul {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+    column-gap: 1.1rem;
+  }
+
+  .footer-bottom {
+    padding-top: 1.1rem;
+  }
 }
 
 .visually-hidden {
