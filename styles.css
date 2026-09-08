@@ -534,25 +534,21 @@ section {
   z-index: 1;
 }
 
-/* Bottom-left corner watermark, mostly off-canvas — bled off both the left
-   and bottom edges (clipped by .hero's own overflow:hidden) so only a
-   ~110x90px sliver of the mark's upper-right corner shows. --mark-h is
-   sized to roughly 55-65% of a typical hero height (58vh, clamped) and
-   everything else derives from it via calc() so the visible slice stays a
-   constant size regardless of viewport: box top edge always lands at
-   "hero bottom minus 90px", well clear of the content column's lowest
-   point (the scroll cue, ~620-690px from the top through 1024-1440px)
-   with margin to spare even as text rewraps at narrower widths. Purely a
-   corner accent now, not a vertically-centered background element, so the
-   old scroll-parallax hookup (--parallax) is dropped — it would have
-   eaten most of that clearance margin on scroll. */
+/* Fully-contained lower-left watermark — no bleed off any edge. Sized to
+   the actual free space in that corner: at 1440/1280 (identical column
+   width once the .wrap hits its 1180px container cap) the gap between
+   the trust row's bottom and the hero's own bottom edge measures out to
+   ~245px; 1024 has slightly more (~262px, shorter headline outweighs the
+   taller lede there), so 1440/1280 is the binding case. bottom:70px
+   (mark height 160px) uses 230px of that 245px, leaving ~15px of margin
+   under the trust row — as far up as this size can go without resizing. */
 .hero-mark {
-  --mark-h: clamp(380px, 58vh, 520px);
+  --mark-h: 160px;
   position: absolute;
   height: var(--mark-h);
   width: calc(var(--mark-h) * 232 / 200);
-  left: calc(-1 * (var(--mark-h) * 232 / 200) + 110px);
-  bottom: calc(-1 * var(--mark-h) + 90px);
+  left: 60px;
+  bottom: 70px;
   pointer-events: none;
   z-index: 0;
 }
@@ -590,15 +586,15 @@ section {
 }
 
 @keyframes heroMarkInLeft {
-  to { opacity: 0.03; transform: translateX(0); }
+  to { opacity: 0.07; transform: translateX(0); }
 }
 
 @keyframes heroMarkInRight {
-  to { opacity: 0.03; transform: translateX(0); }
+  to { opacity: 0.07; transform: translateX(0); }
 }
 
 @keyframes heroMarkPop {
-  to { opacity: 0.03; transform: scale(1); }
+  to { opacity: 0.07; transform: scale(1); }
 }
 
 @keyframes heroUp {
@@ -626,59 +622,6 @@ section {
   color: var(--signal);
 }
 
-.scroll-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
-  color: var(--mist);
-  text-decoration: none;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 0.85rem;
-  transition: color 0.2s ease;
-}
-
-.scroll-cue:hover,
-.scroll-cue:focus-visible {
-  color: var(--paper);
-}
-
-.scroll-cue-arrow {
-  position: relative;
-  width: 1px;
-  height: 26px;
-  background: var(--line-on-dark);
-  overflow: hidden;
-}
-
-.scroll-cue-arrow::after {
-  content: "";
-  position: absolute;
-  left: -2px;
-  top: -30%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--signal);
-  animation: scrollCueDrop 1.8s ease-in-out infinite;
-}
-
-@keyframes scrollCueDrop {
-  0% { top: -10%; opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scroll-cue-arrow::after {
-    animation: none;
-    top: 40%;
-    opacity: 1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .hero-in {
     animation: none;
@@ -688,7 +631,7 @@ section {
   .hero-mark-p2,
   .hero-mark-p3 {
     animation: none;
-    opacity: 0.03;
+    opacity: 0.07;
     transform: none;
   }
 }
