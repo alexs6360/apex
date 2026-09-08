@@ -534,20 +534,32 @@ section {
   z-index: 1;
 }
 
+/* Bottom-left corner watermark, mostly off-canvas — bled off both the left
+   and bottom edges (clipped by .hero's own overflow:hidden) so only a
+   ~110x90px sliver of the mark's upper-right corner shows. --mark-h is
+   sized to roughly 55-65% of a typical hero height (58vh, clamped) and
+   everything else derives from it via calc() so the visible slice stays a
+   constant size regardless of viewport: box top edge always lands at
+   "hero bottom minus 90px", well clear of the content column's lowest
+   point (the scroll cue, ~620-690px from the top through 1024-1440px)
+   with margin to spare even as text rewraps at narrower widths. Purely a
+   corner accent now, not a vertically-centered background element, so the
+   old scroll-parallax hookup (--parallax) is dropped — it would have
+   eaten most of that clearance margin on scroll. */
 .hero-mark {
+  --mark-h: clamp(380px, 58vh, 520px);
   position: absolute;
-  right: clamp(-4rem, -2vw, 1rem);
-  top: 50%;
-  transform: translateY(calc(-50% + var(--parallax, 0px)));
-  width: clamp(16rem, 34vw, 30rem);
+  height: var(--mark-h);
+  width: calc(var(--mark-h) * 232 / 200);
+  left: calc(-1 * (var(--mark-h) * 232 / 200) + 110px);
+  bottom: calc(-1 * var(--mark-h) + 90px);
   pointer-events: none;
   z-index: 0;
-  overflow: visible;
 }
 
-@media (min-width: 960px) {
+@media (max-width: 959px) {
   .hero-mark {
-    right: clamp(20rem, 32vw, 34rem);
+    display: none;
   }
 }
 
@@ -578,15 +590,15 @@ section {
 }
 
 @keyframes heroMarkInLeft {
-  to { opacity: 0.05; transform: translateX(0); }
+  to { opacity: 0.03; transform: translateX(0); }
 }
 
 @keyframes heroMarkInRight {
-  to { opacity: 0.05; transform: translateX(0); }
+  to { opacity: 0.03; transform: translateX(0); }
 }
 
 @keyframes heroMarkPop {
-  to { opacity: 0.05; transform: scale(1); }
+  to { opacity: 0.03; transform: scale(1); }
 }
 
 @keyframes heroUp {
@@ -676,7 +688,7 @@ section {
   .hero-mark-p2,
   .hero-mark-p3 {
     animation: none;
-    opacity: 0.05;
+    opacity: 0.03;
     transform: none;
   }
 }

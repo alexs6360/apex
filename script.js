@@ -36,16 +36,14 @@
     heroVideo.removeAttribute("autoplay");
   }
 
-  var heroMark = document.querySelector(".hero-mark");
   var heroVideoWrap = document.querySelector(".hero-video-wrap");
-  if (!reduceMotion && heroMark) {
+  if (!reduceMotion && heroVideoWrap) {
     var ticking = false;
     var onHeroScroll = function () {
       if (!ticking) {
         window.requestAnimationFrame(function () {
           var scrollY = window.scrollY;
-          heroMark.style.setProperty("--parallax", Math.min(scrollY * 0.16, 70) + "px");
-          if (heroVideoWrap) heroVideoWrap.style.setProperty("--parallax-video", Math.min(scrollY * 0.05, 25) + "px");
+          heroVideoWrap.style.setProperty("--parallax-video", Math.min(scrollY * 0.05, 25) + "px");
           ticking = false;
         });
         ticking = true;
