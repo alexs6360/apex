@@ -1355,8 +1355,13 @@ section {
    Contact / estimate
    ============================================================ */
 .contact {
-  /* Flipped dark — restoring alternation now that area is light. */
-  background: var(--ink);
+  /* Flipped dark to alternate against .area (light) above. Solid black
+     rather than var(--ink) — with the process-teaser section removed,
+     .footer (var(--ink)) now follows directly, and this needs to read as
+     a distinct section rather than blending into it. Same technique as
+     .services/.founder just above: two adjacent dark sections told apart
+     by shade rather than by a light section between them. */
+  background: #000000;
   color: var(--paper);
 }
 
@@ -1491,75 +1496,6 @@ section {
   margin-top: 1rem;
   font-size: 0.85rem;
   color: var(--mist);
-}
-
-/* ============================================================
-   Process teaser
-   A three-second summary, not the full explanation — that now
-   lives at /how-it-works/. Sits between .contact and .footer
-   (both dark), so it's the light section alternation needs here
-   without touching anything before it.
-   ============================================================ */
-.process-teaser {
-  background: var(--cloud);
-}
-
-.process-teaser-head {
-  max-width: 34rem;
-  margin-bottom: clamp(2rem, 4vw, 3rem);
-}
-
-.process-teaser-head .lede {
-  margin-top: 0.5rem;
-}
-
-.process-teaser-row {
-  display: grid;
-  gap: 2rem;
-  margin-bottom: clamp(2rem, 4vw, 3rem);
-}
-
-@media (min-width: 720px) {
-  .process-teaser-row {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-  }
-}
-
-.process-teaser-step {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.process-teaser-num {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: clamp(1.5rem, 2.5vw, 1.85rem);
-  color: var(--signal);
-}
-
-.process-teaser-step p {
-  font-weight: 600;
-}
-
-.process-teaser-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: var(--font-body);
-  font-weight: 600;
-  color: var(--signal);
-  text-decoration: none;
-}
-
-.process-teaser-link span {
-  display: inline-block;
-  transition: transform 200ms ease-out;
-}
-
-.process-teaser-link:hover span,
-.process-teaser-link:focus-visible span {
-  transform: translateX(4px);
 }
 
 /* ============================================================
@@ -1950,8 +1886,7 @@ section {
 .why-us::before,
 .founder::before,
 .area::before,
-.contact::before,
-.process-teaser::before {
+.contact::before {
   content: "";
   position: absolute;
   top: 0;
@@ -1995,11 +1930,6 @@ section {
 
 .contact::before {
   background: var(--cloud);
-}
-
-/* Sits right after .contact (dark). */
-.process-teaser::before {
-  background: var(--ink);
 }
 
 /* ============================================================
