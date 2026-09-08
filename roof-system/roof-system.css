@@ -66,13 +66,10 @@
   background: #1c1c1c;
   color: var(--paper);
   /* Top padding must clear the fixed nav (~111px unscrolled) with room to
-     spare at every viewport width — the old padding-block clamp bottomed
-     out at 96px, letting the heading start above the nav's own height on
-     narrow viewports. Bottom padding is intentionally short: the real
-     nine-layer illustration is the point of this page and should be the
-     first thing visible after the fold, not the abstract hero. */
-  padding-top: clamp(140px, 14vw, 168px);
-  padding-bottom: clamp(48px, 5vw, 64px);
+     spare at every viewport width — 140px is the effective floor for that
+     reason. 80px is the floor for bottom padding, just for breathing room. */
+  padding-top: clamp(140px, 12vw, 148px);
+  padding-bottom: clamp(80px, 8vw, 96px);
 }
 
 /* Background depth: a faint grid (same repeating-linear-gradient technique
@@ -123,14 +120,16 @@
 }
 
 .rs-hero h1 {
-  font-size: clamp(2.4rem, 5.5vw, 3.75rem);
+  font-size: clamp(2.1rem, 4.8vw, 3.25rem);
   text-wrap: balance;
 }
 
 .rs-hero .lede {
   color: #c7cad2;
+  font-size: 18px;
+  line-height: 1.7;
   max-width: 56ch;
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .rs-hero-ctas {
@@ -138,7 +137,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
-  margin-top: 40px;
+  margin-top: 48px;
 }
 
 .rs-hero-inner {
