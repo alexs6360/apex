@@ -198,6 +198,14 @@ section {
   transform: translateY(-1px);
 }
 
+/* Tactile press feedback — every button on the site gets this for free
+   via the shared class, rather than each CTA needing its own :active
+   rule. Settles back down faster than the hover lift transitions in. */
+.btn:active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.1s;
+}
+
 .btn-solid {
   background: var(--signal);
   color: #000000;
@@ -315,22 +323,43 @@ section {
 }
 
 .nav-links a {
+  position: relative;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.9);
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  transition: color 0.2s ease;
+}
+
+/* A sweeping bar instead of an instant text-decoration underline —
+   grows from the left on hover/focus rather than just appearing. */
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 2px;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 
 .nav-links a:hover,
 .nav-links a:focus-visible {
   color: var(--paper);
-  text-decoration: underline;
-  text-decoration-color: var(--signal);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+}
+
+.nav-links a:hover::after,
+.nav-links a:focus-visible::after {
+  transform: scaleX(1);
 }
 
 .nav-links a.is-active {
   color: var(--signal);
+}
+
+.nav-links a.is-active::after {
+  transform: scaleX(1);
 }
 
 .nav-call {
@@ -479,9 +508,41 @@ section {
     text-decoration: none;
   }
 
+  /* Links step in one after another instead of the whole menu arriving
+     as one flat block — same staggered-reveal idea used everywhere else
+     on the site, just triggered by .is-open instead of scroll. */
+  .mobile-menu-links li {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .mobile-menu.is-open .mobile-menu-links li {
+    opacity: 1;
+    transform: none;
+  }
+
+  .mobile-menu-links li:nth-child(1) { transition-delay: 60ms; }
+  .mobile-menu-links li:nth-child(2) { transition-delay: 100ms; }
+  .mobile-menu-links li:nth-child(3) { transition-delay: 140ms; }
+  .mobile-menu-links li:nth-child(4) { transition-delay: 180ms; }
+  .mobile-menu-links li:nth-child(5) { transition-delay: 220ms; }
+  .mobile-menu-links li:nth-child(6) { transition-delay: 260ms; }
+  .mobile-menu-links li:nth-child(7) { transition-delay: 300ms; }
+
   .mobile-menu-call {
     margin: 0 var(--gutter);
     justify-content: center;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s ease,
+      border-color 0.2s ease, color 0.2s ease;
+    transition-delay: 340ms;
+  }
+
+  .mobile-menu.is-open .mobile-menu-call {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -983,6 +1044,25 @@ section {
 .service-tile-icon {
   margin-bottom: 0.25rem;
   flex: none;
+}
+
+/* Icons draw themselves in rather than just appearing — each path/rect
+   carries pathLength="1" in the markup so dasharray/dashoffset can be
+   set to a flat 1 regardless of the shape's actual geometry. Delayed
+   past the card's own fade/rise (that stagger is already handled per
+   nth-child on .service-tile) so the card settles first, then the icon
+   traces itself. */
+.service-tile-icon path,
+.service-tile-icon rect {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.7s ease;
+  transition-delay: 250ms;
+}
+
+.service-tile.is-visible .service-tile-icon path,
+.service-tile.is-visible .service-tile-icon rect {
+  stroke-dashoffset: 0;
 }
 
 .service-tile h3 {
@@ -1541,6 +1621,25 @@ section {
 .contact-extra .trust-row li:not(:first-child)::before {
   background: rgba(75, 85, 99, 0.3);
 }
+
+/* Individual items cascade in rather than the row arriving as one flat
+   block — delayed to land near the end of .contact-side's own 0.7s
+   reveal, so it reads as one last little beat rather than competing
+   with the section's main entrance. */
+.contact-extra .trust-row li {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.contact-side.is-visible .contact-extra .trust-row li {
+  opacity: 1;
+  transform: none;
+}
+
+.contact-extra .trust-row li:nth-child(1) { transition-delay: 500ms; }
+.contact-extra .trust-row li:nth-child(2) { transition-delay: 560ms; }
+.contact-extra .trust-row li:nth-child(3) { transition-delay: 620ms; }
 
 /* White card on the section's #f7f7f8 tint (the inverse of the previous
    #f7f7f8-card-on-white), a shadow instead of a hairline border, and a
