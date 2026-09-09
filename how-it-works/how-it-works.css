@@ -63,13 +63,54 @@
 /* ============================================================
    Hero
    ============================================================ */
+/* Was flat text on solid black with nothing behind it — grid + Apex
+   mark watermark, same treatment as the Roof System hero, so this page
+   doesn't read as visually flatter than the rest of the site. */
 .hiw-hero {
+  position: relative;
+  overflow: hidden;
   /* Standardized to #000000 (background-alternation audit) — no video
      here to justify the ink fallback the homepage hero keeps. */
   background: #000000;
   color: var(--paper);
   padding-top: clamp(7rem, 14vw, 9rem);
   padding-bottom: clamp(4rem, 8vw, 6rem);
+}
+
+.hiw-hero-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hiw-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0px, rgba(255, 255, 255, 0.07) 1px, transparent 1px, transparent 80px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0px, rgba(255, 255, 255, 0.07) 1px, transparent 1px, transparent 80px);
+  -webkit-mask-image: linear-gradient(to bottom, #000000 0%, #000000 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000000 0%, #000000 55%, transparent 100%);
+}
+
+.hiw-hero-mark {
+  position: absolute;
+  right: -6%;
+  bottom: -14%;
+  height: 82%;
+  width: auto;
+  opacity: 0.07;
+}
+
+.hiw-hero-mark path {
+  fill: #ffffff;
+}
+
+.hiw-hero-inner {
+  position: relative;
+  z-index: 1;
 }
 
 .hiw-hero h1 {
@@ -182,8 +223,15 @@
 /* ============================================================
    Storm history lookup
    ============================================================ */
+/* Faint grid — same texture technique as .hiw-hero and the homepage's
+   .services, sized down since this section is shorter. Flat solid color
+   read as plain next to the sections around it that have cards/forms
+   giving them their own visual structure. */
 .hiw-lookup {
-  background: #000000;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    #000000;
   color: var(--paper);
 }
 
@@ -252,6 +300,23 @@
 .hiw-sign-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.2);
+}
+
+/* Icons draw themselves in rather than just appearing — same technique
+   as the homepage service tiles: pathLength="1" on every shape in the
+   markup normalizes dasharray/dashoffset to a flat 1 regardless of the
+   shape's actual geometry. Delayed past the card's own fade/rise. */
+.hiw-sign-icon circle,
+.hiw-sign-icon path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.7s ease;
+  transition-delay: 250ms;
+}
+
+.hiw-sign-card.is-visible .hiw-sign-icon circle,
+.hiw-sign-card.is-visible .hiw-sign-icon path {
+  stroke-dashoffset: 0;
 }
 
 .hiw-sign-card h3 {
@@ -355,8 +420,27 @@
    Repair or replace
    ============================================================ */
 .hiw-repair {
-  background: #000000;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    #000000;
   color: var(--paper);
+}
+
+/* Heading/list on the left, the note as its own callout on the right —
+   this used to stack the note below the list as one long flowing
+   block, plain text. */
+.hiw-repair-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 780px) {
+  .hiw-repair-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: start;
+    gap: 3rem;
+  }
 }
 
 .hiw-repair-inner {
@@ -393,9 +477,19 @@
   border-radius: 50%;
 }
 
+/* Styled as its own callout card, matching the .hiw-worn-point /
+   .hiw-estimates-point pattern elsewhere on this page — dark-section
+   version of the same idea (#1c1c1c card, not white, since this
+   section is black rather than light). */
 .hiw-repair-note {
+  align-self: start;
   color: #c7cad2;
-  max-width: 46rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 1.5rem clamp(1.5rem, 3vw, 2rem);
+  background: #1c1c1c;
+  border-left: 3px solid #ff8200;
+  border-radius: 2px;
 }
 
 /* ============================================================
@@ -524,9 +618,29 @@
 /* ============================================================
    How estimates work
    ============================================================ */
+/* Same faint-grid treatment as the dark sections, just dark-on-white —
+   matches the homepage's .storm-check technique for a light section. */
 .hiw-estimates {
-  background: #ffffff;
+  background:
+    repeating-linear-gradient(0deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
+    #ffffff;
   color: #000000;
+}
+
+/* Copy on the left, the pull-quote callout on the right — this used to
+   stack the callout below the paragraph as one long flowing block. */
+.hiw-estimates-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 780px) {
+  .hiw-estimates-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: start;
+    gap: 3rem;
+  }
 }
 
 .hiw-estimates-inner {
@@ -544,14 +658,14 @@
   margin-top: 1.1rem;
 }
 
-.hiw-estimates-inner .hiw-estimates-point {
-  margin-top: 1.5rem;
+.hiw-estimates-point {
+  align-self: start;
   color: #000000;
   font-weight: 600;
   padding: 1.5rem clamp(1.5rem, 3vw, 2rem);
-  /* Section is now #ffffff itself (was var(--cloud)) — the card needs
-     the light variant instead of plain white to still read as a card
-     rather than disappearing into the section behind it. */
+  /* Section is #ffffff itself — the card needs the light variant
+     instead of plain white to still read as a card rather than
+     disappearing into the section behind it. */
   background: #f7f7f8;
   border-left: 3px solid #ff8200;
   border-radius: 2px;
@@ -561,8 +675,17 @@
    Service area
    ============================================================ */
 .hiw-service-area {
-  background: #000000;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    #000000;
   color: var(--paper);
+  padding-top: clamp(4rem, 9vw, 7.5rem);
+  /* Fixed, not the shared .section-pad clamp — that left ~120px of dead
+     air below the note line, on top of it already being hard to tell
+     the pills and the line below them apart from the section's own
+     padding. */
+  padding-bottom: 96px;
 }
 
 .hiw-service-area-head {
@@ -581,20 +704,43 @@
   margin-bottom: 1.75rem;
 }
 
+/* Outline, not filled — fourteen solid-orange pills would all read as
+   primary buttons. Orange border + transparent fill by default, fills
+   solid only on hover, same as the homepage's town pills. */
 .hiw-service-area-cities span {
+  display: inline-block;
   font-size: 0.95rem;
-  color: var(--paper);
+  color: #ffffff;
   padding: 0.5rem 0.9rem;
-  border: 1px solid var(--line-on-dark);
+  border: 1px solid #ff8200;
+  background: transparent;
   border-radius: 999px;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.hiw-service-area-cities span:hover {
+  background: #ff8200;
+  color: #000000;
+  transform: translateY(-2px);
 }
 
 .hiw-service-area-note {
   color: #c7cad2;
 }
 
+/* Plain text before — the highest-intent word in the sentence needs to
+   read as a tappable link. White text with an orange underline; the
+   text itself fills solid orange on hover. */
 .hiw-service-area-note a {
-  color: var(--signal);
+  color: #ffffff;
+  text-decoration: underline;
+  text-decoration-color: #ff8200;
+  transition: color 0.2s ease;
+}
+
+.hiw-service-area-note a:hover,
+.hiw-service-area-note a:focus-visible {
+  color: #ff8200;
 }
 
 /* ============================================================
