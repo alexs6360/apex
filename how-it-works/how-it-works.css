@@ -50,21 +50,23 @@
   );
 }
 
-.hiw-paths::before { background: var(--ink); }
+.hiw-paths::before { background: #000000; }
 .hiw-lookup::before { background: #ffffff; }
-.hiw-signs::before { background: var(--ink); }
-.hiw-repair::before { background: var(--cloud); }
-.hiw-after::before { background: var(--ink); }
+.hiw-signs::before { background: #000000; }
+.hiw-repair::before { background: #f7f7f8; }
+.hiw-after::before { background: #000000; }
 .hiw-claim::before { background: #ffffff; }
-.hiw-estimates::before { background: var(--ink); }
-.hiw-service-area::before { background: var(--cloud); }
-.hiw-contact::before { background: var(--ink); }
+.hiw-estimates::before { background: #000000; }
+.hiw-service-area::before { background: #ffffff; }
+.hiw-contact::before { background: #000000; }
 
 /* ============================================================
    Hero
    ============================================================ */
 .hiw-hero {
-  background: var(--ink);
+  /* Standardized to #000000 (background-alternation audit) — no video
+     here to justify the ink fallback the homepage hero keeps. */
+  background: #000000;
   color: var(--paper);
   padding-top: clamp(7rem, 14vw, 9rem);
   padding-bottom: clamp(4rem, 8vw, 6rem);
@@ -149,13 +151,22 @@
   margin-bottom: 1.25rem;
 }
 
+/* Orange text measures ~2.5:1 on .hiw-paths' light background — fails.
+   Black text with an orange underline instead. */
 .hiw-path-link {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   font-family: var(--font-body);
   font-weight: 600;
-  color: var(--signal);
+  color: #000000;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+}
+
+.hiw-path-card:hover .hiw-path-link,
+.hiw-path-card:focus-visible .hiw-path-link {
+  text-decoration-color: var(--signal-dim);
 }
 
 .hiw-path-link span {
@@ -172,7 +183,7 @@
    Storm history lookup
    ============================================================ */
 .hiw-lookup {
-  background: var(--ink);
+  background: #000000;
   color: var(--paper);
 }
 
@@ -284,8 +295,13 @@
 /* ============================================================
    Worn-out roof signs
    ============================================================ */
+/* Light variant (not the base #ffffff): .hiw-signs above is also light,
+   and this pairs with it deliberately — both are "which case are you"
+   sign cards, so reading as a matched pair is correct here, not a
+   mistake. The variant hex keeps the two from sharing an identical
+   background value. */
 .hiw-worn {
-  background: var(--cloud);
+  background: #f7f7f8;
   color: #000000;
 }
 
@@ -339,7 +355,7 @@
    Repair or replace
    ============================================================ */
 .hiw-repair {
-  background: var(--ink);
+  background: #000000;
   color: var(--paper);
 }
 
@@ -425,11 +441,18 @@
 .hiw-after-list li:nth-child(4) { transition-delay: 300ms; }
 .hiw-after-list li:nth-child(5) { transition-delay: 400ms; }
 
+/* Orange text fails on .hiw-after's light (#ffffff) background — a
+   pre-existing contrast bug caught during the section-alternation
+   audit. Black text with an orange underline instead. */
 .hiw-after-num {
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 1.5rem;
-  color: var(--signal);
+  color: #000000;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
 .hiw-after-list p {
@@ -447,7 +470,7 @@
    What Apex does on a claim
    ============================================================ */
 .hiw-claim {
-  background: var(--ink);
+  background: #000000;
   color: var(--paper);
 }
 
@@ -502,7 +525,7 @@
    How estimates work
    ============================================================ */
 .hiw-estimates {
-  background: var(--cloud);
+  background: #ffffff;
   color: #000000;
 }
 
@@ -526,7 +549,10 @@
   color: #000000;
   font-weight: 600;
   padding: 1.5rem clamp(1.5rem, 3vw, 2rem);
-  background: #ffffff;
+  /* Section is now #ffffff itself (was var(--cloud)) — the card needs
+     the light variant instead of plain white to still read as a card
+     rather than disappearing into the section behind it. */
+  background: #f7f7f8;
   border-left: 3px solid #ff8200;
   border-radius: 2px;
 }
@@ -535,7 +561,7 @@
    Service area
    ============================================================ */
 .hiw-service-area {
-  background: var(--ink);
+  background: #000000;
   color: var(--paper);
 }
 
@@ -574,6 +600,12 @@
 /* ============================================================
    Contact
    ============================================================ */
+/* Lands light per the alternation audit: last section before the
+   footer, highest-intent part of the page. Pure alternation from the
+   hero would put this section on dark; the .hiw-signs/.hiw-worn pair
+   above already absorbs one deliberate same-type break (both light,
+   distinguished by the #f7f7f8 variant), which is what shifts this
+   section's parity to light without needing to touch it directly. */
 .hiw-contact {
   background: #ffffff;
   color: #000000;
@@ -604,18 +636,25 @@
   margin-bottom: 0.25rem;
 }
 
+/* Orange text fails on this section's white background — black text
+   with an orange underline instead, same fix as everywhere else this
+   pass. Hover/focus darkens the underline rather than swapping the
+   text to orange, so the fix holds in every state. */
 .hiw-contact-phone {
   display: block;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(1.8rem, 3vw, 2.4rem);
   color: #000000;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
 .hiw-contact-phone:hover,
 .hiw-contact-phone:focus-visible {
-  color: var(--signal);
+  text-decoration-color: var(--signal-dim);
 }
 
 .hiw-contact-meta {
@@ -700,16 +739,29 @@
   color: #4b5563;
 }
 
+/* Orange text fails on this section's light form card — black text
+   with an orange underline instead. */
 .hiw-form-consent a {
-  color: var(--signal);
+  color: #000000;
   text-decoration: underline;
+  text-decoration-color: var(--signal);
+}
+
+.hiw-form-consent a:hover,
+.hiw-form-consent a:focus-visible {
+  text-decoration-color: var(--signal-dim);
 }
 
 /* ============================================================
    Insurance disclaimer
    ============================================================ */
+/* Light variant, deliberately adjacent to .hiw-contact (also light) —
+   the second break needed to bring the footer back to dark after the
+   signs/worn break shifted contact onto light. Reads fine as a small
+   legal footnote directly under the contact section rather than a
+   fresh section in its own right. */
 .hiw-disclaimer {
-  background: var(--cloud);
+  background: #f7f7f8;
   padding-block: clamp(1.5rem, 3vw, 2rem);
 }
 

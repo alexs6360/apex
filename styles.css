@@ -16,7 +16,17 @@
 
   --font-display: "Space Grotesk", "Arial Narrow", sans-serif;
   --font-body: "Switzer", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* --font-mono existed for exactly one purpose — a tracked-out mono
+     label treatment on eyebrows, field labels, buttons, and captions —
+     and nothing on the site displays code or tabular data that would
+     actually benefit from a monospace face. It kept reappearing (this
+     is the fifth section it's had to be removed from) because every
+     consumer referenced the variable directly instead of a single
+     shared class, so "removing" it meant hunting down each rule one at
+     a time. Removed the token itself, not just its last few call sites,
+     so there's nothing left to reintroduce it from. Space Grotesk/IBM
+     Plex Mono are still loaded as Google Fonts in every page's <head>;
+     IBM Plex Mono's link should come out too now that nothing uses it. */
 
   --container: 1180px;
   --gutter: clamp(1.25rem, 4vw, 3rem);
@@ -160,7 +170,7 @@ section {
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   text-decoration: none;
@@ -220,6 +230,13 @@ section {
    either way, since that combination passes on any backdrop. */
 .btn-outline--on-dark {
   color: #ffffff;
+}
+
+/* Opposite case from --on-dark: a light section where the default
+   orange-on-transparent text (~2.5:1) also fails. Border stays orange
+   either way — only the text itself needs to flip per surface. */
+.btn-outline--on-light {
+  color: #000000;
 }
 
 .btn:focus-visible {
@@ -770,6 +787,12 @@ section {
   color: rgba(255, 255, 255, 0.45);
 }
 
+/* Same fix as the contact form's select — the prompt option otherwise
+   renders in the same solid white as a real answer. */
+.hero-form .field select:invalid {
+  color: rgba(255, 255, 255, 0.45);
+}
+
 .hero-form .field input:focus,
 .hero-form .field select:focus {
   outline: 2px solid #ff8200;
@@ -1173,14 +1196,14 @@ section {
    Founder
    ============================================================ */
 .founder {
-  /* Flipped dark — restoring alternation now that why-us moved to light. */
-  background: var(--ink);
-  color: var(--paper);
-  /* Extra clearance below why-us's cards: the CTAs plus why-us's own
-     bottom padding already read as a large gap on that side, and this
-     section's heading arriving right at the standard top padding made
-     the far side of the same boundary feel abrupt by comparison. Adding
-     it here evens the two sides out instead of shrinking the other. */
+  /* Flipped light — index.html has no .why-us section, so the real
+     neighbors here are .services (dark) above and .area (dark photo)
+     below. Strict alternation across the whole homepage only works if
+     this one lands light between them. */
+  background: #ffffff;
+  color: #000000;
+  /* Extra clearance below .services' cards: the same reasoning as
+     before this flip, just no longer tied to why-us specifically. */
   padding-top: calc(clamp(4rem, 9vw, 7.5rem) + 64px);
 }
 
@@ -1198,9 +1221,9 @@ section {
 
 .founder-photo {
   aspect-ratio: 4 / 3;
-  border: 1px solid var(--line-on-dark);
+  border: 1px solid rgba(75, 85, 99, 0.15);
   border-radius: 4px;
-  background: var(--ink-soft);
+  background: #f7f7f8;
   overflow: hidden;
 }
 
@@ -1222,17 +1245,39 @@ section {
   margin-bottom: 0.5rem;
 }
 
+/* Orange text measures ~2.5:1 on this section's new white background —
+   fails. Black text carries an orange underline instead so the accent
+   color survives without failing contrast. */
 .founder-title {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.85rem;
   letter-spacing: 0.04em;
-  color: var(--signal);
+  color: #000000;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
   margin-bottom: 1.25rem;
 }
 
 .founder-copy .lede {
-  color: #c7cad2;
+  color: #4b5563;
   max-width: 54ch;
+}
+
+/* Same contrast problem as .founder-title: the shared .eyebrow class
+   defaults to orange text, tuned for the dark sections it appears on
+   elsewhere. Scoped override rather than changing .eyebrow itself,
+   since storm-history.html still uses it on dark sections. The
+   triangle marker keeps its orange via an explicit border-color
+   rather than currentColor, since currentColor would follow the text
+   to black otherwise. */
+.founder .eyebrow {
+  color: #000000;
+}
+
+.founder .eyebrow::before {
+  border-bottom-color: var(--signal);
 }
 
 .founder-ctas {
@@ -1366,14 +1411,17 @@ section {
    Contact / estimate
    ============================================================ */
 .contact {
-  /* Flipped dark to alternate against .area (light) above. Solid black
-     rather than var(--ink) — with the process-teaser section removed,
-     .footer (var(--ink)) now follows directly, and this needs to read as
-     a distinct section rather than blending into it. Same technique as
-     .services/.founder just above: two adjacent dark sections told apart
-     by shade rather than by a light section between them. */
-  background: #000000;
-  color: var(--paper);
+  /* Flipped light: it's the last section before the footer and the
+     highest-intent part of the page, and strict alternation (hero dark,
+     storm-check light, services dark, founder light, area dark, contact
+     light, footer dark) lands it here anyway — no earlier section needed
+     adjusting to make that true. */
+  /* Tinted, not pure white — the form card below is #ffffff, and a card
+     only reads as raised when it sits on a surface a shade darker than
+     itself. White-on-white (the previous state) is what made it nearly
+     invisible. */
+  background: #f7f7f8;
+  color: #000000;
 }
 
 .contact .wrap {
@@ -1388,39 +1436,142 @@ section {
   }
 }
 
+/* .contact-side and .form-card are both .reveal already (shared
+   IntersectionObserver, fires once, reduced-motion respected via the
+   sitewide global rule) — this just staggers the two 80ms apart instead
+   of having both fade in on the same frame. */
+.form-card.reveal {
+  transition-delay: 80ms;
+}
+
 .contact-side .lede {
-  color: var(--mist);
+  color: #4b5563;
   margin-top: 1.1rem;
   margin-bottom: 2rem;
 }
 
+/* Orange text on this section's white background measures ~2.5:1 and
+   fails — black text carries the always-on underline instead. Still
+   the highest-intent element on the page on mobile, so the underline
+   stays on by default rather than only appearing on hover (which never
+   fires on a touchscreen). */
 .contact-phone {
   display: block;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(1.8rem, 3vw, 2.4rem);
-  color: var(--paper);
-  text-decoration: none;
+  color: #000000;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
   margin-bottom: 0.4rem;
 }
 
 .contact-phone:hover,
 .contact-phone:focus-visible {
-  color: var(--signal);
+  text-decoration-color: var(--signal-dim);
 }
 
 .contact-phone-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.78rem;
   letter-spacing: 0.06em;
-  color: var(--mist);
+  color: #4b5563;
 }
 
+/* Fills the ~500px of empty space that used to end right after the
+   phone number — hours, service area, the same trust points as the
+   hero, and what actually happens after someone submits. */
+.contact-extra {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(75, 85, 99, 0.15);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.contact-hours,
+.contact-service-area,
+.contact-next {
+  color: #4b5563;
+  font-size: 0.95rem;
+  max-width: 40ch;
+}
+
+.contact-hours strong {
+  color: #000000;
+  font-weight: 600;
+}
+
+.contact-extra .trust-row {
+  margin: 0;
+  /* .trust-row's shared base color (rgba(255,255,255,.75)) is tuned for
+     the dark hero it's also used on — overridden here for this light
+     section, including the divider ticks between items. */
+  color: #4b5563;
+}
+
+.contact-extra .trust-row li:not(:first-child)::before {
+  background: rgba(75, 85, 99, 0.3);
+}
+
+/* White card on the section's #f7f7f8 tint (the inverse of the previous
+   #f7f7f8-card-on-white), a shadow instead of a hairline border, and a
+   4px orange top bar — this is what actually reads as "raised" rather
+   than as a barely-there box. */
 .form-card {
-  background: var(--ink-soft);
-  border: 1px solid var(--line-on-dark);
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: none;
   border-radius: 6px;
-  padding: clamp(1.75rem, 3vw, 2.5rem);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08);
+  padding: 48px;
+}
+
+.form-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--signal);
+}
+
+.form-card-heading {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  margin: 0 0 1.5rem;
+}
+
+/* Scoped to this form specifically rather than the shared .field rule —
+   the hero form reuses .field too, and this focus treatment wasn't
+   asked for there. Ring instead of a default outline, per spec. */
+.form-card .field input:focus,
+.form-card .field select:focus,
+.form-card .field textarea:focus {
+  outline: none;
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px rgba(255, 130, 0, 0.15);
+}
+
+/* Orange text fails contrast on the form card's light fill — black text
+   plus an orange left border keeps the accent as a border/background
+   element instead, per the same rule as every other orange-on-light fix
+   on this pass. */
+.field-error {
+  margin: 0;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--signal);
+  font-size: 0.8rem;
+  color: #000000;
+}
+
+.field.is-invalid input,
+.field.is-invalid select {
+  border-color: var(--signal);
 }
 
 .form-row {
@@ -1436,33 +1587,57 @@ section {
 
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 6px;
   margin-bottom: 1.25rem;
 }
 
+/* Base .field rules below theme the contact form-card, now light. The
+   hero form reuses .field too but overrides every one of these
+   properties at higher specificity (.hero-form .field ...), so it stays
+   on its own dark styling regardless of what these say. */
 .field label {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  color: var(--mist);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: #4b5563;
 }
 
+/* Required fields (Name, Phone, Service) get an orange asterisk rather
+   than relying on the browser's own required-field affordance, which
+   isn't visible until a field is actually left blank. */
+.field-required {
+  color: var(--signal);
+  margin-left: 2px;
+}
+
+/* Bordered fields, not underlines — an underline reads as unfinished on
+   a light card (it works on the homepage's photo backgrounds, not here). */
 .field input,
 .field select,
 .field textarea {
   font-family: var(--font-body);
   font-size: 1rem;
-  color: var(--paper);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--line-on-dark);
-  padding: 0.65rem 0.1rem;
-  border-radius: 0;
-  transition: border-color 0.2s ease;
+  color: #000000;
+  background: #ffffff;
+  border: 1px solid rgba(75, 85, 99, 0.25);
+  padding: 14px 16px;
+  border-radius: 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .field select {
-  color: var(--paper);
+  color: #000000;
+}
+
+/* The prompt option ("What do you need?") rendered in the same solid
+   black as a real answer, with a native chevron — indistinguishable at
+   a glance from an actual selection, which is why this kept getting
+   reported as a stray/broken field. :invalid matches only while the
+   required select still holds its empty placeholder value, so it reads
+   as muted placeholder text right up until a real option is picked. */
+.field select:invalid {
+  color: rgba(75, 85, 99, 0.55);
 }
 
 .field select option {
@@ -1471,19 +1646,19 @@ section {
 
 .field input::placeholder,
 .field textarea::placeholder {
-  color: var(--mist);
+  color: rgba(75, 85, 99, 0.55);
 }
 
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
   outline: none;
-  border-bottom-color: var(--signal);
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px rgba(255, 130, 0, 0.15);
 }
 
 .field textarea {
   resize: vertical;
-  min-height: 5rem;
 }
 
 .hidden-field {
@@ -1503,17 +1678,76 @@ section {
   }
 }
 
-.form-note {
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  color: var(--mist);
+.form-consent {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.form-consent a {
+  color: #000000;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+}
+
+.form-consent a:hover,
+.form-consent a:focus-visible {
+  text-decoration-color: var(--signal-dim);
+}
+
+/* Spinner replaces the triangle + label (visibility:hidden keeps their
+   layout space so the button doesn't resize) rather than the whole
+   button switching to a "Sending…" state — same button, same width,
+   just busy. Scoped to this form's button; the hero form shares
+   .form-submit but never gets the spinner markup, so it's unaffected. */
+/* Full width of the card at every viewport, overriding the shared
+   .form-submit's auto-width breakpoint (still right for the hero form,
+   which this selector doesn't touch). */
+.form-card .form-submit {
+  position: relative;
+  width: 100%;
+}
+
+.btn-spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+}
+
+.form-submit.is-submitting {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.form-submit.is-submitting .tri,
+.form-submit.is-submitting .btn-label {
+  visibility: hidden;
+}
+
+.form-submit.is-submitting .btn-spinner {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -8px 0 0 -8px;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ============================================================
    Footer
    ============================================================ */
 .footer {
-  background: var(--ink);
+  /* Standardized to the site's canonical dark value (background-alternation
+     audit) rather than var(--ink) — shared across every page, so this one
+     change keeps the footer's hex in line everywhere it appears. */
+  background: #000000;
   color: var(--mist);
   border-top: 1px solid var(--line-on-dark);
   padding-block: clamp(3rem, 6vw, 4.5rem) 2rem;
@@ -1550,7 +1784,7 @@ section {
 }
 
 .footer-col-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   letter-spacing: 0.06em;
   color: var(--paper);
@@ -1579,7 +1813,7 @@ section {
 .footer-bottom {
   border-top: 1px solid var(--line-on-dark);
   padding-top: 1.5rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.78rem;
   letter-spacing: 0.02em;
 }
@@ -1870,9 +2104,17 @@ section {
   color: #4b5563;
 }
 
+/* Orange text measures ~2.5:1 on this section's white background —
+   fails, same fix as every other orange-on-light instance this pass. */
 .storm-check-note a {
-  color: var(--signal);
+  color: #000000;
   text-decoration: underline;
+  text-decoration-color: var(--signal);
+}
+
+.storm-check-note a:hover,
+.storm-check-note a:focus-visible {
+  text-decoration-color: var(--signal-dim);
 }
 
 @media (min-width: 960px) {
@@ -1922,9 +2164,24 @@ section {
 }
 
 /* Only used on storm-history.html now — index.html no longer has a
-   .why-us section. Sits right after .sh-tool (dark) there. */
+   .why-us section. Sits right after .sh-tool there, now #1c1c1c
+   (background-alternation audit). */
 .why-us::before {
-  background: var(--ink);
+  background: #1c1c1c;
+}
+
+/* Orange text fails on this section's white background — the shared
+   .eyebrow class defaults to orange, tuned for dark sections. Scoped
+   here rather than changing .eyebrow itself, since .sh-intro (dark)
+   on this same page still uses the default. Triangle marker keeps its
+   orange via an explicit border-color since currentColor would
+   otherwise follow the text to black. */
+.why-us .eyebrow {
+  color: #000000;
+}
+
+.why-us .eyebrow::before {
+  border-bottom-color: var(--signal);
 }
 
 .area::before {

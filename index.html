@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap">
 <link rel="stylesheet" href="/styles.css">
 </head>
@@ -228,7 +228,7 @@
         <p class="lede">Born and raised in Memphis, Alex spent a decade protecting the community as a Shelby County Sheriff&rsquo;s Deputy before transitioning into the exterior construction industry. After managing operations for a major regional roofing contractor, he founded Apex Exteriors to raise the standard&mdash;delivering competitive, honest pricing without ever compromising on elite material systems, precision installation, or an entirely transparent customer experience.</p>
         <div class="founder-ctas">
           <a class="btn btn-solid btn-sans" href="#estimate"><span class="tri"></span>Request A Free Estimate</a>
-          <a class="btn btn-outline btn-sans btn-outline--on-dark" href="tel:19014947506"><span class="tri"></span>Call (901) 494-7506</a>
+          <a class="btn btn-outline btn-sans btn-outline--on-light" href="tel:19014947506"><span class="tri"></span>Call (901) 494-7506</a>
         </div>
       </div>
     </div>
@@ -271,14 +271,25 @@
   <section class="contact section-pad" id="estimate">
     <div class="wrap">
       <div class="contact-side reveal">
-        <p class="eyebrow">Get A Free Estimate</p>
         <h2>Tell us what's going on.</h2>
         <p class="lede">Fill out the form and we'll follow up to schedule a free inspection. Prefer to talk now?</p>
         <span class="contact-phone-label">Call</span>
         <a class="contact-phone" href="tel:19014947506">(901) 494-7506</a>
+
+        <div class="contact-extra">
+          <p class="contact-hours"><strong>Hours:</strong> Mon–Fri 7am–6pm, Sat 8am–2pm</p>
+          <p class="contact-service-area">Serving Memphis metro and North Mississippi</p>
+          <ul class="trust-row">
+            <li>Licensed &amp; Insured</li>
+            <li>Free Inspections</li>
+            <li>Insurance Claim Help</li>
+          </ul>
+          <p class="contact-next">I'll call you within one business day to schedule your free inspection — no obligation, no pressure.</p>
+        </div>
       </div>
 
-      <form class="form-card reveal" name="estimate-request" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <form class="form-card reveal" name="estimate-request" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
+        <h3 class="form-card-heading">Request Your Free Inspection</h3>
         <input type="hidden" name="form-name" value="estimate-request">
         <p class="hidden-field">
           <label>Don't fill this out: <input name="bot-field"></label>
@@ -286,12 +297,14 @@
 
         <div class="form-row two">
           <div class="field">
-            <label for="name">Name</label>
+            <label for="name">Name <span class="field-required" aria-hidden="true">*</span></label>
             <input id="name" name="name" type="text" required placeholder="Your name">
+            <p class="field-error" id="name-error" hidden>Enter your name.</p>
           </div>
           <div class="field">
-            <label for="phone">Phone</label>
+            <label for="phone">Phone <span class="field-required" aria-hidden="true">*</span></label>
             <input id="phone" name="phone" type="tel" required placeholder="(901) 555-0100">
+            <p class="field-error" id="phone-error" hidden>Enter a phone number.</p>
           </div>
         </div>
 
@@ -299,6 +312,7 @@
           <div class="field">
             <label for="email">Email (Optional)</label>
             <input id="email" name="email" type="email" placeholder="you@email.com">
+            <p class="field-error" id="email-error" hidden>Enter a valid email.</p>
           </div>
           <div class="field">
             <label for="city">Address / City</label>
@@ -307,22 +321,30 @@
         </div>
 
         <div class="field">
-          <label for="service">Service Needed</label>
-          <select id="service" name="service">
+          <label for="service">Service Needed <span class="field-required" aria-hidden="true">*</span></label>
+          <select id="service" name="service" required>
+            <option value="" selected disabled hidden>What do you need?</option>
             <option value="Roofing">Roofing</option>
+            <option value="Siding">Siding</option>
             <option value="Gutters">Gutters</option>
-            <option value="Both">Both</option>
+            <option value="Storm damage">Storm Damage</option>
+            <option value="Inspection">Inspection</option>
             <option value="Not sure">Not Sure</option>
           </select>
+          <p class="field-error" id="service-error" hidden>Choose one so we know how to help.</p>
         </div>
 
         <div class="field">
           <label for="details">Details</label>
-          <textarea id="details" name="details" placeholder="What's going on with your roof or gutters?"></textarea>
+          <textarea id="details" name="details" rows="4" placeholder="What's going on with your roof or gutters?"></textarea>
         </div>
 
-        <button class="btn btn-solid btn-sans form-submit" type="submit"><span class="tri"></span>Send Request</button>
-        <p class="form-note">We typically respond within one business day.</p>
+        <button class="btn btn-solid btn-sans form-submit" type="submit">
+          <span class="tri"></span>
+          <span class="btn-label">Send Request</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+        <p class="form-consent">By submitting this form, you consent to be contacted by phone, text, and email about your request. See our <a href="/privacy.html">Privacy Policy</a>.</p>
       </form>
     </div>
   </section>

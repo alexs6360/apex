@@ -5,7 +5,11 @@
    ============================================================ */
 
 .sh-intro {
-  background: var(--ink);
+  /* Standardized to canonical #000000 (background-alternation audit) —
+     .sh-tool right below was literally the same var(--ink) value, an
+     actual adjacent-section collision, not just the same broad "dark"
+     family. .sh-tool takes the #1c1c1c variant instead. */
+  background: #000000;
   color: var(--paper);
   /* Clears the fixed nav, then 80px of the actual gap the header asks for. */
   padding-top: calc(var(--nav-height) + var(--space-80));
@@ -39,7 +43,7 @@
 /* ---- the address form -------------------------------------------------- */
 
 .sh-tool {
-  background: var(--ink);
+  background: #1c1c1c;
   color: var(--paper);
   padding-bottom: clamp(3rem, 6vw, 4.5rem);
 }

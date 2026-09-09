@@ -54,7 +54,7 @@
     rgba(0, 0, 0, 0.18) 60%,
     transparent 100%
   );
-  background: #232529;
+  background: #1c1c1c;
 }
 
 /* ============================================================
@@ -63,7 +63,10 @@
 .rs-hero {
   position: relative;
   overflow: hidden;
-  background: #1c1c1c;
+  /* Standardized to the canonical #000000 (background-alternation audit)
+     — .rs-layers right below is also dark and takes the #1c1c1c variant
+     instead, so the two still read as distinct. */
+  background: #000000;
   color: var(--paper);
   /* Top padding must clear the fixed nav (~111px unscrolled) with room to
      spare at every viewport width — 140px is the effective floor for that
@@ -183,8 +186,14 @@
 /* ============================================================
    Layers
    ============================================================ */
+/* Dark variant (not the base #000000): .rs-hero above is also dark, and
+   this section already deliberately pairs with it — the divider line in
+   .rs-layers::before plus this value shift is the existing "adjacent
+   same-family sections" pattern this page's own comments describe.
+   Standardized to the canonical #1c1c1c so it matches the rest of the
+   site's variant value exactly. */
 .rs-layers {
-  background: #232529;
+  background: #1c1c1c;
   color: var(--paper);
   padding-block: clamp(96px, 9vw, 120px);
 }

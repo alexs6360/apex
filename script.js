@@ -178,4 +178,49 @@
     });
   });
 
+  /* Estimate form: inline validation on blur (not just on submit), and
+     the submit button disables itself with a spinner so a slow
+     connection can't be double-tapped into two submissions. The form
+     carries novalidate specifically so the browser's own validation UI
+     never fights with this one — checkValidity()/.validity still work
+     fine with novalidate present, it only suppresses the native popup
+     and auto-block-on-submit behavior. */
+  var estimateForm = document.querySelector(".form-card");
+  if (estimateForm) {
+    var estimateFields = estimateForm.querySelectorAll("#name, #phone, #email, #service");
+
+    var validateField = function (el) {
+      var field = el.closest(".field");
+      var error = field ? field.querySelector(".field-error") : null;
+      var valid = el.checkValidity();
+      if (field) field.classList.toggle("is-invalid", !valid);
+      if (error) error.hidden = valid;
+      return valid;
+    };
+
+    estimateFields.forEach(function (el) {
+      el.addEventListener("blur", function () {
+        validateField(el);
+      });
+    });
+
+    estimateForm.addEventListener("submit", function (e) {
+      var allValid = true;
+      estimateFields.forEach(function (el) {
+        if (!validateField(el)) allValid = false;
+      });
+      if (!allValid) {
+        e.preventDefault();
+        var firstInvalid = estimateForm.querySelector(".field.is-invalid input, .field.is-invalid select");
+        if (firstInvalid) firstInvalid.focus();
+        return;
+      }
+      var submitBtn = estimateForm.querySelector(".form-submit");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add("is-submitting");
+      }
+    });
+  }
+
 })();
