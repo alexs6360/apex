@@ -262,6 +262,22 @@ section {
   transition: background 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
 }
 
+/* Nav itself stays transparent at all times (no scroll-triggered
+   background, no solid fill) — this scrim is what actually keeps the
+   logo/links readable over the hero video. Sits behind the nav's own
+   content (z-index: -1 within .nav's own stacking context, which the
+   fixed positioning + z-index: 50 above already elevates well above the
+   video) and fades to nothing by 140px so it never reads as a bar. */
+.nav::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 140px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
 .nav.is-scrolled {
   padding-block: 1.1rem;
 }
@@ -300,13 +316,17 @@ section {
 
 .nav-links a {
   text-decoration: none;
-  color: var(--mist);
-  transition: color 0.2s ease;
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
 .nav-links a:hover,
 .nav-links a:focus-visible {
   color: var(--paper);
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
 .nav-links a.is-active {
@@ -317,11 +337,9 @@ section {
   display: none;
 }
 
-.nav.is-scrolled {
-  background: rgba(28, 30, 36, 0.92);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 1px 0 var(--line-on-dark);
-}
+/* No scroll-triggered background here on purpose — the header stays
+   transparent at every scroll position. The ::before scrim above is
+   what keeps it readable, not a solid fill that fades in on scroll. */
 
 /* For pages that open on a light section instead of a dark hero
    (process.html) — the transparent-until-scrolled nav above assumes a
@@ -521,6 +539,11 @@ section {
      cropping straight to a wall of dark shingles on a tall viewport. */
   background-position: center 15%;
   transform: translateY(var(--parallax-video, 0px));
+  /* Same brightness lift as .hero-video, applied here too since this is
+     what prefers-reduced-motion visitors actually see in its place —
+     without it they'd get the lighter overlay with none of the
+     compensating boost, which is worse than before, not better. */
+  filter: brightness(1.1) contrast(1.05);
 }
 
 .hero-video {
@@ -528,12 +551,15 @@ section {
   height: 100%;
   object-fit: cover;
   animation: heroVideoZoom 20s ease-in-out infinite alternate;
+  /* Source footage runs dark. Paired with the lighter overlay above so
+     the hero reads brighter overall without losing the roofline. */
+  filter: brightness(1.1) contrast(1.05);
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.55) 100%);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.52) 100%);
   z-index: -1;
 }
 
