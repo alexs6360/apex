@@ -79,11 +79,17 @@ a {
   padding-inline: var(--gutter);
 }
 
+/* Root cause of mono re-appearing across sections after removal: this
+   shared base class still set font-family: var(--font-mono) itself, so
+   any section using class="eyebrow" (founder, contact, storm-history)
+   inherited it regardless of whether that section's own CSS had been
+   "cleaned up." Fixed once, here, rather than per section. */
 .eyebrow {
   display: flex;
   align-items: center;
   gap: 0.6em;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  font-weight: 600;
   font-size: 0.78rem;
   letter-spacing: 0.14em;
   color: var(--signal);
@@ -1240,36 +1246,53 @@ section {
    Area
    ============================================================ */
 .area {
-  /* Flipped light — restoring alternation now that founder is dark. */
-  background: var(--cloud);
+  /* Full-bleed photo, not a flat color — alternation against .founder
+     (also dark) still reads fine because a photo is visually distinct
+     from a flat fill regardless of luminance. Gradient goes darker on
+     the left (.88) where the text column sits than the right (.62)
+     where the bridge's lit arches show through unobstructed. */
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.62)), url("/images/memphis-bridge.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #ffffff;
+  /* Was relying on .section-pad's shared clamp (up to 7.5rem/120px) with
+     nothing after the note to justify it — read as ~300px of dead air
+     before .contact. Fixed, not clamped: this section's content doesn't
+     scale with viewport width the way a hero does. */
+  padding-bottom: 96px;
 }
 
 .area-head {
   max-width: 42rem;
-  margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+  margin-bottom: 64px;
+}
+
+.area-head h2 {
+  color: #ffffff;
 }
 
 .area-head .lede {
   margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.75);
 }
 
+/* Single column at a comfortable reading width rather than spanning the
+   section — the photo (and its brightest part, the lit arches) needs to
+   stay visible to the right of the text instead of getting covered. */
 .area-groups {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
+  max-width: 34rem;
   margin-bottom: 2.5rem;
 }
 
-@media (min-width: 700px) {
-  .area-groups {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 .area-group-label {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  /* #FF8200 column headings hold up fine against this dark a scrim. */
   color: var(--signal);
   margin-bottom: 1rem;
 }
@@ -1280,30 +1303,63 @@ section {
   gap: 0.6rem;
 }
 
-.area-cities span {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.03em;
+/* Transparent instead of the old solid-white fill — a white box would
+   fight the photo behind it. Real links (to the estimate form, town
+   prefilled via script.js) rather than plain tags, so the hover state
+   needs to read as interactive, not just decorative. */
+.area-cities a {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
   padding: 0.5rem 0.85rem;
-  border: 1px solid var(--line-on-light);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 2px;
-  color: var(--slate);
-  background: var(--paper);
+  color: #ffffff;
+  background: transparent;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
+
+.area-cities a:hover,
+.area-cities a:focus-visible {
+  border-color: var(--signal);
+  background: rgba(255, 130, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Staggered left-to-right on scroll via the shared .reveal mechanism —
+   each pill fades/rises in independently rather than as one block.
+   Two rows (TN, MS) share the same six delay steps since both groups
+   tend to enter the viewport together. */
+.area-cities a:nth-child(1) { transition-delay: 0ms; }
+.area-cities a:nth-child(2) { transition-delay: 40ms; }
+.area-cities a:nth-child(3) { transition-delay: 80ms; }
+.area-cities a:nth-child(4) { transition-delay: 120ms; }
+.area-cities a:nth-child(5) { transition-delay: 160ms; }
+.area-cities a:nth-child(6) { transition-delay: 200ms; }
 
 .area-note {
-  color: var(--slate);
+  color: rgba(255, 255, 255, 0.75);
 }
 
+/* Black-on-white (the fix for the previous light section) would fail
+   badly here — white text with an orange underline keeps the same
+   affordance and clears contrast easily against the .88 scrim this
+   column sits on. */
 .area-note a {
-  color: var(--signal);
-  text-decoration: none;
+  color: #ffffff;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
   font-weight: 600;
+  transition: text-decoration-color 0.2s ease;
 }
 
 .area-note a:hover,
 .area-note a:focus-visible {
-  color: var(--signal-dim);
+  text-decoration-color: #ffffff;
 }
 
 /* ============================================================
@@ -1883,8 +1939,12 @@ section {
   background: #000000;
 }
 
+/* .area is a dark photo now, not var(--cloud) — this fades from its own
+   darkest tone (the .88 scrim on the left, near-black) into .contact's
+   #000000, not the old light color that would leave a mismatched pale
+   smudge across two dark sections. */
 .contact::before {
-  background: var(--cloud);
+  background: #000000;
 }
 
 /* ============================================================

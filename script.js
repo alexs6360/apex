@@ -161,4 +161,21 @@
     });
   });
 
+  /* Town pills hand off to the bottom estimate form (the nearer of the
+     two forms to this section) with the address field prefilled to that
+     town, rather than linking to a per-town landing page that doesn't
+     exist yet. Same real-href-plus-click-handler pattern as the service
+     tiles above, for the same reason: works with JS disabled too. */
+  document.querySelectorAll(".area-cities a[data-town]").forEach(function (pill) {
+    pill.addEventListener("click", function (e) {
+      e.preventDefault();
+      var target = document.getElementById("estimate");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      var cityField = document.getElementById("city");
+      if (cityField) cityField.value = pill.dataset.town;
+      var nameField = document.getElementById("name");
+      if (nameField) nameField.focus({ preventScroll: true });
+    });
+  });
+
 })();
