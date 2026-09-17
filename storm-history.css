@@ -8,6 +8,19 @@
    bump it there too when this file changes.
    ============================================================ */
 
+/* styles.css deliberately never gives the fixed nav a scroll-triggered
+   background — that works on pages riding a single dark hero (video or
+   otherwise) the whole way down. This page breaks that assumption: the
+   Mapbox legend box is anchored to a corner of the map, not the viewport,
+   so it scrolls freely under the fixed nav and — with no solid backing —
+   overlapped the logo unreadably. Solid once scrolled (is-scrolled fires
+   at 40px, see script.js, so this is opaque long before the map is in
+   view), transparent at the very top so the hero's rain/lightning still
+   shows through the way it does on every other page. */
+.nav.is-scrolled {
+  background: #000000;
+}
+
 .sh-intro {
   /* Standardized to canonical #000000 (background-alternation audit) —
      .sh-tool right below was literally the same var(--ink) value, an
