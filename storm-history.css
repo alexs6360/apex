@@ -29,6 +29,13 @@
   background: #000000;
   color: var(--paper);
   overflow: hidden;
+  /* .sh-rain and .sh-bolt are position:absolute and need this as their
+     containing block — without it they size/position against the
+     viewport instead (a real latent bug: .sh-bolt's height:75% was
+     resolving against window height, not this box, so it visibly bled
+     past the hero into .sh-tool below instead of stopping at this box's
+     own overflow:hidden edge). */
+  position: relative;
   /* Clears the fixed nav, then 120px of the actual gap the header asks
      for (raised from 80px — this pass raised every gap on the page). */
   padding-top: calc(var(--nav-height) + 120px);
