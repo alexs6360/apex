@@ -67,13 +67,15 @@
   z-index: 1;
 }
 
-/* Soft, low-contrast cloud cover behind the rain — on its own the rain
-   read as thin static streaks on flat black ("looks like stars"), this
-   gives it a sky to actually fall through. Oversized (inset: -20%) and
-   drifts via transform rather than repositioning the gradients
-   themselves, so the edges never show as it moves. Deliberately
-   low-contrast — this is atmosphere, not something meant to compete with
-   the headline or the bolt.
+/* A real storm-cloud photo (licensed, provided by the client) behind the
+   rain — the CSS gradient version read too flat/abstract. The dark
+   gradient layered on top of the image (first in the background list, so
+   it paints above it) does two jobs: keeps the headline/subhead readable
+   against whatever's brightest in the photo, and darkens the bottom edge
+   enough that .sh-intro::after's own fade to #1c1c1c doesn't have to
+   fight a bright sky right where it starts.
+   Oversized (inset: -20%) and drifts via transform rather than
+   repositioning the image itself, so the edges never show as it moves.
    z-index: 0, not a negative value — .sh-intro has position: relative
    but no z-index of its own, so it doesn't establish a stacking context,
    and a negative z-index here would paint behind .sh-intro's own opaque
@@ -85,9 +87,9 @@
   inset: -20%;
   z-index: 0;
   background:
-    radial-gradient(ellipse 45% 30% at 20% 25%, rgba(60, 63, 68, 0.55), transparent 70%),
-    radial-gradient(ellipse 55% 35% at 75% 15%, rgba(50, 52, 58, 0.45), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 55% 60%, rgba(45, 47, 52, 0.4), transparent 70%);
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.55) 50%, rgba(0, 0, 0, 0.85) 100%),
+    url("/images/storm-clouds-hero.jpg") center / cover no-repeat;
+  filter: saturate(0.75) brightness(0.9);
   animation: sh-clouds-drift 90s ease-in-out infinite alternate;
   pointer-events: none;
 }
