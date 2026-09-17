@@ -67,6 +67,36 @@
   z-index: 1;
 }
 
+/* Soft, low-contrast cloud cover behind the rain — on its own the rain
+   read as thin static streaks on flat black ("looks like stars"), this
+   gives it a sky to actually fall through. Oversized (inset: -20%) and
+   drifts via transform rather than repositioning the gradients
+   themselves, so the edges never show as it moves. Deliberately
+   low-contrast — this is atmosphere, not something meant to compete with
+   the headline or the bolt.
+   z-index: 0, not a negative value — .sh-intro has position: relative
+   but no z-index of its own, so it doesn't establish a stacking context,
+   and a negative z-index here would paint behind .sh-intro's own opaque
+   background instead of just behind the rain (confirmed invisible when
+   tried). Same z-index as .sh-rain below, so DOM order (this comes
+   first) is what puts it underneath instead. */
+.sh-clouds {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 45% 30% at 20% 25%, rgba(60, 63, 68, 0.55), transparent 70%),
+    radial-gradient(ellipse 55% 35% at 75% 15%, rgba(50, 52, 58, 0.45), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 55% 60%, rgba(45, 47, 52, 0.4), transparent 70%);
+  animation: sh-clouds-drift 90s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes sh-clouds-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1.05); }
+  to { transform: translate3d(2%, 1.5%, 0) scale(1.1); }
+}
+
 /* Fits the page's subject better than a static hero — thin falling
    streaks, generated in script.js (guarded by prefers-reduced-motion)
    since hand-writing dozens of randomized positions/timings in markup
@@ -191,6 +221,12 @@
   .sh-bolt,
   .sh-lightning {
     display: none;
+  }
+
+  /* Kept visible (unlike the motion effects above) — it's atmosphere, not
+     motion, and still reads as a stormy sky at rest. Only the drift stops. */
+  .sh-clouds {
+    animation: none;
   }
 }
 
