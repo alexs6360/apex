@@ -201,12 +201,14 @@
   }
 
   /* Lightning: a visible bolt plus a soft ambient flash, at random
-     intervals (6-16s apart), never a rapid strobe — each flicker resolves
+     intervals (3-8s apart), never a rapid strobe — each flicker resolves
      in under a second via the CSS animations, and animationend removes
      the trigger classes so they can fire again later instead of looping.
-     Three jagged path variants (viewBox 0 0 100 400, so they scale with
-     .sh-bolt's own height) picked at random each strike so it isn't the
-     same bolt every time. */
+     Even at the fast end of this range, strikes are always several
+     seconds apart, nowhere near the "flashes within one second" strobe
+     threshold. Three jagged path variants (viewBox 0 0 100 400, so they
+     scale with .sh-bolt's own height) picked at random each strike so
+     it isn't the same bolt every time. */
   var lightningEl = document.querySelector(".sh-lightning");
   var boltEl = document.querySelector(".sh-bolt");
   var boltPath = boltEl ? boltEl.querySelector("path") : null;
@@ -217,7 +219,7 @@
   ];
   if ((lightningEl || boltEl) && !reduceMotion) {
     var scheduleLightning = function () {
-      var delay = 6000 + Math.random() * 10000;
+      var delay = 3000 + Math.random() * 5000;
       setTimeout(function () {
         if (boltEl && boltPath) {
           boltPath.setAttribute("d", boltVariants[Math.floor(Math.random() * boltVariants.length)]);
