@@ -3,6 +3,10 @@
    Loaded after /styles.css. Reuses shared tokens, .wrap,
    .section-pad, .reveal, and .btn/.btn-sans; everything else is
    scoped to this page's own rs-* classes.
+
+   Cache-busted with a "?v=YYYYMMDD" query string on its <link> in
+   roof-system/index.html — see /styles.css's own header comment for why,
+   and bump it there too when this file changes.
    ============================================================ */
 
 /* ============================================================

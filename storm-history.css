@@ -2,6 +2,10 @@
    Storm History Lookup — page-specific styles
    Ported from riseroofingms.com's storm history tool and restyled
    to the Apex palette. Only loaded on storm-history.html.
+
+   Cache-busted with a "?v=YYYYMMDD" query string on its <link> in
+   storm-history.html — see styles.css's own header comment for why, and
+   bump it there too when this file changes.
    ============================================================ */
 
 .sh-intro {
@@ -11,24 +15,124 @@
      family. .sh-tool takes the #1c1c1c variant instead. */
   background: #000000;
   color: var(--paper);
-  /* Clears the fixed nav, then 80px of the actual gap the header asks for. */
-  padding-top: calc(var(--nav-height) + var(--space-80));
-  /* The only source of "subhead to search bar" — .sh-tool below adds none
-     of its own, so this one value is the whole 48px. */
-  padding-bottom: var(--space-48);
+  overflow: hidden;
+  /* Clears the fixed nav, then 120px of the actual gap the header asks
+     for (raised from 80px — this pass raised every gap on the page). */
+  padding-top: calc(var(--nav-height) + 120px);
+  /* Subhead to the section boundary. .sh-tool's own padding-top below
+     carries the boundary-to-search-bar gap instead of this owning the
+     whole thing. */
+  padding-bottom: 96px;
 }
 
-.sh-intro .eyebrow {
-  color: var(--signal);
-  /* Not on the 12/16/24/32/48/64/80 scale — this one is a type-relationship
-     adjustment (eyebrow baseline to headline cap-height), not a layout gap. */
-  margin-bottom: 20px;
+/* Fades the hero's own black into .sh-tool's exact #1c1c1c — not the
+   reverse (a fade sitting on top of .sh-tool, colored as the hero, which
+   is the pattern used everywhere else on the site) because this was
+   asked for specifically as a pseudo-element on the hero. Ending at
+   .sh-tool's literal color means the fade's own bottom edge is already
+   indistinguishable from .sh-tool's real background the instant it
+   arrives, so there's no seam to trade for another. Contained inside
+   .sh-intro's own box (.sh-intro has overflow: hidden for the rain), not
+   bleeding into .sh-tool — the "starts below the fade" requirement is
+   handled by .sh-tool's own increased padding-top instead. */
+.sh-intro::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 160px;
+  background: linear-gradient(to bottom, transparent, #1c1c1c);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Fits the page's subject better than a static hero — thin falling
+   streaks, generated in script.js (guarded by prefers-reduced-motion)
+   since hand-writing dozens of randomized positions/timings in markup
+   isn't maintainable. Sits behind .wrap via z-index, not in front of it. */
+.sh-rain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sh-intro .wrap {
+  position: relative;
+  z-index: 2;
+}
+
+/* Brighter and thicker than the first pass, plus a slight windblown
+   drift baked into the fall keyframes instead of falling perfectly
+   straight down — reads as a real storm rather than a faint texture. */
+.sh-raindrop {
+  position: absolute;
+  top: -10%;
+  left: var(--x, 50%);
+  width: var(--w, 1.5px);
+  height: var(--h, 70px);
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.85), transparent);
+  opacity: var(--o, 0.6);
+  animation: sh-rain-fall var(--duration, 1.4s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* Fixed px, not a viewport unit — .sh-rain's height is .sh-intro's own
+   (a few hundred px, not the viewport), and overflow: hidden on
+   .sh-intro clips the tail end regardless, so this only needs to
+   comfortably clear the tallest the hero gets. The horizontal drift
+   (translateX) is the same for every drop — real wind blows one
+   direction, not each drop its own way — driven by --drift so the
+   angle can be flipped per screen without touching the keyframes. */
+@keyframes sh-rain-fall {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(var(--drift, -55px), 650px);
+  }
+}
+
+/* Lightning: sits above the rain, below the text. A soft white flash,
+   not a hard strobe — opacity peaks well under 1 and the whole flicker
+   resolves in under a second, well clear of the "three flashes per
+   second" photosensitivity threshold since this fires at most once
+   every several seconds (timed from script.js). */
+.sh-lightning {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sh-lightning.is-flashing {
+  animation: sh-lightning-flash 0.8s ease-out;
+}
+
+@keyframes sh-lightning-flash {
+  0% { opacity: 0; }
+  6% { opacity: 0.45; }
+  12% { opacity: 0.08; }
+  18% { opacity: 0.35; }
+  30% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-rain,
+  .sh-lightning {
+    display: none;
+  }
 }
 
 .sh-intro h1 {
   font-size: clamp(2.2rem, 5vw, 3.2rem);
   color: var(--paper);
-  margin-bottom: var(--space-24);
+  /* h1 to subhead. */
+  margin-bottom: 28px;
 }
 
 .sh-intro .lede {
@@ -45,21 +149,38 @@
 .sh-tool {
   background: #1c1c1c;
   color: var(--paper);
+  /* Section boundary to search bar — raised from 64px so the search bar
+     starts clear of the hero's fade zone above it, rather than reading
+     as if it's sitting inside the transition. */
+  padding-top: 128px;
   padding-bottom: clamp(3rem, 6vw, 4.5rem);
 }
 
 .sh-lookup {
   /* Data-currency line to map. */
-  margin-bottom: var(--space-64);
+  margin-bottom: 80px;
 }
 
 /* .sh-lookup-row, .sh-combo and .sh-suggest* live in styles.css now — the
    address-autocomplete widget (storm-autocomplete.js) hardcodes those class
    names and is shared with the homepage's storm-history teaser search. */
 
+/* Scoped to this page's own form (#sh-lookup), not the shared base rules —
+   the input and button relied on padding alone to size themselves, which
+   put them a few px apart rather than lined up. Explicit, matching
+   heights instead. .sh-lookup-row's own gap (0.75rem = 12px) already
+   matched the spec, so it's untouched. */
+#sh-lookup .sh-combo input {
+  height: 60px;
+}
+
+#sh-lookup .sh-lookup-row .btn {
+  height: 60px;
+}
+
 .sh-consent {
   /* Search bar to privacy note. */
-  margin-top: var(--space-16);
+  margin-top: 20px;
   font-size: 0.9rem;
   color: var(--mist);
   max-width: 60ch;
@@ -78,7 +199,7 @@
 
 .sh-currency {
   /* Privacy note to data-currency line. */
-  margin-top: var(--space-12);
+  margin-top: 16px;
   font-size: 0.82rem;
   color: var(--mist);
 }

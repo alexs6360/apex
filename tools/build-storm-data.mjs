@@ -59,6 +59,7 @@ import path from "node:path";
 import zlib from "node:zlib";
 import { GRID_DEG, cellKey, bucketOf, preferred, preferredReport } from "./storm-grid.mjs";
 import { hasEccodes, extractMesh } from "./mesh.mjs";
+import { parseLsrFeature } from "./lsr.mjs";
 
 /* One geographic filter for every layer. A bbox rather than a list of county
    names: a homeowner two miles over the county line should not get an empty
@@ -428,33 +429,14 @@ async function localStormReports(afterDate) {
     if (!res) { hadFailure = true; process.stderr.write(`  ! lsr ${iso(from)} failed\n`); continue; }
     let data;
     try { data = await res.json(); } catch (e) { continue; }
+    /* parseLsrFeature lives in ./lsr.mjs specifically so
+       verify-wind-fixture.mjs can run the exact same parsing this loop
+       does, against a known date, and catch a regression here (or an IEM
+       schema change) before it surfaces as "wind is silently stuck again"
+       three weeks from now. */
     for (const f of data.features || []) {
-      const p = f.properties;
-      const lon = parseFloat(p.lon), lat = parseFloat(p.lat);
-      if (!isFinite(lon) || !isFinite(lat) || !inBbox(lon, lat)) continue;
-      const type = (p.typetext || "").toUpperCase();
-      const mag = parseFloat(p.magnitude);
-      let kind = null, val = null;
-      if (type === "HAIL") {
-        kind = "hail";
-        val = isFinite(mag) ? +mag.toFixed(2) : null;
-      } else if (type === "TSTM WND GST") {
-        kind = "wind";
-        /* LSR gusts are already MPH — converting again turns 66 into 76. */
-        val = isFinite(mag) ? Math.round(mag) : null;
-      } else if (type === "TSTM WND DMG" || type === "NON-TSTM WND DMG") {
-        /* A real event with no measured gust. Kept, with no number: dropping
-           it hides a storm, and showing 0 mph invents a reading. */
-        kind = "wind";
-        val = null;
-      } else continue;
-      out.push({
-        date: (p.valid || "").slice(0, 10),
-        kind, val,
-        lon: +lon.toFixed(4),
-        lat: +lat.toFixed(4),
-        src: "NWS Local Storm Report",
-      });
+      const r = parseLsrFeature(f, BBOX);
+      if (r) out.push(r);
     }
     await sleep(250);
   }
@@ -882,6 +864,20 @@ write("storm-index.json", {
     source: "NWS Storm Events, Local Storm Reports, and ASOS/AWOS (all observed)",
     storm_events_through: seThrough,
     reports: windRows.length,
+    /* Parallel to mesh.last_success below, and for the same reason: "through"
+       is a content date, so a genuinely quiet stretch (no qualifying LSR or
+       ASOS gust in the bbox — which happens, and isn't a bug) makes "through"
+       look exactly like a dead pipeline would. LSR and ASOS are fetched
+       unconditionally every run (frequent and daily alike, see MODE above),
+       so reaching this write at all means neither failed this run (a failure
+       exits before any file is written — see the hadFailure guard above);
+       this is "today" every time execution gets here, same as mesh's. The
+       *_last_run counts are the per-run numbers showStaleness() can't get
+       from "through" either — a run that fetched and found zero new records
+       looks identical to "through" as a run that never fetched at all. */
+    last_success: END.toISOString().slice(0, 10),
+    lsr_last_run: lsr.length,
+    asos_last_run: asos.length,
   },
   ground_truth: {
     source: "CoCoRaHS (observed hail) and ASOS/AWOS (observed gusts)",

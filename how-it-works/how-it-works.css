@@ -7,6 +7,10 @@
    everything else here is scoped to this page's own hiw-*
    classes so it can't leak elsewhere (the exact bug this page's
    own build fixed on process.html).
+
+   Cache-busted with a "?v=YYYYMMDD" query string on its <link> in
+   how-it-works/index.html — see /styles.css's own header comment for why,
+   and bump it there too when this file changes.
    ============================================================ */
 
 /* ============================================================

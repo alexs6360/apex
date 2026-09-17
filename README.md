@@ -9,9 +9,30 @@ Use `tools/deploy.sh`, not `netlify deploy` directly — it substitutes the
 Mapbox token into a temporary copy of the site before deploying, so the real
 token never sits in the project's own tracked files.
 
+**This site has no Netlify GitHub integration set up.** Pushing to
+`origin/main` does not deploy anything by itself — `tools/deploy.sh` (or the
+Netlify dashboard) is the only thing that ships code. Keep the two in sync by
+committing and pushing before every prod deploy; see below.
+
+Preview a change (does not touch the live site):
+
 ```
 bash tools/deploy.sh
 ```
+
+Ship to production — refuses to run if the working tree has uncommitted
+changes, so what's live always matches a real commit:
+
+```
+bash tools/deploy.sh --prod
+```
+
+**Better long-term fix:** connect this repo to Netlify's GitHub integration
+(Site settings → Build & deploy → Link repository in the Netlify dashboard,
+same setup as the Rise site) so a push to `main` deploys automatically and
+`tools/deploy.sh --prod` stops being necessary at all. This requires
+authorizing Netlify's GitHub App in the dashboard — not something scriptable
+from here.
 
 ## Mapbox token
 

@@ -1,5 +1,11 @@
 /* ============================================================
    Apex Exteriors — design tokens
+
+   No build step means no automatic cache-busting: every <link> that loads
+   this file has a "?v=YYYYMMDD" query string appended by hand, and every
+   HTML file that references it needs the same string. Bump it (today's
+   date is fine) whenever this file changes, or a browser/CDN that already
+   cached the old response has no reason to fetch the new one.
    ============================================================ */
 :root {
   --ink: #1c1e24;

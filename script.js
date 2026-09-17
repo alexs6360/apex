@@ -178,6 +178,48 @@
     });
   });
 
+  /* Storm history hero: falling rain streaks plus an occasional lightning
+     flash behind the headline — fits the page's subject (a storm-history
+     lookup tool) better than a static hero. Generated here rather than
+     hand-written in markup since dozens of randomized positions/speeds
+     aren't maintainable as HTML. No-ops entirely on every other page
+     (elements just don't exist) and under prefers-reduced-motion. */
+  var rainContainer = document.querySelector(".sh-rain");
+  if (rainContainer && !reduceMotion) {
+    var dropCount = 70;
+    for (var i = 0; i < dropCount; i++) {
+      var drop = document.createElement("span");
+      drop.className = "sh-raindrop";
+      drop.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "%");
+      drop.style.setProperty("--h", (40 + Math.random() * 60).toFixed(0) + "px");
+      drop.style.setProperty("--w", (1 + Math.random() * 1).toFixed(2) + "px");
+      drop.style.setProperty("--o", (0.35 + Math.random() * 0.4).toFixed(2));
+      drop.style.setProperty("--duration", (0.6 + Math.random() * 0.9).toFixed(2) + "s");
+      drop.style.setProperty("--delay", (Math.random() * -2).toFixed(2) + "s");
+      rainContainer.appendChild(drop);
+    }
+  }
+
+  /* Lightning: a soft flash at random intervals (6-16s apart), never a
+     rapid strobe — each flicker resolves in under a second via the CSS
+     animation, and animationend removes the trigger class so it can
+     fire again later instead of looping. */
+  var lightningEl = document.querySelector(".sh-lightning");
+  if (lightningEl && !reduceMotion) {
+    var scheduleLightning = function () {
+      var delay = 6000 + Math.random() * 10000;
+      setTimeout(function () {
+        lightningEl.classList.add("is-flashing");
+        lightningEl.addEventListener("animationend", function onFlashEnd() {
+          lightningEl.classList.remove("is-flashing");
+          lightningEl.removeEventListener("animationend", onFlashEnd);
+        });
+        scheduleLightning();
+      }, delay);
+    };
+    scheduleLightning();
+  }
+
   /* Estimate form: inline validation on blur (not just on submit), and
      the submit button disables itself with a spinner so a slow
      connection can't be double-tapped into two submissions. The form

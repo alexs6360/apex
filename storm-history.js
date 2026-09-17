@@ -102,6 +102,20 @@
      MESH is specifically what covers the last few hours a homeowner is most
      likely to be asking about right after a storm. */
   var MESH_STALE_DAYS = 1;
+  /* Same reasoning as MESH_STALE_DAYS: LSR and ASOS/AWOS gusts are fetched
+     unconditionally every run (frequent and daily alike — see MODE in
+     build-storm-data.mjs), not just once a day, so a dead wind pipeline is
+     detectable within a day instead of waiting on STALE_DAYS below. Checked
+     against wind.last_success (did the fetch run and complete), not
+     wind.through (did it find anything) — a genuinely quiet stretch with
+     zero qualifying wind reports is normal, not a failure, and looks
+     identical to a dead pipeline if "through" is the only signal available.
+     Confirmed live against the actual sources: as of this writing there are
+     no in-bbox LSR wind reports after Aug 26 or qualifying ASOS gusts after
+     Aug 22, so wind.through sitting well behind hail.through is currently
+     correct data, not a stuck pipeline — exactly the ambiguity this field
+     exists to resolve going forward. */
+  var WIND_STALE_DAYS = 1;
   var CENTER = [-89.9, 35.0];
   /* Proximity bias for address search. CENTER is the centroid of the whole
      bbox, which sits in open country between towns; biasing to it ranked rural
@@ -311,6 +325,19 @@
       return;
     }
 
+    /* Parallel to the MESH check above, and checked just as early \u2014 see
+       WIND_STALE_DAYS for why wind.last_success (not wind.through) is the
+       right field here. A quiet stretch with nothing to report still
+       updates last_success every run; only a dead fetch leaves it behind. */
+    var windSuccess = index.wind && index.wind.last_success;
+    if (windSuccess && daysSince(windSuccess) > WIND_STALE_DAYS) {
+      staleEl.textContent = "Our wind report feed (Local Storm Reports and ASOS gusts) hasn't " +
+        "updated since " + prettyDate(windSuccess) + " \u2014 the automated refresh may be down. " +
+        "Hail data below is still current.";
+      staleEl.hidden = false;
+      return;
+    }
+
     var hail = index.hail && index.hail.through;
     var wind = index.wind && index.wind.through;
     var newest = [hail, wind].filter(Boolean).sort().pop();
@@ -488,10 +515,13 @@
 
   /* Two basemaps, one set of storm layers.
 
-     A homeowner reading a dark vector map is reading an abstraction; on
-     imagery they can find their own roof under the swath, which is the point
-     of the page. Satellite is the default for that reason, with the vector
-     view kept for orientation when the imagery is too busy.
+     Dark vector is the default: satellite's bright green aerial fights the
+     rest of the page and the color ramps tuned for a flat dark ground turn
+     to haze over grass and vanish over parking lots on imagery, making the
+     purple hail and amber wind swaths — the actual point of the page —
+     harder to read, not easier. Satellite stays available via the toggle
+     for whoever wants to find their own roof under a swath once they know
+     roughly where to look.
 
      Standard Satellite rather than the classic satellite-streets style: it is
      Mapbox Standard with an imagery base, so it keeps roads and place labels
@@ -527,7 +557,11 @@
       windLine: { width: 1, opacity: 0.45 },
     },
   };
-  var basemap = "satellite";
+  /* Dark vector by default — satellite's bright green aerial fights the
+     page and washes out the purple hail / amber wind swaths the whole
+     tool exists to show. The toggle below still offers satellite for
+     whoever wants to find their own roof under a swath. */
+  var basemap = "dark";
 
   function initMap() {
     if (map || !mapEl) return;

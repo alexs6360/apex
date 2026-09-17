@@ -12,12 +12,21 @@ name: Update storm data
 #   every 4 hours     MRMS MESH + the NWS warnings poll only — both describe
 #                     conditions that are only hours old and would be stale
 #                     well before the next daily run otherwise.
-# A third, manual-only mode (verify-mesh-fixture) decodes a known historical
-# hail date and checks the result against what that file is expected to
-# contain — see tools/verify-mesh-fixture.mjs. Run it after touching MESH
-# decoding, or any time the eccodes install below changes, to catch a
-# regression here instead of in production three weeks from now. It does
-# not touch data/ or commit anything.
+# Two more manual-only modes verify parsing against known-good dates instead
+# of touching data/ or committing anything:
+#   verify-mesh-fixture   decodes a known historical hail date and checks the
+#                         result against what that file is expected to
+#                         contain — see tools/verify-mesh-fixture.mjs. Run it
+#                         after touching MESH decoding, or any time the
+#                         eccodes install below changes.
+#   verify-wind-fixture   fetches a known wind-report date from IEM's LSR
+#                         feed and checks the parsed result against a
+#                         confirmed record — see tools/verify-wind-fixture.mjs
+#                         and tools/lsr.mjs. Run it after touching LSR
+#                         parsing. This is what catches an ingest that fetches
+#                         successfully but silently returns zero records —
+#                         wind.last_success alone cannot tell that apart from
+#                         a genuinely quiet stretch.
 #
 # Attribution (NOAA open data terms require this be stated somewhere on the
 # page — see the methodology note in storm-history.html, not just here):
@@ -35,7 +44,7 @@ on:
       mode:
         description: "Which pass to run"
         type: choice
-        options: [daily, frequent, verify-mesh-fixture]
+        options: [daily, frequent, verify-mesh-fixture, verify-wind-fixture]
         default: daily
 
 # No API keys are configured here because none are needed: every source
@@ -105,8 +114,12 @@ jobs:
         if: steps.mode.outputs.mode == 'verify-mesh-fixture'
         run: node tools/verify-mesh-fixture.mjs
 
+      - name: Verify LSR wind parsing against known fixture
+        if: steps.mode.outputs.mode == 'verify-wind-fixture'
+        run: node tools/verify-wind-fixture.mjs
+
       - name: Regenerate storm data
-        if: steps.mode.outputs.mode != 'verify-mesh-fixture'
+        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture'
         env:
           MODE: ${{ steps.mode.outputs.mode }}
           # Incremental in both modes: refetches the last 2 calendar months
@@ -120,7 +133,7 @@ jobs:
         run: node tools/build-storm-data.mjs data
 
       - name: Commit if changed
-        if: steps.mode.outputs.mode != 'verify-mesh-fixture'
+        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
