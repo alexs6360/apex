@@ -63,8 +63,13 @@ if [ -n "${MAPBOX_TOKEN:-}" ]; then
   sed -i '' "s|__MAPBOX_TOKEN__|${MAPBOX_TOKEN}|g" "$TMP/storm-history.js" "$TMP/home-storm-search.js"
 fi
 
+# --no-build: this script already built its own output above. Without this
+# flag, `netlify deploy` also runs netlify.toml's build.command (meant for
+# the GitHub-integration path, see tools/netlify-build.sh) before deploying
+# the --dir we hand it — redundant at best, and that script's GNU `sed -i`
+# syntax fails outright on macOS's BSD sed.
 if [ "$PROD" = true ]; then
-  netlify deploy --prod --dir "$TMP"
+  netlify deploy --prod --no-build --dir "$TMP"
 else
-  netlify deploy --dir "$TMP"
+  netlify deploy --no-build --dir "$TMP"
 fi

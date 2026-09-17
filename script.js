@@ -200,20 +200,41 @@
     }
   }
 
-  /* Lightning: a soft flash at random intervals (6-16s apart), never a
-     rapid strobe — each flicker resolves in under a second via the CSS
-     animation, and animationend removes the trigger class so it can
-     fire again later instead of looping. */
+  /* Lightning: a visible bolt plus a soft ambient flash, at random
+     intervals (6-16s apart), never a rapid strobe — each flicker resolves
+     in under a second via the CSS animations, and animationend removes
+     the trigger classes so they can fire again later instead of looping.
+     Three jagged path variants (viewBox 0 0 100 400, so they scale with
+     .sh-bolt's own height) picked at random each strike so it isn't the
+     same bolt every time. */
   var lightningEl = document.querySelector(".sh-lightning");
-  if (lightningEl && !reduceMotion) {
+  var boltEl = document.querySelector(".sh-bolt");
+  var boltPath = boltEl ? boltEl.querySelector("path") : null;
+  var boltVariants = [
+    "M52,0 L38,90 L56,96 L26,220 L44,226 L14,400",
+    "M30,0 L47,80 L27,87 L58,205 L36,212 L64,400",
+    "M62,0 L46,60 L66,67 L32,180 L52,187 L20,320 L40,327 L10,400"
+  ];
+  if ((lightningEl || boltEl) && !reduceMotion) {
     var scheduleLightning = function () {
       var delay = 6000 + Math.random() * 10000;
       setTimeout(function () {
-        lightningEl.classList.add("is-flashing");
-        lightningEl.addEventListener("animationend", function onFlashEnd() {
-          lightningEl.classList.remove("is-flashing");
-          lightningEl.removeEventListener("animationend", onFlashEnd);
-        });
+        if (boltEl && boltPath) {
+          boltPath.setAttribute("d", boltVariants[Math.floor(Math.random() * boltVariants.length)]);
+          boltEl.style.setProperty("--bolt-x", (15 + Math.random() * 70).toFixed(0) + "%");
+          boltEl.classList.add("is-striking");
+          boltEl.addEventListener("animationend", function onBoltEnd() {
+            boltEl.classList.remove("is-striking");
+            boltEl.removeEventListener("animationend", onBoltEnd);
+          });
+        }
+        if (lightningEl) {
+          lightningEl.classList.add("is-flashing");
+          lightningEl.addEventListener("animationend", function onFlashEnd() {
+            lightningEl.classList.remove("is-flashing");
+            lightningEl.removeEventListener("animationend", onFlashEnd);
+          });
+        }
         scheduleLightning();
       }, delay);
     };

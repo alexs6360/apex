@@ -94,11 +94,56 @@
   }
 }
 
-/* Lightning: sits above the rain, below the text. A soft white flash,
-   not a hard strobe — opacity peaks well under 1 and the whole flicker
-   resolves in under a second, well clear of the "three flashes per
-   second" photosensitivity threshold since this fires at most once
-   every several seconds (timed from script.js). */
+/* The bolt itself — a jagged stroked path, one of a few variants picked
+   and re-drawn by script.js on each strike so it isn't the same shape
+   every time. Tall and narrow (viewBox 100x400) so it stretches from the
+   top of the hero partway down regardless of the hero's actual height.
+   Sits just above the rain, below the ambient flash below. */
+.sh-bolt {
+  position: absolute;
+  top: 0;
+  left: var(--bolt-x, 50%);
+  width: 70px;
+  height: 75%;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  overflow: visible;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 16px rgba(255, 255, 255, 0.5));
+}
+
+.sh-bolt path {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Two quick flickers rather than one clean fade — real strikes re-light
+   as the channel discharges. Still resolves well under a second and
+   fires no more than once every several seconds (script.js), so this
+   stays clear of photosensitivity strobe thresholds. */
+.sh-bolt.is-striking {
+  animation: sh-bolt-strike 0.5s ease-out;
+}
+
+@keyframes sh-bolt-strike {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  12% { opacity: 0.15; }
+  18% { opacity: 0.9; }
+  28% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Lightning: the ambient sky flash that follows the bolt above — sits
+   above the rain, below the text. A soft white flash, not a hard
+   strobe — opacity peaks well under 1 and the whole flicker resolves in
+   under a second, well clear of the "three flashes per second"
+   photosensitivity threshold since this fires at most once every
+   several seconds (timed from script.js, in sync with .sh-bolt). */
 .sh-lightning {
   position: absolute;
   inset: 0;
@@ -123,6 +168,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sh-rain,
+  .sh-bolt,
   .sh-lightning {
     display: none;
   }
