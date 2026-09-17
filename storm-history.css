@@ -778,6 +778,27 @@
 }
 
 @media (max-width: 767.98px) {
+  /* At the desktop values (96px/72px = 168px total) the search bar sat
+     almost exactly at the bottom of a typical phone's first viewport,
+     right where the fixed .mobile-call-bar lives — tightened further for
+     mobile specifically, not just to save space. */
+  .sh-intro {
+    /* Subhead to hero bottom edge. */
+    padding-bottom: 64px;
+  }
+
+  .sh-tool {
+    /* Address section top padding. */
+    padding-top: 56px;
+  }
+
+  /* Runs edge-to-edge and wraps to two lines at the desktop size (2.2rem
+     floor of the clamp()) with no margin on either side — one step down
+     so it has room to breathe. */
+  .sh-intro h1 {
+    font-size: 1.9rem;
+  }
+
   .sh-chips {
     gap: 5px;
   }

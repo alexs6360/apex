@@ -2400,12 +2400,13 @@ section {
 }
 
 @media (max-width: 767px) {
-  /* Bar height (56px, confirmed against the rendered element, not assumed)
-     plus 24px of actual clearance — at exactly 56px of padding the last
-     line of page content sat flush against the bar with no breathing room,
-     which read as the bar covering it. */
+  /* Bar height (56px, confirmed against the rendered element via
+     getBoundingClientRect, not assumed) plus 32px of actual clearance —
+     24px still let an orange CTA button sitting right above the bar read
+     as one solid block with it, since both share the same color with no
+     border between them (see .mobile-call-bar's border-top below). */
   body {
-    padding-bottom: 80px;
+    padding-bottom: 88px;
   }
 
   .mobile-call-bar {
@@ -2418,6 +2419,10 @@ section {
     bottom: 0;
     height: 56px;
     background: var(--signal);
+    /* Separates the bar from anything orange sitting directly above it —
+       without this, an orange button abutting the bar reads as one
+       continuous block since the color itself gives no seam. */
+    border-top: 1px solid rgba(0, 0, 0, 0.25);
     color: #000000;
     font-family: var(--font-body);
     font-weight: 600;
