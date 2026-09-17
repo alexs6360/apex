@@ -9,10 +9,11 @@ Use `tools/deploy.sh`, not `netlify deploy` directly — it substitutes the
 Mapbox token into a temporary copy of the site before deploying, so the real
 token never sits in the project's own tracked files.
 
-**This site has no Netlify GitHub integration set up.** Pushing to
-`origin/main` does not deploy anything by itself — `tools/deploy.sh` (or the
-Netlify dashboard) is the only thing that ships code. Keep the two in sync by
-committing and pushing before every prod deploy; see below.
+**As of this writing, this site has no Netlify GitHub integration set up
+yet — see below to fix that.** Until it's linked, pushing to `origin/main`
+does not deploy anything by itself; `tools/deploy.sh` (or the Netlify
+dashboard) is the only thing that ships code. Keep the two in sync by
+committing and pushing before every prod deploy.
 
 Preview a change (does not touch the live site):
 
@@ -27,12 +28,32 @@ changes, so what's live always matches a real commit:
 bash tools/deploy.sh --prod
 ```
 
-**Better long-term fix:** connect this repo to Netlify's GitHub integration
-(Site settings → Build & deploy → Link repository in the Netlify dashboard,
-same setup as the Rise site) so a push to `main` deploys automatically and
-`tools/deploy.sh --prod` stops being necessary at all. This requires
-authorizing Netlify's GitHub App in the dashboard — not something scriptable
-from here.
+### Connecting Netlify's GitHub integration
+
+This turns a push to `main` into an automatic deploy, same as the Rise site,
+and makes `tools/deploy.sh --prod` unnecessary. It requires authorizing
+Netlify's GitHub App, which only you can do from the dashboard:
+
+1. `https://app.netlify.com/projects/apexexteriorsmidsouth/settings/deploys`
+   → **Build & deploy → Continuous deployment → Link repository**.
+2. Choose GitHub, authorize the app if prompted, select `alexs6360/apex`,
+   branch `main`.
+3. Add a site environment variable `MAPBOX_TOKEN` (Site settings →
+   Environment variables) with the real token from `.env.local`.
+
+`netlify.toml` and `tools/netlify-build.sh` already do the rest: the build
+copies the site into a clean directory (same exclusions as
+`tools/deploy.sh` — `tools/`, `.git`, `node_modules`, etc. never get
+published) and substitutes `MAPBOX_TOKEN` into `storm-history.js` and
+`home-storm-search.js` in place of their placeholder, exactly like the
+manual script does. If `MAPBOX_TOKEN` isn't set, the build still succeeds
+and the site falls back to "Map unavailable" rather than failing.
+
+Once this is linked, `tools/deploy.sh --prod` becomes a manual override for
+one-off deploys rather than the normal path — the GitHub Action that
+regenerates storm data (`.github/workflows/update-storm-data.yml`) will also
+start reaching production automatically instead of sitting in git until
+someone runs the script.
 
 ## Mapbox token
 

@@ -1,0 +1,6 @@
+# Only used by Netlify's GitHub integration (Site settings -> Build & deploy
+# -> Continuous deployment). Manual deploys via tools/deploy.sh don't read
+# this file — they do their own token substitution the same way.
+[build]
+  command = "bash tools/netlify-build.sh"
+  publish = ".netlify-publish"
