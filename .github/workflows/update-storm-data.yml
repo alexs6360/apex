@@ -3,7 +3,12 @@ name: Update storm data
 # Keeps data/*.json (storm-history.html's hail, wind, and warning archive)
 # current for the Apex service area — bbox 34.4-35.6N, -90.8--89.0W, set in
 # tools/build-storm-data.mjs — without a backend or a build step on Netlify.
-# Netlify's GitHub integration deploys automatically once this pushes to main.
+#
+# This workflow commits straight to main, but that alone does not put new
+# data on the live site: this repo has no Netlify GitHub integration, so
+# nothing deploys automatically on push. Someone still has to run
+# `tools/deploy.sh --prod` (or set up the GitHub integration — see README)
+# to ship a commit this workflow made.
 #
 # Two schedules share one script — tools/build-storm-data.mjs decides what to
 # do based on MODE, computed below from which cron fired:
