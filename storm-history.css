@@ -253,10 +253,14 @@
 .sh-tool {
   background: #1c1c1c;
   color: var(--paper);
-  /* Section boundary to search bar — raised from 64px so the search bar
-     starts clear of the hero's fade zone above it, rather than reading
-     as if it's sitting inside the transition. */
-  padding-top: 128px;
+  /* Section boundary to search bar. Set independently of .sh-intro's own
+     padding-bottom (96px) without accounting for the two combined — an
+     earlier pass raised this to 128px specifically to clear the fade
+     zone above, which double-counted against .sh-intro's padding-bottom
+     already doing that job and left ~224px of dead space above the
+     search bar instead of the ~168px these two were each written to
+     produce on their own. */
+  padding-top: 72px;
   padding-bottom: clamp(3rem, 6vw, 4.5rem);
 }
 
