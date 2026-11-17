@@ -23,16 +23,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap">
-<link rel="stylesheet" href="/styles.css?v=20260917">
+<link rel="stylesheet" href="/styles.css?v=20261116">
 <style>
   .thanks {
     min-height: 100vh;
+    /* Pushed down by the fixed header (now opaque glass, not a
+       transparent scrim) so it doesn't sit under the bar — the flex
+       centering below still centers within whatever's left. */
+    padding-top: var(--nav-height);
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--ink);
     color: var(--paper);
-    padding: var(--gutter);
+    padding-inline: var(--gutter);
+    padding-bottom: var(--gutter);
     text-align: center;
   }
   .thanks-inner {
@@ -57,6 +62,42 @@
 </head>
 <body>
 
+<nav class="nav" id="nav">
+  <div class="wrap">
+    <a class="nav-brand" href="/">
+      <img class="logo-lockup" src="/images/apex-logo-white-compact.png" alt="Apex Exteriors">
+    </a>
+    <ul class="nav-links">
+      <li><a href="/#services">Services</a></li>
+      <li><a href="/roof-system/">Roof System</a></li>
+      <li><a href="/how-it-works/">How It Works</a></li>
+      <li><a href="/#founder">Why Us</a></li>
+      <li><a href="/#area">Service Area</a></li>
+      <li><a href="/#estimate">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a class="pill nav-cta__call" href="tel:19014947506">Call (901) 494-7506</a>
+      <a class="pill nav-cta__quote" href="/#estimate">Get A Free Inspection</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <ul class="mobile-menu-links">
+      <li><a href="/#services">Services</a></li>
+      <li><a href="/roof-system/">Roof System</a></li>
+      <li><a href="/how-it-works/">How It Works</a></li>
+      <li><a href="/#founder">Why Us</a></li>
+      <li><a href="/#area">Service Area</a></li>
+      <li><a href="/#estimate">Contact</a></li>
+    </ul>
+    <a class="btn btn-solid btn-sans mobile-menu-call" href="tel:19014947506"><span class="tri"></span>Call (901) 494-7506</a>
+  </div>
+</nav>
+
 <div class="thanks">
   <div class="thanks-inner">
     <svg class="thanks-mark" viewBox="0 0 232 200" aria-hidden="true"><g fill="currentColor"><path d="M115.47 0 L137.99 39 L45.05 200 L0 200 Z"/><path d="M154 66 L231.36 200 L184 200 L130.33 107 Z"/><path d="M115.47 134 L153.57 200 L77.37 200 Z"/></g></svg>
@@ -66,5 +107,8 @@
   </div>
 </div>
 
+<a class="mobile-call-bar" href="tel:19014947506">Call (901) 494-7506</a>
+
+<script src="/script.js?v=20261116"></script>
 </body>
 </html>

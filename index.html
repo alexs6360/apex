@@ -22,9 +22,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap">
-<link rel="stylesheet" href="/styles.css?v=20260917">
+<!-- Hero-only pairing (sticky-hero port): Montserrat for the headline
+     and form heading, Inter for the rest of the hero's copy. Nothing
+     outside .hero uses either, so this link is index.html-only. -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css?v=20261116">
 </head>
-<body>
+<body class="anim">
 
 <nav class="nav" id="nav">
   <div class="wrap">
@@ -40,7 +44,10 @@
       <li><a href="#area">Service Area</a></li>
       <li><a href="#estimate">Contact</a></li>
     </ul>
-    <a class="btn btn-solid btn-sans nav-call" href="tel:19014947506">Call (901) 494-7506</a>
+    <div class="nav-cta">
+      <a class="pill nav-cta__call" href="tel:19014947506">Call (901) 494-7506</a>
+      <a class="pill nav-cta__quote" href="#estimate">Get A Free Inspection</a>
+    </div>
     <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
       <span class="nav-toggle-bar"></span>
       <span class="nav-toggle-bar"></span>
@@ -63,71 +70,78 @@
 
 <main id="top">
 
-  <header class="hero">
-    <div class="hero-video-wrap" aria-hidden="true">
-      <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="/images/hero-poster.jpg">
-        <source src="/videos/hero.mp4" type="video/mp4">
-      </video>
+  <section class="hero">
+    <div class="hero__grid" aria-hidden="true"></div>
+    <div class="hero__mark" aria-hidden="true">
+      <svg viewBox="0 0 232 200"><g fill="#fff">
+        <path d="M115.47 0 L137.99 39 L45.05 200 L0 200 Z"/>
+        <path d="M154 66 L231.36 200 L184 200 L130.33 107 Z"/>
+        <path d="M115.47 134 L153.57 200 L77.37 200 Z"/>
+      </g></svg>
     </div>
-    <div class="hero-overlay" aria-hidden="true"></div>
-    <svg class="hero-mark" viewBox="0 0 232 200" aria-hidden="true">
-      <path class="hero-mark-p1" d="M115.47 0 L137.99 39 L45.05 200 L0 200 Z"/>
-      <path class="hero-mark-p2" d="M154 66 L231.36 200 L184 200 L130.33 107 Z"/>
-      <path class="hero-mark-p3" d="M115.47 134 L153.57 200 L77.37 200 Z"/>
-    </svg>
-    <div class="wrap">
-      <div class="hero-grid">
-        <div class="hero-content">
-          <h1 class="hero-headline">
-            <span class="hero-line"><span class="hero-word hero-in" style="--d:0">Elevating</span> <span class="hero-word hero-in" style="--d:1">Your</span></span>
-            <span class="hero-line"><span class="hero-word hero-in" style="--d:2">Home's</span> <span class="hero-word hero-word--accent hero-in" style="--d:3">Exterior</span></span>
-          </h1>
-          <p class="lede hero-in" style="--d:4">Complete exterior protection—roofing, siding, and gutters—engineered for the Mid-South. Backed by free inspections, crystal-clear written estimates, and a seamless, hassle-free installation from start to finish.</p>
-          <ul class="trust-row hero-in" style="--d:5">
-            <li>Licensed &amp; Insured</li>
-            <li>Free Inspections</li>
-            <li>Insurance Claim Help</li>
-          </ul>
+
+    <div class="wrap stage">
+      <div class="copy">
+        <span class="badge fx"><s></s>Southaven &middot; Olive Branch &middot; Hernando &middot; Memphis</span>
+        <h1 class="fx">
+          <span class="ln"><span>Elevating Your</span></span>
+          <span class="ln"><span class="accent">Home&rsquo;s Exterior</span></span>
+        </h1>
+        <p class="lede fx">Every job starts with an honest look at your roof. Sometimes that&rsquo;s a replacement, sometimes a repair, and sometimes we tell you it can wait.</p>
+        <div class="cta fx">
+          <a class="pill pill--lg pill--ghost" href="#hero-form">Get A Free Inspection</a>
+          <a class="tel" href="tel:19014947506">(901) 494-7506</a>
         </div>
+        <div class="chips fx">
+          <span>Roofing</span><span>Siding</span><span>Gutters</span>
+        </div>
+      </div>
 
-        <div class="hero-form-card hero-in" style="--d:6" id="hero-form">
-          <h2 class="hero-form-heading">Get Your Free Inspection</h2>
-          <form name="apex-estimate" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks" class="hero-form">
-            <input type="hidden" name="form-name" value="apex-estimate">
-            <p hidden><label>Don't fill this out: <input name="bot-field"></label></p>
-
-            <div class="field">
-              <label for="hero-name">Name</label>
-              <input id="hero-name" name="name" type="text" required placeholder="Your name">
-            </div>
-            <div class="field">
-              <label for="hero-phone">Phone</label>
-              <input id="hero-phone" name="phone" type="tel" required placeholder="(901) 555-0100">
-            </div>
-            <div class="field">
-              <label for="hero-address">Street Address</label>
-              <input id="hero-address" name="address" type="text" required placeholder="123 Main St">
-            </div>
-            <div class="field">
-              <label for="hero-need">What Do You Need?</label>
-              <select id="hero-need" name="need" required>
-                <option value="" selected disabled>What Do You Need?</option>
-                <option value="Roof">Roof</option>
-                <option value="Siding">Siding</option>
-                <option value="Gutters">Gutters</option>
-                <option value="Storm damage">Storm Damage</option>
-                <option value="Inspection">Inspection</option>
-                <option value="Not sure">Not Sure</option>
-              </select>
-            </div>
-
-            <button type="submit" class="btn btn-solid btn-sans form-submit"><span class="tri"></span>Get My Free Inspection</button>
-            <p class="hero-form-note">We'll call to schedule. No obligation, no pressure.</p>
-          </form>
+      <div class="media">
+        <div class="panel fx">
+          <!-- story clip: plays once. src is set by script.js so phones can skip the heavy file. -->
+          <video class="panel__media" muted playsinline preload="auto"
+                 poster="/images/apex-hero-poster.jpg" aria-hidden="true" id="bg"
+                 data-src="/videos/apex-hero.mp4"></video>
+          <!-- finished-house sequence: takes over and loops forever -->
+          <video class="panel__media panel__media--loop" muted loop playsinline preload="none"
+                 poster="/images/apex-hero-poster.jpg" aria-hidden="true" id="bgloop"
+                 data-src="/videos/apex-hero-loop.mp4"></video>
         </div>
       </div>
     </div>
-  </header>
+
+    <div class="wrap band fx">
+      <div class="barform" id="hero-form">
+        <form name="apex-estimate" method="POST" data-netlify="true"
+              netlify-honeypot="bot-field" action="/thanks">
+          <input type="hidden" name="form-name" value="apex-estimate">
+          <p hidden><label>Don&rsquo;t fill this out: <input name="bot-field"></label></p>
+
+          <div class="band__head">
+            <h2><s></s>Start with a free inspection</h2>
+          </div>
+
+          <div class="barform__in">
+            <div class="field">
+              <label for="hero-name">Name</label>
+              <input id="hero-name" name="name" type="text" placeholder="Your name" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="hero-phone">Phone</label>
+              <input id="hero-phone" name="phone" type="tel" placeholder="(901) 555-0100" autocomplete="tel" required>
+            </div>
+            <div class="field">
+              <label for="hero-address">Street Address</label>
+              <input id="hero-address" name="address" type="text" placeholder="123 Main St" autocomplete="street-address" required>
+            </div>
+            <button class="pill" type="submit">Get My Free Inspection</button>
+          </div>
+          <p class="fine">We&rsquo;ll call to schedule. No obligation, no pressure.</p>
+        </form>
+      </div>
+    </div>
+  </section>
 
   <section class="storm-check" id="storm-check">
     <div class="wrap">
@@ -398,6 +412,6 @@
 
 <script src="/storm-autocomplete.js"></script>
 <script src="/home-storm-search.js"></script>
-<script src="/script.js?v=20260917-3"></script>
+<script src="/script.js?v=20261116"></script>
 </body>
 </html>

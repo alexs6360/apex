@@ -23,11 +23,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap">
-<link rel="stylesheet" href="/styles.css?v=20260917">
+<link rel="stylesheet" href="/styles.css?v=20261116">
 <style>
   .policy {
     background: var(--paper);
-    padding-top: clamp(7rem, 14vw, 9rem);
+    /* Clears the fixed header (now opaque glass rather than a
+       transparent scrim — see the Nav section in styles.css) plus a
+       bit of breathing room, instead of the fixed clamp() this used
+       before. */
+    padding-top: calc(var(--nav-height) + clamp(1.5rem, 4vw, 2.5rem));
   }
   .policy h1 {
     font-size: clamp(2rem, 4.5vw, 2.75rem);
@@ -79,7 +83,10 @@
       <li><a href="/#area">Service Area</a></li>
       <li><a href="/#estimate">Contact</a></li>
     </ul>
-    <a class="btn btn-solid btn-sans nav-call" href="tel:19014947506">Call (901) 494-7506</a>
+    <div class="nav-cta">
+      <a class="pill nav-cta__call" href="tel:19014947506">Call (901) 494-7506</a>
+      <a class="pill nav-cta__quote" href="/#estimate">Get A Free Inspection</a>
+    </div>
     <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
       <span class="nav-toggle-bar"></span>
       <span class="nav-toggle-bar"></span>
@@ -234,6 +241,6 @@
 
 <a class="mobile-call-bar" href="tel:19014947506">Call (901) 494-7506</a>
 
-<script src="/script.js?v=20260917-3"></script>
+<script src="/script.js?v=20261116"></script>
 </body>
 </html>
