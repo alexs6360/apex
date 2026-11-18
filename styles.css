@@ -939,20 +939,6 @@ html.past-hero .nav-cta__quote {
   margin-bottom: 24px;
 }
 
-.hero .cta .tel {
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 17px;
-  border-bottom: 2px solid rgba(255, 130, 0, 0.55);
-  padding-bottom: 3px;
-  transition: border-color 0.2s var(--hx-ease);
-}
-
-.hero .cta .tel:hover {
-  border-bottom-color: #ff8200;
-}
-
 .hero .chips {
   display: flex;
   flex-wrap: wrap;
@@ -1153,6 +1139,17 @@ html.past-hero .nav-cta__quote {
   border: 1px solid rgba(255, 255, 255, 0.17);
   border-radius: 8px;
   padding: 5px 13px 6px;
+  /* The base .field rule (below, for the stacked contact-form fields) sets
+     margin-bottom:1.25rem. In this single-row grid that margin still counts
+     toward the row's auto height under align-items:stretch, inflating the
+     track by 20px beyond the field's own content — the submit .pill (no
+     margin) then stretches to fill that inflated row while .field's content
+     box stays at its natural size, landing the extra 20px in .field's own
+     margin instead. .barform__in's gap already owns the spacing between
+     columns (and, stacked on mobile, between rows), so this margin is
+     redundant here regardless — zeroing it fixes the height match at the
+     source instead of compensating on the button's side. */
+  margin-bottom: 0;
   transition: background 0.2s var(--hx-ease), border-color 0.2s var(--hx-ease);
 }
 
