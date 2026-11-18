@@ -155,3 +155,4 @@ is no custom Netlify Function or third-party email service wired up.
 The storm history tool — data pipeline, contour fitting, and lookup UI — was
 ported from a sibling project, riseroofingms.com, and re-pointed at the
 Memphis metro with its own data, colors, and copy.
+<!-- throwaway check for coming-soon gate scoping -->
