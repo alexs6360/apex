@@ -8,15 +8,23 @@
    cached the old response has no reason to fetch the new one.
    ============================================================ */
 :root {
-  --ink: #1c1e24;
-  --ink-soft: #262932;
-  --slate: #454a57;
-  --mist: #9195a1;
-  --cloud: #f3f4f6;
+  --ink: #000000;
+  /* Was a hex raised-surface shade; a surface that needs to read as
+     lifted off --ink now gets there with a white-alpha overlay instead
+     of a second near-black hex. */
+  --ink-soft: #000000;
+  --slate: #4b5563;
+  /* White at 58%, not a slate at any alpha. #9195a1 was a LIGHT grey and
+     every consumer sits on black or near-black — service-tile body copy and
+     all the footer text — so the replacement has to lighten against the
+     surface, not darken. Measured: 6.92:1 on #000 and 6.86:1 on the tile's
+     rgb(14,14,14), against the original's 7.02 and 6.45. */
+  --mist: rgba(255, 255, 255, 0.58);
+  --cloud: rgba(0, 0, 0, 0.04);
   --paper: #ffffff;
   --signal: #ff8200;
-  --signal-dim: #d96e00;
-  --signal-light: #ff9426;
+  --signal-dim: color-mix(in srgb, var(--signal) 85%, #000000);
+  --signal-light: color-mix(in srgb, var(--signal) 92%, #ffffff);
   --line-on-dark: rgba(255, 255, 255, 0.1);
   --line-on-light: rgba(28, 30, 36, 0.1);
 
@@ -703,13 +711,14 @@ html.past-hero .nav-cta__quote {
   background: #ff8200;
   color: #000000;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   border: 0;
   cursor: pointer;
-  font-family: inherit;
-  padding: 15px 26px;
-  border-radius: 10px;
+  padding: 0.95rem 1.5rem;
+  border-radius: 2px;
   white-space: nowrap;
   transition: filter 0.2s var(--hx-ease);
 }
@@ -726,8 +735,7 @@ html.past-hero .nav-cta__quote {
 }
 
 .pill--lg {
-  font-size: 17px;
-  padding: 17px 32px;
+  padding: 1.05rem 1.75rem;
 }
 
 .pill--ghost {
@@ -749,10 +757,11 @@ html.past-hero .nav-cta__quote {
    Pins (position: sticky) while the next section slides up over it;
    --p (0 at rest, 1 once fully covered) is set by script.js from
    scroll position and eases the copy/panel/band back so they recede
-   under the incoming section instead of fighting it. Montserrat for
-   the headline and the form heading, Inter for everything else in
-   here — both loaded in index.html's own <head> only, since nothing
-   outside the hero uses them. Colors are literal, not the shared
+   under the incoming section instead of fighting it. Type is the
+   site's own pair — var(--font-display)/var(--font-body) — not the
+   Montserrat/Inter this section loaded for itself at port time; that
+   extra pairing never earned its keep next to the rest of the page.
+   Colors are literal, not the shared
    --ink/--signal/--slate tokens above: this block is held to exactly
    the 4 brand hex values (#000000 / #FF8200 / #4B5563 / #FFFFFF),
    which don't all line up with those tokens' own shades.
@@ -780,7 +789,7 @@ html.past-hero .nav-cta__quote {
     linear-gradient(180deg, rgba(255, 255, 255, 0.094) 0%, rgba(255, 255, 255, 0.055) 46%, rgba(255, 255, 255, 0.039) 100%),
     #000;
   color: #ffffff;
-  font-family: Inter, -apple-system, system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -892,7 +901,7 @@ html.past-hero .nav-cta__quote {
 }
 
 .hero h1 {
-  font-family: Montserrat, sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   color: #ffffff;
   font-size: clamp(2.4rem, 4.6vw, 4.05rem);
@@ -1093,14 +1102,14 @@ html.past-hero .nav-cta__quote {
   margin: 0 0 8px;
 }
 
-/* A 20px/700 Montserrat heading read as a second hero — this is a
+/* A 20px/700 display-font heading read as a second hero — this is a
    label for the fields below it, not a headline, so it steps back to
    the eyebrow's weight. .hero .band__head h2 (specificity 0,2,1) sits
    well above the sitewide h1,h2,h3{...} and h2{font-size:...} rules
    (0,0,3 and 0,0,1) earlier in this file, so every property here wins
    outright regardless of source order — nothing to raise further. */
 .hero .band__head h2 {
-  font-family: Montserrat, sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -1128,9 +1137,12 @@ html.past-hero .nav-cta__quote {
   align-items: stretch;
 }
 
-/* .pill's own sitewide font-size (16px) would otherwise win here on
-   source order alone once this rule also sets one — explicit, not
-   relying on the cascade, so there's no ambiguity about which wins. */
+/* .pill's own sitewide padding/font-size would otherwise win here on
+   source order alone once this rule also sets them — explicit, not
+   relying on the cascade, so there's no ambiguity about which wins.
+   Padding is 0 24px (not .pill's rem-based default) because this
+   button sits in a grid row with align-items:stretch — its height
+   comes from matching the inputs beside it, not its own padding. */
 .hero .barform__in .pill {
   padding: 0 24px;
   font-size: 14.5px;
@@ -1413,7 +1425,8 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
      for a dark-ink backdrop. .services is now flat black, so the cards
      need their own, slightly lighter fill and a more visible border to
      actually lift off it rather than blend in. */
-  background: #1c1c1c;
+  background: #000000;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.055));
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   padding: clamp(1.5rem, 2.5vw, 2rem);
@@ -1771,7 +1784,8 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   aspect-ratio: 4 / 3;
   border: 1px solid rgba(75, 85, 99, 0.15);
   border-radius: 4px;
-  background: #f7f7f8;
+  background: #ffffff;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.03));
   overflow: hidden;
 }
 
@@ -1968,7 +1982,8 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
      only reads as raised when it sits on a surface a shade darker than
      itself. White-on-white (the previous state) is what made it nearly
      invisible. */
-  background: #f7f7f8;
+  background: #ffffff;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.03));
   color: #000000;
 }
 
@@ -2083,10 +2098,10 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 .contact-extra .trust-row li:nth-child(2) { transition-delay: 560ms; }
 .contact-extra .trust-row li:nth-child(3) { transition-delay: 620ms; }
 
-/* White card on the section's #f7f7f8 tint (the inverse of the previous
-   #f7f7f8-card-on-white), a shadow instead of a hairline border, and a
-   4px orange top bar — this is what actually reads as "raised" rather
-   than as a barely-there box. */
+/* White card on the section's own faint black-alpha tint (the inverse
+   of the previous white-card-on-white), a shadow instead of a hairline
+   border, and a 4px orange top bar — this is what actually reads as
+   "raised" rather than as a barely-there box. */
 .form-card {
   position: relative;
   overflow: hidden;
@@ -2731,10 +2746,10 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 }
 
 /* Only used on storm-history.html now — index.html no longer has a
-   .why-us section. Sits right after .sh-tool there, now #1c1c1c
+   .why-us section. Sits right after .sh-tool there, now #000000
    (background-alternation audit). */
 .why-us::before {
-  background: #1c1c1c;
+  background: #000000;
 }
 
 /* Orange text fails on this section's white background — the shared
