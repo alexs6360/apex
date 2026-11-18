@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apex Exteriors</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Apex Exteriors is launching soon.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background-color:#000;
+    background-image:
+      radial-gradient(900px 620px at 50% 34%, rgba(255,255,255,.085), transparent 70%),
+      linear-gradient(180deg, rgba(255,255,255,.055) 0%, rgba(255,255,255,.022) 55%, rgba(255,255,255,0) 100%);
+    color:#fff; font-family:Montserrat,-apple-system,"Segoe UI",Arial,sans-serif;
+    display:grid; place-items:center; padding:40px 24px;
+    overflow:hidden; position:relative;
+  }
+  body::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:72px 72px;
+    mask-image:radial-gradient(circle at 50% 42%, #000 0%, transparent 72%);
+    -webkit-mask-image:radial-gradient(circle at 50% 42%, #000 0%, transparent 72%);
+  }
+  .wrap{position:relative;text-align:center;max-width:460px}
+  .mark{display:block;width:76px;height:auto;margin:0 auto 26px}
+  .word{font-weight:700;font-size:clamp(17px,4.6vw,22px);letter-spacing:.2em;
+    text-transform:uppercase;margin:0;line-height:1.2}
+  .rule{width:34px;height:2px;background:#FF8200;margin:30px auto;border:0}
+  .soon{font-weight:600;font-size:clamp(13px,3.4vw,14px);letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(255,255,255,.55);margin:0}
+  @media (prefers-reduced-motion:no-preference){
+    .wrap{animation:rise .9s cubic-bezier(.22,.9,.3,1) both}
+    @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <svg class="mark" viewBox="0 0 232 200" role="img" aria-label="Apex Exteriors">
+      <path fill="#ffffff" d="M115.47 0 L137.99 39 L45.05 200 L0 200 Z"/>
+      <path fill="#ffffff" d="M154 66 L231.36 200 L184 200 L130.33 107 Z"/>
+      <path fill="#FF8200" d="M115.47 134 L153.57 200 L77.37 200 Z"/>
+    </svg>
+    <p class="word">Apex Exteriors</p>
+    <hr class="rule">
+    <p class="soon">Launching soon</p>
+  </div>
+</body>
+</html>

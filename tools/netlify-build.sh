@@ -32,3 +32,19 @@ if [ -n "${MAPBOX_TOKEN:-}" ]; then
 else
   echo "MAPBOX_TOKEN not set — leaving placeholder in place; map will show as unavailable." >&2
 fi
+
+# Coming-soon gate, production only. [[redirects]] in netlify.toml is global
+# and can't be scoped to a deploy context (Netlify's own docs are explicit
+# about this), so this is done per-build instead: CONTEXT is set by Netlify
+# on every build (production / deploy-preview / branch-deploy) and by
+# `netlify dev` (dev) — only a production build appends the catch-all, so
+# deploy previews and local dev keep serving the real site untouched.
+# Appended, not overwritten — _redirects already carries the /process
+# redirects from the repo root — and appended LAST, since first match wins
+# and this one must not shadow anything above it. The trailing "!" forces
+# the rewrite even though /coming-soon.html itself is a real file that
+# would otherwise just be served normally for its own path; without it the
+# gate would no-op for every other real file on the site too.
+if [ "${CONTEXT:-}" = "production" ]; then
+  printf '/*  /coming-soon.html  200!\n' >> .netlify-publish/_redirects
+fi
