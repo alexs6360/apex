@@ -786,19 +786,21 @@ html.past-hero .nav-cta__quote {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Two-tier measurement grid — fine 37px cells inside bold 148px
-   blocks. Reads as drafting paper rather than a flat black field. */
+/* Measurement grid on the site's own 48px module — the same cell and
+   the same 6% white as .services, so the hero reads as part of the page
+   rather than a section with its own drafting system. This was 148px
+   blocks with a 37px tier inside them; two tiers at once read as noise
+   across the whole left side, and neither cell matched anything else
+   on the site. */
 .hero__grid {
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.13) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 148px 148px, 148px 148px, 37px 37px, 37px 37px;
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
   -webkit-mask-image: radial-gradient(88% 82% at 25% 46%, #000 0%, rgba(0, 0, 0, 0.5) 58%, transparent 100%);
   mask-image: radial-gradient(88% 82% at 25% 46%, #000 0%, rgba(0, 0, 0, 0.5) 58%, transparent 100%);
 }
@@ -1008,7 +1010,10 @@ html.past-hero .nav-cta__quote {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
-  background-size: 148px 148px;
+  /* 144 = 3 x the 48px background module. The coarse scale is what keeps
+     the footage from reading as a pasted-in rectangle; being a clean
+     multiple is what keeps it from reading as a second, unrelated grid. */
+  background-size: 144px 144px;
   mix-blend-mode: overlay;
 }
 
