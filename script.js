@@ -48,6 +48,7 @@
 
   var reveals = document.querySelectorAll(".reveal, .process-item");
   if ("IntersectionObserver" in window) {
+    document.documentElement.classList.add("js-reveal");
     var io = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
