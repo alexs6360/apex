@@ -53,7 +53,18 @@
      the homepage hero's own entrance/exit motion (sticky-hero port) — a
      distinct name since nothing else on the site uses this curve. */
   --hx-ease: cubic-bezier(0.22, 0.9, 0.3, 1);
+
+  /* The hero's wide grid. Lifted out of .hero so .nav--wide can share the
+     exact same track: the logo has to land on the same x as the headline,
+     and two hardcoded copies of these numbers would drift apart the first
+     time one of them was tuned. */
+  --hx-container: 1560px;
+  --hx-pad: 56px;
+  --hx-bleed: calc((min(var(--hx-container), 100vw) - var(--hx-pad) * 2) / 2 - 50vw);
 }
+
+@media (max-width: 1240px) { :root { --hx-pad: 36px; } }
+@media (max-width: 640px)  { :root { --hx-pad: 22px; } }
 
 * {
   box-sizing: border-box;
@@ -313,12 +324,37 @@ section {
   align-items: center;
   text-decoration: none;
   color: var(--paper);
+  /* flex: none — the brand is the only shrinkable item in the nav row, so
+     without this flex resolves any shortfall by crushing the logo rather
+     than overflowing where it would be noticed. It collapsed to 20px at
+     1040. The row is sized by the breakpoint below instead. */
+  flex: none;
 }
 
 .logo-lockup {
   display: block;
   height: 60px;
   width: auto;
+}
+
+/* index.html only. The nav's shared .wrap is the site's 1180px spine,
+   but the homepage hero runs on the wider 1560px track — which put the
+   logo 166px inboard of the headline directly beneath it, reading as a
+   header bolted on rather than part of the page. Sharing the hero's
+   tokens (not a second copy of the numbers) lands the logo on the
+   headline's own x. Other pages have no 1560px section, so their nav
+   keeps the 1180px spine. */
+.nav--wide .wrap {
+  max-width: var(--hx-container);
+  padding-inline: var(--hx-pad);
+}
+
+/* Seven labels, five of them two words. Without this the flex row breaks
+   INSIDE a label — "Roof System" stacking as two lines — which is what
+   made the bar run to two rows at every desktop width. Breaking between
+   links is fine; breaking inside one is not. */
+.nav-links a {
+  white-space: nowrap;
 }
 
 .nav-links {
@@ -410,7 +446,10 @@ section {
   display: none;
 }
 
-@media (max-width: 719px) {
+/* 1199, not 719. Seven nowrap links plus the brand plus the CTA need
+   1118px of row; only 1200+ provides it. Measured, not guessed. Lower
+   it only by shortening labels or tightening the link gap. */
+@media (max-width: 1199px) {
   .nav-links {
     display: none;
   }
@@ -600,9 +639,23 @@ html.nav-hidden .nav {
    of view. Both pills share one grid cell so the bar never jumps when
    they cross-fade. Pages without a .hero never gain .past-hero, so
    they just keep showing the call button — unchanged from before. */
+/* Hidden on phones, where .mobile-call-bar is the call CTA — two fixed
+   orange "Call" targets on one screen is one too many. Hiding the
+   CONTAINER rather than the pills inside it: .nav .wrap is a flex row
+   with a 2rem gap, so an emptied .nav-cta would still contribute that
+   gap. */
 .nav-cta {
-  display: grid;
+  display: none;
   align-items: center;
+}
+
+/* 768, not 720: .mobile-call-bar is shown at max-width 767px, so
+   restoring this at 720 left a 48px window where both were on screen
+   at once. */
+@media (min-width: 768px) {
+  .nav-cta {
+    display: grid;
+  }
 }
 
 .nav-cta > .pill {
@@ -625,17 +678,13 @@ html.past-hero .nav-cta__quote {
   visibility: visible;
 }
 
-.nav-cta__call,
-.nav-cta__quote {
-  display: none;
-}
-
-@media (min-width: 720px) {
-  .nav-cta__call,
-  .nav-cta__quote {
-    display: inline-flex;
-  }
-}
+/* These two were .nav-cta__call/.nav-cta__quote{display:none} with a
+   min-width:720px restore. Both are (0,1,0) — the same specificity as
+   .pill{display:inline-flex} below, which is later in the file and so
+   won outright. The pill therefore rendered at every width: on a 390px
+   screen it measured 218px and squeezed the logo lockup down to 28px.
+   Ownership of this now sits on .nav-cta above, against a container no
+   other rule sets display on. */
 
 /* ============================================================
    Pill — rounded CTA button introduced with the sticky-hero design.
@@ -710,10 +759,6 @@ html.past-hero .nav-cta__quote {
    ============================================================ */
 .hero {
   --p: 0;
-  --hx-pad: 56px;
-  /* How far past the wrap's right edge the panel must reach to bleed
-     off the viewport edge. */
-  --hx-bleed: calc((min(1560px, 100vw) - var(--hx-pad) * 2) / 2 - 50vw);
   position: sticky;
   top: 0;
   z-index: 0;
@@ -780,7 +825,7 @@ html.past-hero .nav-cta__quote {
    1180px container. */
 .hero .wrap {
   width: 100%;
-  max-width: 1560px;
+  max-width: var(--hx-container);
   margin: 0 auto;
   padding: 0 var(--hx-pad);
   position: relative;
@@ -1250,7 +1295,6 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   .hero .barform__in { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 26px; }
 }
 @media (max-width: 1240px) {
-  .hero { --hx-pad: 36px; }
   .stage { grid-template-columns: minmax(0, clamp(400px, 38vw, 440px)) minmax(0, 1fr); gap: 0 28px; padding-top: 36px; }
   .hero h1 { font-size: clamp(2.2rem, 4.3vw, 3.4rem); }
   .hero .badge { font-size: 11.5px; letter-spacing: 0.08em; }
@@ -1286,7 +1330,6 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   }
 }
 @media (max-width: 640px) {
-  .hero { --hx-pad: 22px; }
   .hero .panel { border-radius: 14px; }
   .hero .lede { font-size: 16.5px; margin-bottom: 28px; }
   .hero .cta { gap: 18px; margin-bottom: 28px; }
