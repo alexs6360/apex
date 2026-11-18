@@ -61,6 +61,20 @@ official standalone/curl installer or Homebrew formula, despite how this
 looks.) As of this writing the installed version is 27.1.2; latest on npm
 is 27.20.0.
 
+## DNS
+
+- `apexexteriorsmidsouth.com` is registered at Squarespace Domains but uses
+  Netlify DNS (nameservers `dns1-4.p03.nsone.net`). Netlify manages the zone.
+- **DNSSEC is OFF and must stay off.** Netlify DNS does not support it; it
+  had to be disabled at Squarespace to delegate the nameservers. Re-enabling
+  it would publish DS records for keys Netlify does not sign with, and
+  validating resolvers would stop resolving the domain entirely.
+- SPF is `v=spf1 -all` (no mail authorized). When business email is set up,
+  that record must be replaced with one authorizing the mail provider, and
+  MX records added to the Netlify zone.
+- Manual CLI deploys return `405` on this site. Deploys go through the
+  GitHub integration from `github.com/alexs6360/apex` on `main`.
+
 ## Mapbox token
 
 The storm history tool (`storm-history.html`) uses Mapbox for the basemap and
