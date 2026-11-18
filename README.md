@@ -61,6 +61,17 @@ official standalone/curl installer or Homebrew formula, despite how this
 looks.) As of this writing the installed version is 27.1.2; latest on npm
 is 27.20.0.
 
+## Reviewing changes
+
+Work on the `preview` branch. Push, wait for the branch deploy, review at
+preview--apexexteriorsmidsouth.netlify.app. Merge to main when satisfied;
+main is production and is currently behind the coming-soon gate, so
+merging publishes nothing until that gate comes down.
+
+The gate lives in tools/netlify-build.sh, keyed on CONTEXT=production.
+Branch deploys and deploy previews are not production context, which is
+why the real site shows there.
+
 ## DNS
 
 - `apexexteriorsmidsouth.com` is registered at Squarespace Domains but uses
@@ -104,6 +115,13 @@ loads (200), only the actual map data doesn't, so the failure isn't
 obvious from a glance. The production domain and the site's own default
 `https://apexexteriorsmidsouth.netlify.app` are both already allowed and
 don't need touching.
+
+**`https://preview--apexexteriorsmidsouth.netlify.app` is also allowed, and
+that entry is permanent** — it's the `preview` branch's fixed deploy
+hostname (see Reviewing changes above), not a per-PR URL, so unlike a
+`deploy-preview-<N>` entry it never needs removing. `MAPBOX_TOKEN` itself
+is set with context `all`, so it's already available in branch-deploy
+builds without any scoping change.
 
 If `.env.local` is missing or empty when `tools/deploy.sh` runs, the site
 still deploys, but the storm history page shows "Map unavailable — no Mapbox
