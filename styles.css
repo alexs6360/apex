@@ -48,6 +48,11 @@
   /* Logo (60px) plus the nav's 1.6rem vertical padding, unscrolled — the
      fixed nav's real height, used to clear it before counting off a gap. */
   --nav-height: 111px;
+
+  /* Shared easing for the fixed header's glass/retreat transitions and
+     the homepage hero's own entrance/exit motion (sticky-hero port) — a
+     distinct name since nothing else on the site uses this curve. */
+  --hx-ease: cubic-bezier(0.22, 0.9, 0.3, 1);
 }
 
 * {
@@ -368,14 +373,6 @@ section {
   transform: scaleX(1);
 }
 
-.nav-call {
-  display: none;
-}
-
-/* No scroll-triggered background here on purpose — the header stays
-   transparent at every scroll position. The ::before scrim above is
-   what keeps it readable, not a solid fill that fades in on scroll. */
-
 /* For pages that open on a light section instead of a dark hero
    (process.html) — the transparent-until-scrolled nav above assumes a
    dark backdrop to read against, which isn't there on this page at
@@ -403,12 +400,6 @@ section {
 
 .nav--light .nav-links a.is-active {
   color: var(--signal);
-}
-
-@media (min-width: 720px) {
-  .nav-call {
-    display: inline-flex;
-  }
 }
 
 .nav-toggle {
@@ -553,359 +544,756 @@ section {
 }
 
 /* ============================================================
-   Hero
+   Nav — fixed glass header (sticky-hero port)
+
+   Ported from the new homepage hero's reference design and applied to
+   every page, not just the one with the hero: the bar now carries real
+   depth (blurred glass, not the old fading scrim) so it reads the same
+   regardless of what's behind it, retreats out of the way while reading
+   down a page and reappears the instant you scroll back up, and firms
+   up once you've scrolled a little. Still the same .nav/.nav-toggle
+   markup and ids script.js already hooked, with the call button now
+   wrapped in .nav-cta (see the pill component below) so it can swap
+   for a "get a quote" pill once a page's .hero has scrolled past —
+   only the look and the new scroll-driven classes (on <html>, not
+   .nav itself) are new.
+   ============================================================ */
+.nav {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.22));
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  transform: translateY(0);
+  transition: background 0.35s var(--hx-ease), border-color 0.35s var(--hx-ease),
+    padding 0.3s ease, transform 0.35s var(--hx-ease);
+}
+
+/* The glass background above now does the legibility job the old
+   fade-to-nothing scrim used to — this pseudo-element keeps the
+   stacking context it was created for but no longer paints anything. */
+.nav::before {
+  display: none;
+}
+
+.nav.is-scrolled {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.8));
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+
+/* Retreats upward while scrolling down past the hero, returns the
+   instant you scroll up. Set on <html> by script.js (not on .nav)
+   since it has to coordinate with the hero's --p and .past-hero below;
+   only ever added on pages with a .hero, so every other page's nav
+   just stays put, same as before. */
+html.nav-hidden .nav {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    transition: none;
+  }
+}
+
+/* The nav's own call-to-action follows the page: the phone number over
+   the hero, the hero's own "get a quote" ask once it has scrolled out
+   of view. Both pills share one grid cell so the bar never jumps when
+   they cross-fade. Pages without a .hero never gain .past-hero, so
+   they just keep showing the call button — unchanged from before. */
+.nav-cta {
+  display: grid;
+  align-items: center;
+}
+
+.nav-cta > .pill {
+  grid-area: 1 / 1;
+  transition: opacity 0.3s var(--hx-ease), visibility 0.3s var(--hx-ease);
+}
+
+.nav-cta__quote {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html.past-hero .nav-cta__call {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html.past-hero .nav-cta__quote {
+  opacity: 1;
+  visibility: visible;
+}
+
+.nav-cta__call,
+.nav-cta__quote {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .nav-cta__call,
+  .nav-cta__quote {
+    display: inline-flex;
+  }
+}
+
+/* ============================================================
+   Pill — rounded CTA button introduced with the sticky-hero design.
+   Used by the header's call/quote swap above and throughout the new
+   hero below. .btn (earlier in this file) stays the site's original
+   button for every other CTA so neither style bleeds into the other's
+   context.
+   ============================================================ */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  background: #ff8200;
+  color: #000000;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 15px 26px;
+  border-radius: 10px;
+  white-space: nowrap;
+  transition: filter 0.2s var(--hx-ease);
+}
+
+/* A brightness lift instead of a second orange — keeps hover feedback
+   inside the 4 brand colors instead of introducing a lighter tint. */
+.pill:hover {
+  filter: brightness(1.08);
+}
+
+.pill:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.pill--lg {
+  font-size: 17px;
+  padding: 17px 32px;
+}
+
+.pill--ghost {
+  background: transparent;
+  color: #ff8200;
+  box-shadow: inset 0 0 0 1px rgba(255, 130, 0, 0.55);
+}
+
+.pill--ghost:hover {
+  background: rgba(255, 130, 0, 0.09);
+  box-shadow: inset 0 0 0 1px #ff8200;
+  filter: none;
+}
+
+
+/* ============================================================
+   Hero — sticky reveal (sticky-hero port)
+
+   Pins (position: sticky) while the next section slides up over it;
+   --p (0 at rest, 1 once fully covered) is set by script.js from
+   scroll position and eases the copy/panel/band back so they recede
+   under the incoming section instead of fighting it. Montserrat for
+   the headline and the form heading, Inter for everything else in
+   here — both loaded in index.html's own <head> only, since nothing
+   outside the hero uses them. Colors are literal, not the shared
+   --ink/--signal/--slate tokens above: this block is held to exactly
+   the 4 brand hex values (#000000 / #FF8200 / #4B5563 / #FFFFFF),
+   which don't all line up with those tokens' own shades.
    ============================================================ */
 .hero {
-  position: relative;
-  /* Establishes a stacking context so .hero-video-wrap's z-index: -2 paints
-     above THIS element's own background instead of below it. clip-path used
-     to do this as a side effect; removing the angled cut for a straight
-     bottom edge took that with it and left the ink background covering the
-     video entirely. z-index on its own, with no visual effect otherwise,
-     restores the same containment. */
+  --p: 0;
+  --hx-pad: 56px;
+  /* How far past the wrap's right edge the panel must reach to bleed
+     off the viewport edge. */
+  --hx-bleed: calc((min(1560px, 100vw) - var(--hx-pad) * 2) / 2 - 50vw);
+  position: sticky;
+  top: 0;
   z-index: 0;
-  background: var(--ink);
-  color: var(--paper);
-  padding-top: clamp(7rem, 16vw, 10rem);
-  padding-bottom: clamp(6rem, 14vw, 9rem);
+  overflow: hidden;
+  isolation: isolate;
+  height: 100vh;
+  height: 100svh;
+  min-height: 660px;
+  padding-top: var(--nav-height);
+  display: flex;
+  flex-direction: column;
+  /* White-alpha-over-black stands in for the reference's near-black
+     gradient stops (#16181B/#0D0E10/#090A0B) — luminance-matched to
+     within 3/255 by pixel sampling, not just eyeballed, so the same
+     top-to-bottom lift survives on brand black instead of a 5th
+     custom color. */
+  background:
+    radial-gradient(1250px 780px at 20% 30%, rgba(255, 255, 255, 0.085), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.094) 0%, rgba(255, 255, 255, 0.055) 46%, rgba(255, 255, 255, 0.039) 100%),
+    #000;
+  color: #ffffff;
+  font-family: Inter, -apple-system, system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Two-tier measurement grid — fine 37px cells inside bold 148px
+   blocks. Reads as drafting paper rather than a flat black field. */
+.hero__grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.13) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 148px 148px, 148px 148px, 37px 37px, 37px 37px;
+  -webkit-mask-image: radial-gradient(88% 82% at 25% 46%, #000 0%, rgba(0, 0, 0, 0.5) 58%, transparent 100%);
+  mask-image: radial-gradient(88% 82% at 25% 46%, #000 0%, rgba(0, 0, 0, 0.5) 58%, transparent 100%);
+}
+
+/* Watermark mark, bottom-left of the copy column. */
+.hero__mark {
+  position: absolute;
+  inset: auto auto -60px -70px;
+  width: 460px;
+  height: 397px;
+  z-index: -1;
+  opacity: 0.075;
+  pointer-events: none;
+}
+
+.hero__mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Scoped to .hero, not the bare .wrap the rest of the site shares —
+   the hero's own wrap runs wider (1560px) than the site's normal
+   1180px container. */
+.hero .wrap {
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 0 var(--hx-pad);
+  position: relative;
+}
+
+/* Column 2 (panel + band) is much taller than the copy. Centring the
+   copy in it opened a void under the header, worse the wider the
+   screen — so the copy spans both rows and is centered on its own. */
+.stage {
+  display: grid;
+  /* 495px is not arbitrary: "Home's Exterior" measures ~7.3x the font
+     size, h1 scales at 4.6vw until it caps at 4.05rem around 1409px
+     wide, so at 1512+ the headline needs 475px. Below 495 it clips
+     silently — h1 .ln is overflow:hidden, so a too-narrow column loses
+     the end of the word rather than visibly overflowing. Don't lower
+     this ceiling. */
+  grid-template-columns: minmax(0, clamp(430px, 36vw, 495px)) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0 32px;
+  align-items: stretch;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  flex: 1;
+  min-height: 0;
+  transform-origin: 0 50%;
+  transform: scale(calc(1 - var(--p) * 0.022));
+  opacity: calc(1 - var(--p) * 0.72);
+}
+
+.copy {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 0;
+}
+
+/* Required, not cosmetic: justify-content:center counts a trailing
+   bottom margin as part of the block's own height and shifts the
+   whole thing upward — without this, whichever element ends up last
+   (.chips normally, .cta when .chips hides on short viewports) throws
+   the vertical centering off by its own margin-bottom. */
+.hero .copy > *:last-child {
+  margin-bottom: 0;
+}
+
+.hero .badge {
+  display: block;
+  margin: 0 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  padding-left: 16px;
+  border-left: 3px solid #ff8200;
+}
+
+.hero .badge s {
+  display: none;
+}
+
+.hero h1 {
+  font-family: Montserrat, sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: clamp(2.4rem, 4.6vw, 4.05rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+}
+
+.hero h1 .ln {
+  display: block;
   overflow: hidden;
 }
 
-/* Dissolves the video into the storm section's own background rather than
-   cutting to it — the end color has to match .storm-check's background
-   exactly or this just trades one hard seam for another. z-index: 0 sits
-   above the video/overlay (-2/-1) and below the actual hero content (1). */
-.hero::after {
+.hero h1 .ln span {
+  display: block;
+}
+
+.hero h1 .accent {
+  color: #ff8200;
+}
+
+.hero .lede {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 17px;
+  line-height: 1.55;
+  margin: 0 0 24px;
+  max-width: 44ch;
+}
+
+.hero .cta {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.hero .cta .tel {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 17px;
+  border-bottom: 2px solid rgba(255, 130, 0, 0.55);
+  padding-bottom: 3px;
+  transition: border-color 0.2s var(--hx-ease);
+}
+
+.hero .cta .tel:hover {
+  border-bottom-color: #ff8200;
+}
+
+.hero .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hero .chips span {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 9px 16px;
+}
+
+/* ---------- video panel ----------
+   Bleeds off the right edge. Video and form are one continuous
+   object, not two outlined boxes stacked with a seam — the panel's
+   own edges feather into the page on three sides, and the right side
+   runs off the viewport. */
+.media {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+.hero .panel {
+  position: relative;
+  /* Source footage is 1280x720. At 4/3 the box ran 21% narrower than
+     the frame and object-fit:cover was shaving ~10% off each side. */
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: 100%;
+  overflow: hidden;
+  margin-right: var(--hx-bleed);
+  margin-top: -64px;
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 150px),
+    linear-gradient(180deg, transparent 0, #000 70px),
+    linear-gradient(0deg, transparent 0, #000 80px);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 150px),
+    linear-gradient(180deg, transparent 0, #000 70px),
+    linear-gradient(0deg, transparent 0, #000 80px);
+  mask-composite: intersect;
+}
+
+/* The page's blueprint grid continues across the footage, tying the
+   two together. */
+.hero .panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 148px 148px;
+  mix-blend-mode: overlay;
+}
+
+/* Pulls the footage toward the page's own black at the edges, where
+   it meets the page — the middle keeps full brightness. */
+.hero .panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.34) 16%, transparent 44%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 16%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.55), transparent 18%);
+}
+
+.hero .panel__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero .panel__media--loop {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.hero .panel__media--loop.on {
+  opacity: 1;
+}
+
+/* ---------- form band ----------
+   Architecture, not a widget: a hairline rule across the hero's full
+   width, inputs sitting directly on the page. No card, no border, no
+   blur — nothing left to float. Overhangs the panel's own feathered
+   bottom edge, so there's footage behind it to read through. */
+.hero .band {
+  position: relative;
+  z-index: 4;
+  padding-top: 15px;
+  margin-bottom: 36px;
+  transform-origin: 0 50%;
+  transform: scale(calc(1 - var(--p) * 0.022));
+  opacity: calc(1 - var(--p) * 0.72);
+}
+
+.hero .band::after {
+  content: "";
+  position: absolute;
+  left: var(--hx-pad);
+  right: var(--hx-pad);
+  top: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.hero .band::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 90px;
-  z-index: 0;
-  background: #ffffff;
-  /* Eased, not a flat 2-stop linear-gradient — the same fix as the
-     between-section fades: a uniform ramp reads as a visible smudge, an
-     eased one (slow start, fast finish) reads as a clean dissolve. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.15) 45%, rgba(0, 0, 0, 0.6) 75%, black 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.15) 45%, rgba(0, 0, 0, 0.6) 75%, black 100%);
+  top: -140px;
+  height: 140px;
   pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.5));
 }
 
-.hero-video-wrap {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  overflow: hidden;
-  /* Same frame as the <video poster>. Only visible once .hero-video is
-     hidden below — on top of it during normal playback either way. */
-  background-image: url("/images/hero-poster.jpg");
-  background-size: cover;
-  /* The source frame is dark roofline in the lower frame, sky and treeline
-     across the top — biasing up keeps some of that in view instead of
-     cropping straight to a wall of dark shingles on a tall viewport. */
-  background-position: center 15%;
-  transform: translateY(var(--parallax-video, 0px));
-  /* Same brightness lift as .hero-video, applied here too since this is
-     what prefers-reduced-motion visitors actually see in its place —
-     without it they'd get the lighter overlay with none of the
-     compensating boost, which is worse than before, not better. */
-  filter: brightness(1.1) contrast(1.05);
-}
-
-.hero-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  animation: heroVideoZoom 20s ease-in-out infinite alternate;
-  /* Source footage runs dark. Paired with the lighter overlay above so
-     the hero reads brighter overall without losing the roofline. */
-  filter: brightness(1.1) contrast(1.05);
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.52) 100%);
-  z-index: -1;
-}
-
-@keyframes heroVideoZoom {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.08);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-video {
-    display: none;
-  }
-}
-
-.hero .wrap {
-  position: relative;
-  z-index: 1;
-}
-
-/* Fully-contained lower-left watermark — no bleed off any edge. Sized to
-   the actual free space in that corner: at 1440/1280 (identical column
-   width once the .wrap hits its 1180px container cap) the gap between
-   the trust row's bottom and the hero's own bottom edge measures out to
-   ~245px; 1024 has slightly more (~262px, shorter headline outweighs the
-   taller lede there), so 1440/1280 is the binding case. bottom:70px
-   (mark height 160px) uses 230px of that 245px, leaving ~15px of margin
-   under the trust row — as far up as this size can go without resizing. */
-.hero-mark {
-  --mark-h: 160px;
-  position: absolute;
-  height: var(--mark-h);
-  width: calc(var(--mark-h) * 232 / 200);
-  left: 60px;
-  bottom: 70px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-@media (max-width: 959px) {
-  .hero-mark {
-    display: none;
-  }
-}
-
-.hero-mark-p1,
-.hero-mark-p2,
-.hero-mark-p3 {
-  fill: var(--paper);
-  opacity: 0;
-}
-
-.hero-mark-p1 {
-  transform: translateX(-30px);
-  animation: heroMarkInLeft 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.5s;
-}
-
-.hero-mark-p2 {
-  transform: translateX(30px);
-  animation: heroMarkInRight 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.62s;
-}
-
-.hero-mark-p3 {
-  transform: scale(0.5);
-  transform-origin: 115px 167px;
-  animation: heroMarkPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  animation-delay: 1.05s;
-}
-
-@keyframes heroMarkInLeft {
-  to { opacity: 0.07; transform: translateX(0); }
-}
-
-@keyframes heroMarkInRight {
-  to { opacity: 0.07; transform: translateX(0); }
-}
-
-@keyframes heroMarkPop {
-  to { opacity: 0.07; transform: scale(1); }
-}
-
-@keyframes heroUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.hero-in {
-  opacity: 0;
-  animation: heroUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: calc(150ms + var(--d, 0) * 100ms);
-}
-
-.hero-line {
-  display: block;
-  overflow: hidden;
-  padding-bottom: 0.1em;
-}
-
-.hero-word {
-  display: inline-block;
-}
-
-.hero-word--accent {
-  color: var(--signal);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-in {
-    animation: none;
-    opacity: 1;
-  }
-  .hero-mark-p1,
-  .hero-mark-p2,
-  .hero-mark-p3 {
-    animation: none;
-    opacity: 0.07;
-    transform: none;
-  }
-}
-
-.hero-grid {
-  display: grid;
-  grid-template-columns: 55fr 45fr;
-  align-items: center;
-  gap: 64px;
-}
-
-@media (max-width: 959px) {
-  .hero-grid {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-  }
-}
-
-.hero-content {
-  max-width: 46rem;
-}
-
-.hero-headline {
-  font-family: var(--font-display);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.01em;
-  margin: 0 0 1.4rem;
-  font-size: clamp(2.6rem, 6vw, 4.6rem);
-}
-
-.hero .lede {
-  color: #c7cad2;
-  /* Widened from 42ch — the longer copy wrapped to 4-5 lines and crowded
-     the headline below it. In practice the binding constraint at wide
-     viewports is the hero grid's 55% column, not this ch value, which is
-     why the font-size below is doing the real work up there. */
-  max-width: 68ch;
-  /* Shared .lede clamps up to 1.25rem (20px) — measured empirically against
-     the actual copy at the hero's column width: 18px wraps to 4 lines,
-     17px holds 3. Capped one notch below that break point. */
-  font-size: clamp(1rem, 1.4vw, 1.0625rem);
-  margin-bottom: 2.4rem;
-}
-
-.trust-row {
+.hero .band__head {
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
   flex-wrap: wrap;
-  row-gap: 12px;
-  column-gap: 24px;
-  list-style: none;
-  margin: 0 0 1.75rem;
-  padding: 0;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 8px;
 }
 
-.trust-row li {
-  position: relative;
+/* A 20px/700 Montserrat heading read as a second hero — this is a
+   label for the fields below it, not a headline, so it steps back to
+   the eyebrow's weight. .hero .band__head h2 (specificity 0,2,1) sits
+   well above the sitewide h1,h2,h3{...} and h2{font-size:...} rules
+   (0,0,3 and 0,0,1) earlier in this file, so every property here wins
+   outright regardless of source order — nothing to raise further. */
+.hero .band__head h2 {
+  font-family: Montserrat, sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+  line-height: 1.2;
+  margin: 0;
 }
 
-.trust-row li:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: -13px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.25);
+.hero .band__head h2 s {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  background: #ff8200;
+  vertical-align: middle;
+  margin-right: 10px;
+  text-decoration: none;
 }
 
-.hero-form-card {
-  max-width: 460px;
+.hero .barform__in {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 10px;
+  max-width: 1120px;
+  align-items: stretch;
+}
+
+/* .pill's own sitewide font-size (16px) would otherwise win here on
+   source order alone once this rule also sets one — explicit, not
+   relying on the cascade, so there's no ambiguity about which wins. */
+.hero .barform__in .pill {
+  padding: 0 24px;
+  font-size: 14.5px;
+}
+
+.hero .field {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 8px;
+  padding: 5px 13px 6px;
+  transition: background 0.2s var(--hx-ease), border-color 0.2s var(--hx-ease);
+}
+
+.hero .field:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.hero .field:focus-within {
+  background: rgba(255, 255, 255, 0.085);
+  border-color: rgba(255, 130, 0, 0.65);
+}
+
+.hero .field label {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+  margin: 0 0 2px;
+  cursor: text;
+}
+
+.hero .field input {
   width: 100%;
-  justify-self: end;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  padding: 0;
+  border-radius: 0;
+  text-overflow: ellipsis;
 }
 
-@media (max-width: 959px) {
-  .hero-form-card {
-    max-width: none;
-    justify-self: stretch;
+.hero .field input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.hero .field input:focus,
+.hero .field input:focus-visible {
+  /* The wrapper's :focus-within border above is the focus indicator —
+     an inner ring on the input too would read as a doubled outline. */
+  outline: none;
+}
+
+.hero .fine {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 9px 0 0;
+}
+
+/* ---------- load sequence ----------
+   Choreographed in Figma and exported via get_motion_context: a
+   looping 2s timeline with the stagger encoded as percentages, so
+   every element shares one 2s duration and holds until its own start
+   — no delays. Percentages below are Figma's, unmodified. Scoped
+   under body.anim/body.go rather than bare .anim/.go since those
+   classes only ever land on index.html's own <body>.
+
+   Starting hidden has to live under body.anim, not a bare .hero .fx —
+   script.js drops both classes ~2.2s after load (so the animation's
+   own fill-mode:both isn't left pinning opacity/transform forever),
+   and a bare rule would then permanently re-hide everything the
+   instant .go (and its animation) goes away. */
+body.anim .hero .fx {
+  opacity: 0;
+}
+
+body.go .hero .fx {
+  animation-duration: 2s;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+body.go .hero .badge      { animation-name: apexEyebrowY, apexEyebrowO; }
+body.go .hero h1 .ln span { animation-name: apexHeadY; }
+body.go .hero h1          { animation-name: apexHeadO; }
+body.go .hero .lede       { animation-name: apexLedeY, apexLedeO; }
+body.go .hero .cta        { animation-name: apexCtaY, apexCtaO; }
+body.go .hero .chips      { animation-name: apexChipsY, apexChipsO; }
+body.go .hero .panel      { animation-name: apexPanelS, apexPanelO; }
+body.go .hero .band       { animation-name: apexCardY, apexCardO; }
+
+@keyframes apexEyebrowY{0%,6%{transform:translateY(14px)}
+  6%{animation-timing-function:ease-out}33.5%,100%{transform:translateY(0)}}
+@keyframes apexEyebrowO{0%,6%{opacity:0}6%{animation-timing-function:ease-out}27.45%,100%{opacity:1}}
+
+@keyframes apexHeadY{0%,12%{transform:translateY(105%)}
+  12%{animation-timing-function:ease-out}49.5%,100%{transform:translateY(0)}}
+@keyframes apexHeadO{0%,12%{opacity:0}12%{animation-timing-function:ease-out}41.25%,100%{opacity:1}}
+
+@keyframes apexLedeY{0%,23%{transform:translateY(18px)}
+  23%{animation-timing-function:ease-out}53%,100%{transform:translateY(0)}}
+@keyframes apexLedeO{0%,23%{opacity:0}23%{animation-timing-function:ease-out}46.4%,100%{opacity:1}}
+
+@keyframes apexCtaY{0%,29%{transform:translateY(18px)}
+  29%{animation-timing-function:ease-out}59%,100%{transform:translateY(0)}}
+@keyframes apexCtaO{0%,29%{opacity:0}29%{animation-timing-function:ease-out}52.4%,100%{opacity:1}}
+
+@keyframes apexChipsY{0%,35%{transform:translateY(18px)}
+  35%{animation-timing-function:ease-out}65%,100%{transform:translateY(0)}}
+@keyframes apexChipsO{0%,35%{opacity:0}35%{animation-timing-function:ease-out}58.4%,100%{opacity:1}}
+
+@keyframes apexPanelS{0%{transform:scale(1.045);animation-timing-function:ease-out}
+  52.5%,100%{transform:scale(1)}}
+@keyframes apexPanelO{0%{opacity:0;animation-timing-function:ease-out}35.1%,100%{opacity:1}}
+
+@keyframes apexCardY{0%,32%{transform:translateY(26px)}
+  32%{animation-timing-function:ease-out}69.5%,100%{transform:translateY(0)}}
+@keyframes apexCardO{0%,32%{opacity:0}32%{animation-timing-function:ease-out}61.25%,100%{opacity:1}}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Same specificity as the opacity:0 rule above (so this actually
+     wins) and in the same body.anim-scoped form, so reduced-motion
+     visitors never sit through even the brief invisible gap before
+     script.js's timeout clears .anim/.go. */
+  body.anim .hero .fx { opacity: 1; }
+  body.go .hero .fx,
+  body.go .hero h1 .ln span { animation: none; }
+  .stage, .hero .band { transform: none; opacity: 1; }
+}
+
+/* ---------- responsive ----------
+   Short screens: trim the copy column so it stops overflowing its
+   row. The services chips go first — least load-bearing thing here. */
+@media (min-width: 1041px) and (max-height: 830px) {
+  .hero h1 { font-size: clamp(2rem, 3.4vw, 2.9rem); }
+  .hero .lede { font-size: 16px; line-height: 1.55; margin-bottom: 24px; }
+  .hero .cta { margin-bottom: 0; }
+  .hero .badge { margin-bottom: 14px; }
+  .hero .band__head { margin-bottom: 8px; }
+  .hero .band { padding-top: 15px; margin-bottom: 28px; }
+}
+/* narrow + mid-height: the lede wraps longer, so the copy still overruns */
+@media (min-width: 1041px) and (max-width: 1300px) and (max-height: 900px) {
+  .hero .lede { font-size: 16px; margin-bottom: 24px; }
+  .hero .cta { margin-bottom: 0; }
+}
+/* Below ~700px the tightened rhythm and slimmer band still aren't enough
+   room for the chips row — drop it, and recover the ~12px clip that
+   shows up once it's gone by trimming the three margins above it. */
+@media (min-width: 1041px) and (max-height: 700px) {
+  .hero .chips { display: none; }
+  .hero .badge { margin-bottom: 10px; }
+  .hero h1 { margin-bottom: 12px; }
+  .hero .lede { margin-bottom: 16px; }
+}
+@media (min-width: 1041px) and (max-height: 880px) {
+  .stage { padding-top: 20px; padding-bottom: 28px; }
+  .hero .lede { margin-bottom: 26px; }
+  .hero .chips { padding-top: 22px; }
+}
+@media (max-width: 1180px) {
+  .hero .barform__in { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 26px; }
+}
+@media (max-width: 1240px) {
+  .hero { --hx-pad: 36px; }
+  .stage { grid-template-columns: minmax(0, clamp(400px, 38vw, 440px)) minmax(0, 1fr); gap: 0 28px; padding-top: 36px; }
+  .hero h1 { font-size: clamp(2.2rem, 4.3vw, 3.4rem); }
+  .hero .badge { font-size: 11.5px; letter-spacing: 0.08em; }
+  .hero .lede { font-size: 16.5px; margin-bottom: 30px; }
+}
+@media (max-width: 1040px) {
+  /* single column: everything back into normal flow, no overhang */
+  .stage { grid-template-columns: 1fr; gap: 40px; padding-top: 40px; }
+  .copy, .media { grid-column: 1; grid-row: auto; }
+  .hero .panel { margin-right: 0; -webkit-mask-image: none; mask-image: none; border-radius: 16px; }
+  .hero__mark { display: none; }
+  .hero .barform__in { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* The sticky pin + fixed 100vh/overflow:hidden box is a desktop-only
+     flourish: badge + headline + lede + cta + chips + video panel +
+     form band, stacked in one column, is taller content than most
+     phone viewports have room for once the fixed header's own height
+     is subtracted — and overflow:hidden would silently crop whatever
+     doesn't fit, with no way to scroll and see it. Below this
+     breakpoint the hero just goes back to being a normal block: it
+     takes whatever height its content needs and the page scrolls
+     under the fixed header like any other section, same as before
+     this port. --p still gets set by script.js and still drives the
+     .stage/.band scale+fade as the (now much taller) hero scrolls by
+     — harmless, just no longer a "pin and reveal," which only made
+     sense against the sticky box this disables. */
+  .hero {
+    position: relative;
+    top: auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
   }
 }
-
-.hero-form-heading {
-  font-family: var(--font-body);
-  font-size: 22px;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 1.5rem;
+@media (max-width: 640px) {
+  .hero { --hx-pad: 22px; }
+  .hero .panel { border-radius: 14px; }
+  .hero .lede { font-size: 16.5px; margin-bottom: 28px; }
+  .hero .cta { gap: 18px; margin-bottom: 28px; }
+  .hero .band { padding-top: 24px; margin-bottom: 28px; }
+  .hero .barform__in { grid-template-columns: 1fr; gap: 20px; }
+  .hero .barform__in .pill { width: 100%; justify-content: center; }
 }
-
-.hero-form .field {
-  margin-bottom: 1rem;
-}
-
-.hero-form .field label {
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 14px;
-  letter-spacing: normal;
-  text-transform: none;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.hero-form .field input,
-.hero-form .field select {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 0;
-  color: #ffffff;
-  padding: 12px 0;
-}
-
-.hero-form .field select {
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 2px center;
-  background-size: 12px 8px;
-  padding-right: 20px;
-}
-
-.hero-form .field input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-/* Same fix as the contact form's select — the prompt option otherwise
-   renders in the same solid white as a real answer. */
-.hero-form .field select:invalid {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.hero-form .field input:focus,
-.hero-form .field select:focus {
-  outline: 2px solid #ff8200;
-  outline-offset: 3px;
-  border-bottom-color: #ff8200;
-}
-
-.hero-form-card .form-submit {
-  width: 100%;
-  font-family: var(--font-body);
-  font-weight: 600;
-  text-transform: none;
-}
-
-.hero-form-note {
-  margin-top: 1rem;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.55);
-}
-
 
 /* ============================================================
    Services
@@ -1724,8 +2112,8 @@ section {
 
 /* Base .field rules below theme the contact form-card, now light. The
    hero form reuses .field too but overrides every one of these
-   properties at higher specificity (.hero-form .field ...), so it stays
-   on its own dark styling regardless of what these say. */
+   properties at higher specificity (.hero .field ...), so it stays
+   on its own dark glass styling regardless of what these say. */
 .field label {
   font-family: var(--font-body);
   font-size: 14px;

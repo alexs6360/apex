@@ -1,10 +1,50 @@
 (function () {
-  var nav = document.getElementById("nav");
-  var onScroll = function () {
-    nav.classList.toggle("is-scrolled", window.scrollY > 40);
-  };
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive: true });
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* Fixed glass header, site-wide: firms up past 40px scroll on every
+     page (the old is-scrolled toggle, now also mirrored onto <html> as
+     .scrolled). .hero-only concerns — the sticky hero's own --p
+     progress and the nav's retreat-on-scroll-down / past-hero CTA swap
+     — only ever activate on pages that actually have a .hero, so every
+     other page's header just stays put, same as before this hero
+     redesign. */
+  (function () {
+    var nav = document.getElementById("nav");
+    var hero = document.querySelector(".hero");
+    var root = document.documentElement;
+    if (!nav) return;
+    var ticking = false,
+      lastY = 0;
+    var apply = function () {
+      ticking = false;
+      var y = window.scrollY;
+      nav.classList.toggle("is-scrolled", y > 40);
+      root.classList.toggle("scrolled", y > 40);
+      if (hero) {
+        var h = hero.offsetHeight || 1;
+        hero.style.setProperty("--p", Math.min(Math.max(y / h, 0), 1).toFixed(4));
+        root.classList.toggle("past-hero", y > h - 90);
+        if (!reduceMotion) {
+          var dy = y - lastY;
+          if (y > h && dy > 4) root.classList.add("nav-hidden");
+          else if (dy < -4 || y < 40) root.classList.remove("nav-hidden");
+        }
+      }
+      lastY = y;
+    };
+    apply();
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (!ticking) {
+          ticking = true;
+          window.requestAnimationFrame(apply);
+        }
+      },
+      { passive: true }
+    );
+    window.addEventListener("resize", apply, { passive: true });
+  })();
 
   var reveals = document.querySelectorAll(".reveal, .process-item");
   if ("IntersectionObserver" in window) {
@@ -26,30 +66,6 @@
     reveals.forEach(function (el) {
       el.classList.add("is-visible");
     });
-  }
-
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  var heroVideo = document.getElementById("heroVideo");
-  if (heroVideo && reduceMotion) {
-    heroVideo.pause();
-    heroVideo.removeAttribute("autoplay");
-  }
-
-  var heroVideoWrap = document.querySelector(".hero-video-wrap");
-  if (!reduceMotion && heroVideoWrap) {
-    var ticking = false;
-    var onHeroScroll = function () {
-      if (!ticking) {
-        window.requestAnimationFrame(function () {
-          var scrollY = window.scrollY;
-          heroVideoWrap.style.setProperty("--parallax-video", Math.min(scrollY * 0.05, 25) + "px");
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener("scroll", onHeroScroll, { passive: true });
   }
 
   /* Same drift effect as the hero mark/video, generalized: any image
@@ -287,5 +303,69 @@
       }
     });
   }
+
+  /* Homepage hero entrance: the sticky hero's .fx elements (badge, h1,
+     lede, cta, chips, panel, band) start at opacity:0 and only reveal
+     via the body.anim/body.go keyframes in styles.css. No-ops on every
+     page but index.html, since <body class="anim"> is only set there. */
+  if (document.body.classList.contains("anim")) {
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        document.body.classList.add("go");
+      });
+    });
+    // animation-fill-mode:both pins the final opacity/transform once the
+    // entrance finishes — dropping the classes afterward frees those
+    // properties again instead of leaving them pinned forever.
+    window.setTimeout(function () {
+      document.body.classList.remove("anim", "go");
+    }, 2200);
+  }
+
+  /* Hero video handoff: the long "story" clip (inspection through
+     finished house) plays once, then crossfades into a short looping
+     clip of the finished house. Both <video> elements carry data-src,
+     not src — set here rather than in markup so a phone can skip
+     straight to the light loop instead of fetching the heavy story
+     file it's about to discard anyway. No-ops everywhere but the
+     homepage, since #bg/#bgloop only exist in the hero. */
+  (function () {
+    var v = document.getElementById("bg"),
+      lv = document.getElementById("bgloop");
+    if (!v || !lv) return;
+
+    var handed = false;
+    function startLoop() {
+      if (handed) return;
+      handed = true;
+      if (!lv.src) lv.src = lv.dataset.src;
+      var p = lv.play();
+      if (p && p.catch) p.catch(function () {});
+      lv.classList.add("on");
+    }
+
+    // Phones: skip the long story file and run the short loop only.
+    var light =
+      window.matchMedia("(max-width:640px)").matches ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (light) {
+      startLoop();
+      return;
+    }
+
+    lv.src = lv.dataset.src; // warm the loop so the handoff never stalls
+    v.src = v.dataset.src;
+    var p = v.play();
+    if (p && p.catch) p.catch(function () { startLoop(); });
+
+    v.addEventListener("timeupdate", function () {
+      if (!v.duration) return;
+      // begin the crossfade just before the story ends
+      if (v.currentTime > v.duration - 1.1) startLoop();
+    });
+    v.addEventListener("ended", startLoop);
+    v.addEventListener("error", startLoop);
+  })();
 
 })();

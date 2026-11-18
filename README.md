@@ -5,15 +5,27 @@ HTML/CSS/JS deployed straight to Netlify.
 
 ## Deploying
 
-Use `tools/deploy.sh`, not `netlify deploy` directly — it substitutes the
-Mapbox token into a temporary copy of the site before deploying, so the real
-token never sits in the project's own tracked files.
+**This site builds from [github.com/alexs6360/apex](https://github.com/alexs6360/apex)
+on `main` via Netlify's GitHub integration.** A push to `main` (or a merged
+PR) is what ships — `netlify.toml` points the integration at
+`tools/netlify-build.sh`, which does the same copy-and-substitute
+`tools/deploy.sh` does manually (see below), and the site's `MAPBOX_TOKEN`
+environment variable (Site settings → Environment variables in the Netlify
+dashboard) is already set, scoped to builds, so the Git-triggered build can
+read it — `.env.local` is local-only and a Git build can never see it.
 
-**As of this writing, this site has no Netlify GitHub integration set up
-yet — see below to fix that.** Until it's linked, pushing to `origin/main`
-does not deploy anything by itself; `tools/deploy.sh` (or the Netlify
-dashboard) is the only thing that ships code. Keep the two in sync by
-committing and pushing before every prod deploy.
+**Manual CLI deploys to this site now return `405 Method Not Allowed`.**
+`tools/deploy.sh` (and plain `netlify deploy`) call `POST
+/sites/{id}/deploys` directly, and once a site is linked to continuous
+deployment, Netlify's API stops accepting that from the CLI — deploys have
+to come from a Git push/PR instead. `tools/deploy.sh` is kept below for the
+substitution logic it documents and in case the integration ever gets
+unlinked, but treat it as non-functional against this site until then. The
+regular path for a change is: commit, push (ideally via a PR, for a deploy
+preview to review first), merge to `main`.
+
+The commands below describe `tools/deploy.sh`'s intended behavior; they are
+not expected to succeed while the GitHub integration is linked.
 
 Preview a change (does not touch the live site):
 
@@ -28,32 +40,26 @@ changes, so what's live always matches a real commit:
 bash tools/deploy.sh --prod
 ```
 
-### Connecting Netlify's GitHub integration
+### netlify-cli lives under a custom npm prefix, not the default one
 
-This turns a push to `main` into an automatic deploy, same as the Rise site,
-and makes `tools/deploy.sh --prod` unnecessary. It requires authorizing
-Netlify's GitHub App, which only you can do from the dashboard:
+`netlify` resolves to `~/.local/bin/netlify`, a symlink into
+`~/.local/lib/node_modules/netlify-cli` — an ordinary npm global install,
+just under a custom prefix (`~/.local`) rather than npm's default
+(`/usr/local`, confirmed via `npm config get prefix`). Because of that,
+plain `npm ls -g netlify-cli` / `npm outdated -g netlify-cli` / `npm i -g
+netlify-cli` all operate against the *default* prefix and never see or
+touch this install — `npm i -g netlify-cli` will error with `EACCES` on
+`/usr/local/lib/node_modules` (no permission there, and it's the wrong
+location regardless). To actually update the CLI that's in use:
 
-1. `https://app.netlify.com/projects/apexexteriorsmidsouth/settings/deploys`
-   → **Build & deploy → Continuous deployment → Link repository**.
-2. Choose GitHub, authorize the app if prompted, select `alexs6360/apex`,
-   branch `main`.
-3. Add a site environment variable `MAPBOX_TOKEN` (Site settings →
-   Environment variables) with the real token from `.env.local`.
+```
+npm i -g netlify-cli --prefix ~/.local
+```
 
-`netlify.toml` and `tools/netlify-build.sh` already do the rest: the build
-copies the site into a clean directory (same exclusions as
-`tools/deploy.sh` — `tools/`, `.git`, `node_modules`, etc. never get
-published) and substitutes `MAPBOX_TOKEN` into `storm-history.js` and
-`home-storm-search.js` in place of their placeholder, exactly like the
-manual script does. If `MAPBOX_TOKEN` isn't set, the build still succeeds
-and the site falls back to "Map unavailable" rather than failing.
-
-Once this is linked, `tools/deploy.sh --prod` becomes a manual override for
-one-off deploys rather than the normal path — the GitHub Action that
-regenerates storm data (`.github/workflows/update-storm-data.yml`) will also
-start reaching production automatically instead of sitting in git until
-someone runs the script.
+(`npm install -g` is the only install method Netlify documents — there's no
+official standalone/curl installer or Homebrew formula, despite how this
+looks.) As of this writing the installed version is 27.1.2; latest on npm
+is 27.20.0.
 
 ## Mapbox token
 
@@ -65,11 +71,25 @@ for turning a typed address into a coordinate. The token lives in
 export MAPBOX_TOKEN="pk.your_token_here"
 ```
 
-**The token must have `apexexteriorsmidsouth.com` (and the
-`*.netlify.app` preview domain) added to its allowed URLs in the Mapbox
-account**, or requests from this site will fail with a 401/403. A token
-restricted to a different domain — for instance one already in use on another
-site — will not work here.
+**The token must have `apexexteriorsmidsouth.com` added to its allowed URLs
+in the Mapbox account**, or requests from this site will fail with a
+401/403. A token restricted to a different domain — for instance one
+already in use on another site — will not work here.
+
+**Deploy previews need their own entry, added by hand, every time.** Each
+Netlify deploy preview gets its own subdomain
+(`deploy-preview-<N>--apexexteriorsmidsouth.netlify.app`), and **Mapbox's
+URL restrictions do not support wildcards** — confirmed directly in the
+Mapbox console ("Wildcard characters (*) are not supported in URL
+restrictions"), so there is no single entry that covers every future
+preview the way `https://*.apexexteriorsmidsouth.netlify.app` might
+suggest. Until a PR's preview URL is added to the token's allowed URLs
+(Mapbox account → Tokens → the `apex` token → URLs), the map on that
+preview will 403 on every tile/data request — the style itself still
+loads (200), only the actual map data doesn't, so the failure isn't
+obvious from a glance. The production domain and the site's own default
+`https://apexexteriorsmidsouth.netlify.app` are both already allowed and
+don't need touching.
 
 If `.env.local` is missing or empty when `tools/deploy.sh` runs, the site
 still deploys, but the storm history page shows "Map unavailable — no Mapbox
