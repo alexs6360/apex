@@ -71,11 +71,25 @@ for turning a typed address into a coordinate. The token lives in
 export MAPBOX_TOKEN="pk.your_token_here"
 ```
 
-**The token must have `apexexteriorsmidsouth.com` (and the
-`*.netlify.app` preview domain) added to its allowed URLs in the Mapbox
-account**, or requests from this site will fail with a 401/403. A token
-restricted to a different domain — for instance one already in use on another
-site — will not work here.
+**The token must have `apexexteriorsmidsouth.com` added to its allowed URLs
+in the Mapbox account**, or requests from this site will fail with a
+401/403. A token restricted to a different domain — for instance one
+already in use on another site — will not work here.
+
+**Deploy previews need their own entry, added by hand, every time.** Each
+Netlify deploy preview gets its own subdomain
+(`deploy-preview-<N>--apexexteriorsmidsouth.netlify.app`), and **Mapbox's
+URL restrictions do not support wildcards** — confirmed directly in the
+Mapbox console ("Wildcard characters (*) are not supported in URL
+restrictions"), so there is no single entry that covers every future
+preview the way `https://*.apexexteriorsmidsouth.netlify.app` might
+suggest. Until a PR's preview URL is added to the token's allowed URLs
+(Mapbox account → Tokens → the `apex` token → URLs), the map on that
+preview will 403 on every tile/data request — the style itself still
+loads (200), only the actual map data doesn't, so the failure isn't
+obvious from a glance. The production domain and the site's own default
+`https://apexexteriorsmidsouth.netlify.app` are both already allowed and
+don't need touching.
 
 If `.env.local` is missing or empty when `tools/deploy.sh` runs, the site
 still deploys, but the storm history page shows "Map unavailable — no Mapbox
