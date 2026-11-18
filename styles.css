@@ -925,10 +925,10 @@ html.past-hero .nav-cta__quote {
 
 .hero .lede {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 17px;
+  font-size: 19px;
   line-height: 1.55;
   margin: 0 0 24px;
-  max-width: 44ch;
+  max-width: 40ch;
 }
 
 .hero .cta {
@@ -1313,6 +1313,12 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   .hero h1 { font-size: clamp(2.2rem, 4.3vw, 3.4rem); }
   .hero .badge { font-size: 11.5px; letter-spacing: 0.08em; }
   .hero .lede { font-size: 16.5px; margin-bottom: 30px; }
+}
+/* On desktop the form band is already on screen, so this button scrolls
+   you to something you can see — it does nothing. Below 1040 the band is
+   several scrolls down and this is the only route to it, so it stays. */
+@media (min-width: 1040px) {
+  .hero .cta { display: none; }
 }
 @media (max-width: 1040px) {
   /* single column: everything back into normal flow, no overhang */
