@@ -1446,8 +1446,13 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
    entrance off translateY and onto the separate `translate` property —
    `transform` is needed free for the hover lift below, and one property
    can't run two different transitions (a slow staggered entrance, a fast
-   uniform hover) at once. */
-.service-tile.reveal {
+   uniform hover) at once. Same no-js defect class as the base .reveal rule
+   (see Scroll reveal below) — gated the same way, under .js-reveal, so a
+   failed/missing script.js never leaves these permanently hidden. The
+   .js-reveal prefix also keeps this at higher specificity (0,3,0) than the
+   base .js-reveal .reveal rule (0,2,0), so it still wins regardless of
+   source order, same as before. */
+.js-reveal .service-tile.reveal {
   opacity: 0;
   transform: none;
   translate: 0 18px;
@@ -1459,7 +1464,7 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
     border-color 200ms ease-out;
 }
 
-.service-tile.reveal.is-visible {
+.js-reveal .service-tile.reveal.is-visible {
   opacity: 1;
   translate: 0 0;
 }
@@ -1562,137 +1567,6 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 .service-tile:hover a .arrow,
 .service-tile:focus-within a .arrow {
   transform: translateX(4px);
-}
-
-/* ============================================================
-   Process
-   ============================================================ */
-
-/* Standalone page header — process.html only, not used on the homepage.
-   No padding-bottom of its own: the 64px gap to the first step is
-   owned entirely by .process's padding-top below, rather than split
-   across both sides of the section boundary. */
-.process-intro {
-  background: var(--paper);
-  padding-top: clamp(7rem, 14vw, 9rem);
-  padding-bottom: 0;
-}
-
-.process-intro .lede {
-  margin-top: 1rem;
-  max-width: 56ch;
-}
-
-.process {
-  background: var(--cloud);
-}
-
-/* Two-class selector to outrank .section-pad's shared clamp() without
-   !important — this section's top spacing is now deliberately fixed,
-   not fluid, since .process-intro no longer contributes any of its own. */
-.process.section-pad {
-  padding-top: 64px;
-}
-
-.process-head {
-  max-width: 34rem;
-  margin-bottom: clamp(2.5rem, 5vw, 4rem);
-}
-
-.process-list {
-  position: relative;
-  display: grid;
-  gap: 0;
-}
-
-/* Connector line reading the steps as one sequence rather than four
-   separate hairline-divided rows. Inset top/bottom to roughly the
-   vertical center of the first and last step numbers rather than the
-   full list height, so it visually connects number-to-number instead
-   of overshooting into the padding above/below them. */
-.process-list::before {
-  content: "";
-  position: absolute;
-  top: 2.75rem;
-  bottom: 2.75rem;
-  left: 1.75rem;
-  width: 2px;
-  background: rgba(75, 85, 99, 0.3);
-}
-
-.process-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 3.5rem 1fr;
-  gap: 1.5rem;
-  padding-block: 1.75rem;
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-/* Staggered reveal — each step lags the previous by 100ms rather than
-   all four fading in together. */
-.process-item:nth-child(1) { transition-delay: 0ms; }
-.process-item:nth-child(2) { transition-delay: 100ms; }
-.process-item:nth-child(3) { transition-delay: 200ms; }
-.process-item:nth-child(4) { transition-delay: 300ms; }
-
-.process-item.is-visible {
-  opacity: 1;
-  transform: none;
-}
-
-.process-num {
-  position: relative;
-  z-index: 1;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
-  color: var(--signal);
-  text-align: center;
-}
-
-.process-item h3 {
-  font-size: 1.15rem;
-  margin-bottom: 0.4rem;
-}
-
-.process-item p {
-  color: var(--slate);
-  max-width: 52ch;
-}
-
-/* The actual reason this section exists: how long each step takes. */
-.process-time {
-  margin-top: 0.5rem;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 0.85rem;
-  color: #4b5563;
-}
-
-.process-cta {
-  margin-top: clamp(2.5rem, 5vw, 4rem);
-  text-align: center;
-}
-
-@media (min-width: 700px) {
-  .process-item {
-    grid-template-columns: 5.5rem 1fr;
-  }
-
-  .process-list::before {
-    left: 2.75rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .process-item {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
 }
 
 /* ============================================================
@@ -2077,14 +1951,17 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 /* Individual items cascade in rather than the row arriving as one flat
    block — delayed to land near the end of .contact-side's own 0.7s
    reveal, so it reads as one last little beat rather than competing
-   with the section's main entrance. */
-.contact-extra .trust-row li {
+   with the section's main entrance. Same no-js defect class as the base
+   .reveal rule — a staggered-children variant of it, gated under
+   .js-reveal the same way so a failed/missing script.js never leaves
+   these permanently hidden. */
+.js-reveal .contact-extra .trust-row li {
   opacity: 0;
   transform: translateY(6px);
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.contact-side.is-visible .contact-extra .trust-row li {
+.js-reveal .contact-side.is-visible .contact-extra .trust-row li {
   opacity: 1;
   transform: none;
 }
@@ -2623,21 +2500,30 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 
 /* Children step in one after another instead of the block arriving as one
    flat piece — .reveal still drives the trigger (IntersectionObserver adds
-   .is-visible once), this just re-times what happens under it. Compound
-   selectors so this beats the shared .reveal rule regardless of source
-   order between the two stylesheet sections. */
-.storm-check-inner.reveal {
+   .is-visible once), this just re-times what happens under it. .js-reveal
+   prefixed throughout (not just .reveal.reveal — see .storm-check-inner > *
+   below) so every rule here stays at (0,3,0)+, ahead of the base
+   .js-reveal .reveal pair at (0,2,0): without it, this and the base rule
+   are an exact specificity tie and whichever is later in the file wins
+   regardless of intent — which is exactly how this container ended up
+   stuck at opacity:0 before intersecting, the same tie the base rule's own
+   gating change introduced here by raising its specificity from one class
+   to two. */
+.js-reveal .storm-check-inner.reveal {
   opacity: 1;
   transform: none;
 }
 
-.storm-check-inner > * {
+/* Same no-js defect class as the base .reveal rule — a staggered-children
+   variant of it, gated under .js-reveal the same way so a failed/missing
+   script.js never leaves this content permanently hidden. */
+.js-reveal .storm-check-inner > * {
   opacity: 0;
   transform: translateY(14px);
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.storm-check-inner.is-visible > * {
+.js-reveal .storm-check-inner.is-visible > * {
   opacity: 1;
   transform: none;
 }
