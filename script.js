@@ -46,7 +46,7 @@
     window.addEventListener("resize", apply, { passive: true });
   })();
 
-  var reveals = document.querySelectorAll(".reveal, .process-item");
+  var reveals = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window) {
     document.documentElement.classList.add("js-reveal");
     var io = new IntersectionObserver(
