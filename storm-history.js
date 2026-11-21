@@ -92,30 +92,11 @@
   var AREA = { minLon: -90.8, minLat: 34.4, maxLon: -89.0, maxLat: 35.6 };
   /* The daily workflow refetches every morning; four days of slack covers a
      missed run or two before this says anything, so a normal weekend gap
-     between fixes doesn't read as broken. */
+     between fixes doesn't read as broken. Pipeline-health monitoring (is the
+     workflow itself still running) lives in GitHub Actions now, not here —
+     this is purely about explaining a quiet stretch of real weather to a
+     visitor, never about the pipeline. */
   var STALE_DAYS = 4;
-  /* MRMS MESH polls every 4 hours, not daily — a failure there (eccodes
-     missing, a decode error) blocks every write this file makes, including
-     hail.through and wind.through, so STALE_DAYS above would eventually
-     catch a dead MESH pipeline too, but only after four full days of
-     silence. This catches it within a day instead, which matters because
-     MESH is specifically what covers the last few hours a homeowner is most
-     likely to be asking about right after a storm. */
-  var MESH_STALE_DAYS = 1;
-  /* Same reasoning as MESH_STALE_DAYS: LSR and ASOS/AWOS gusts are fetched
-     unconditionally every run (frequent and daily alike — see MODE in
-     build-storm-data.mjs), not just once a day, so a dead wind pipeline is
-     detectable within a day instead of waiting on STALE_DAYS below. Checked
-     against wind.last_success (did the fetch run and complete), not
-     wind.through (did it find anything) — a genuinely quiet stretch with
-     zero qualifying wind reports is normal, not a failure, and looks
-     identical to a dead pipeline if "through" is the only signal available.
-     Confirmed live against the actual sources: as of this writing there are
-     no in-bbox LSR wind reports after Aug 26 or qualifying ASOS gusts after
-     Aug 22, so wind.through sitting well behind hail.through is currently
-     correct data, not a stuck pipeline — exactly the ambiguity this field
-     exists to resolve going forward. */
-  var WIND_STALE_DAYS = 1;
   var CENTER = [-89.9, 35.0];
   /* Proximity bias for address search. CENTER is the centroid of the whole
      bbox, which sits in open country between towns; biasing to it ranked rural
@@ -299,12 +280,12 @@
     showStaleness();
   }
 
-  /* If the daily refresh has stopped running \u2014 a failed workflow, a source
-     gone dark \u2014 the line above would otherwise keep citing an old date as if
-     it were still current, and a homeowner would read an empty result as "no
-     storms" instead of "no recent data". This checks the newest date either
+  /* Explains a quiet stretch of real weather to a visitor \u2014 never the
+     pipeline's own health, which a visitor can't do anything about and
+     shouldn't be told might be broken. This checks the newest date either
      layer actually reached against today's date and says so once it is more
-     than STALE_DAYS behind. */
+     than STALE_DAYS behind. Whether the pipeline itself is still running is
+     a question for GitHub Actions to answer, not this page. */
   function daysSince(iso) {
     return Math.floor((Date.now() - new Date(iso + "T00:00:00Z").getTime()) / 86400000);
   }
@@ -312,36 +293,6 @@
   function showStaleness() {
     if (!staleEl || !index) return;
 
-    /* Checked first and separately from hail/wind below: MESH runs every 4
-       hours specifically so a homeowner asking about last night's storm gets
-       an answer, so its own automation going quiet is worth calling out on
-       a tighter clock than the once-a-day sources further down. */
-    var meshSuccess = index.mesh && index.mesh.last_success;
-    if (meshSuccess && daysSince(meshSuccess) > MESH_STALE_DAYS) {
-      staleEl.textContent = "Our recent-hail radar feed (MRMS) hasn't updated since " +
-        prettyDate(meshSuccess) + " \u2014 the automated refresh may be down. Older hail and " +
-        "wind data below is still current; a storm from the last day or two may just not be here yet.";
-      staleEl.hidden = false;
-      return;
-    }
-
-    /* Parallel to the MESH check above, and checked just as early \u2014 see
-       WIND_STALE_DAYS for why wind.last_success (not wind.through) is the
-       right field here. A quiet stretch with nothing to report still
-       updates last_success every run; only a dead fetch leaves it behind. */
-    var windSuccess = index.wind && index.wind.last_success;
-    if (windSuccess && daysSince(windSuccess) > WIND_STALE_DAYS) {
-      staleEl.textContent = "Our wind report feed (Local Storm Reports and ASOS gusts) hasn't " +
-        "updated since " + prettyDate(windSuccess) + " \u2014 the automated refresh may be down. " +
-        "Hail data below is still current.";
-      staleEl.hidden = false;
-      return;
-    }
-
-    /* Reaching here means both checks above already passed \u2014 the pipeline
-       ran recently and found nothing. That is a fact about the weather, not
-       about us, so this says so plainly instead of apologising for an outage
-       that isn't happening. */
     var hail = index.hail && index.hail.through;
     var wind = index.wind && index.wind.through;
     var newest = [hail, wind].filter(Boolean).sort().pop();
