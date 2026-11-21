@@ -338,14 +338,17 @@
       return;
     }
 
+    /* Reaching here means both checks above already passed \u2014 the pipeline
+       ran recently and found nothing. That is a fact about the weather, not
+       about us, so this says so plainly instead of apologising for an outage
+       that isn't happening. */
     var hail = index.hail && index.hail.through;
     var wind = index.wind && index.wind.through;
     var newest = [hail, wind].filter(Boolean).sort().pop();
     if (!newest) { staleEl.hidden = true; return; }
     var ageDays = daysSince(newest);
     if (ageDays <= STALE_DAYS) { staleEl.hidden = true; return; }
-    staleEl.textContent = "Our storm data hasn't refreshed since " + prettyDate(newest) +
-      " (" + ageDays + " days ago). Recent storms may be missing \u2014 we're aware and working on it.";
+    staleEl.textContent = "No hail or wind events recorded in this area since " + prettyDate(newest) + ".";
     staleEl.hidden = false;
   }
 
@@ -612,7 +615,7 @@
     map.addControl(
       new mapboxgl.AttributionControl({
         compact: false,
-        customAttribution: "NOAA NCEI &middot; NWS",
+        customAttribution: "NOAA NCEI &middot; NWS &middot; Iowa Environmental Mesonet",
       })
     );
 
@@ -830,13 +833,21 @@
 
   /* ---- lookup ----------------------------------------------------------- */
 
+  function fmtIn(n) {
+    return n.toFixed(2).replace(/0$/, "");
+  }
+
   function eventsAt(lon, lat) {
     var out = [];
 
     /* Radar-estimated vs. observed, everywhere a number shows up: MESH runs
        high against a ruler, and an adjuster's own measurement is what a claim
        actually turns on. Overstating a radar figure as a measurement is worse
-       than not showing it, so the two are never allowed to look the same. */
+       than not showing it, so the two are never allowed to look the same.
+
+       Raw fields (kind/size/val/here/away), not a pre-built label — grouping
+       by date below needs to compare and recombine these across records, and
+       a baked-in sentence can't be un-said to build a different one. */
     hail.cells.forEach(function (c) {
       /* Containment, not proximity. A cell is ~5.6 x 4.6km, so its centroid
          can sit 3.6km from an address the cell still covers — the old 1.5km
@@ -845,19 +856,15 @@
       var here = addrBucket && c[5] === addrBucket[0] && c[6] === addrBucket[1];
       var near = !here && distanceKm(lon, lat, c[2], c[3]) <= REPORT_RADIUS_KM;
       if (!here && !near) return;
-      var size = c[1].toFixed(2).replace(/0$/, "");
       var isMesh = c[4] === "MRMS";
       out.push({
         date: c[0],
-        /* "in your area" is what the data supports: radar-estimated hail
-           somewhere in the cell containing this address. Not "on your roof". */
-        label: (here
-          ? size + '" hail (radar estimate) in your area'
-          : size + '" hail (radar estimate) ' + awayFrom(lon, lat, c[2], c[3])),
-        source: isMesh ? "NOAA MRMS MESH" : "NEXRAD radar" + (c[4] ? " (" + c[4] + ")" : ""),
+        kind: "hail",
+        estimated: true,
         here: !!here,
         size: c[1],
-        estimated: true,
+        away: here ? null : awayFrom(lon, lat, c[2], c[3]),
+        source: isMesh ? "NOAA MRMS MESH" : "NEXRAD radar" + (c[4] ? " (" + c[4] + ")" : ""),
       });
     });
 
@@ -865,32 +872,33 @@
       var g = f.geometry.coordinates;
       if (distanceKm(lon, lat, g[0], g[1]) > REPORT_RADIUS_KM) return;
       var p = f.properties;
-      var label;
-      var where = awayFrom(lon, lat, g[0], g[1]);
       /* CoCoRaHS and ASOS/AWOS are ground truth same as Storm Events and LSR
          — a volunteer's ruler, a station's anemometer — so they share this
-         branch rather than getting their own. What differs by source is only
-         the label text below. */
-      if (p.kind === "hail") {
-        label = (p.val ? p.val + '" ' : "") + "hail observed " + where;
-      } else if (p.val) {
-        /* Already mph — the generator normalises Storm Events' and ASOS's
-           knots, so converting again here would turn a 66 mph gust into 76. */
-        label = p.val + " mph gust observed " + where;
-      } else {
-        /* A real report with no measured gust. Saying nothing hides a storm;
-           saying 0 mph invents a reading. */
-        label = "wind damage observed " + where;
-      }
+         branch rather than getting their own. Reports never get a "here"
+         containment test the way hail cells do — distance is all there is
+         for a point report, so every one of these is "nearby", never "in
+         your area". */
       out.push({
-        date: (p.date || "").slice(0, 10), label: label, source: p.src,
+        date: (p.date || "").slice(0, 10),
+        kind: p.kind,
         estimated: false,
+        here: false,
+        /* Already mph for wind — the generator normalises Storm Events' and
+           ASOS's knots, so converting again here would turn 66 into 76. */
+        val: p.kind === "hail" || p.val ? p.val : null,
+        away: awayFrom(lon, lat, g[0], g[1]),
+        source: p.src,
       });
     });
 
     /* Point-in-polygon, not proximity: an address is either inside the storm-
        based polygon a Severe Thunderstorm or Tornado Warning was issued for,
-       or it is not, and that is a materially different fact from "nearby". */
+       or it is not, and that is a materially different fact from "nearby".
+       Kept as a fully-built label, not structured fields like the above — a
+       warning is a forecaster's judgment call at a point in time, not a
+       magnitude to merge with a radar cell or a ground report, so it always
+       renders as its own row rather than folding into the hail/wind summary
+       for its date. */
     (warnings || []).forEach(function (w) {
       if (!pointInGeometry(lon, lat, w.geometry)) return;
       var bits = [];
@@ -898,6 +906,7 @@
       if (w.gust_mph_estimated) bits.push(w.gust_mph_estimated + " mph gusts");
       out.push({
         date: (w.effective || w.expires || "").slice(0, 10),
+        kind: "warning",
         label: "Address was inside a " + w.event + " polygon" +
           (bits.length ? " — forecaster estimate at issuance: " + bits.join(", ") + " (radar estimate)" : ""),
         source: "NWS active alerts",
@@ -908,6 +917,118 @@
 
     out.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
     return out;
+  }
+
+  /* One row per storm day, not per observation — four radar cells covering
+     one address on one day are one storm, not four rows. Hail and wind each
+     collapse to their strongest record for the day; a day with both gets one
+     row per hazard, joined. Observed always leads over estimated when both
+     exist for the same hazard on the same day — an observation is stronger
+     evidence than a radar estimate, and leading with the bigger radar number
+     when ground truth said less reads as picking the scarier figure. Radar-
+     only days show no count: surfacing "(4 detections)" re-inflates the
+     number this whole pass exists to deflate. The underlying records are
+     still reachable by clicking the date — nothing here hides data, it only
+     changes how many lines summarize it. */
+  /* A winner picked from a pool of one keeps its own precise distance — that
+     is simply the one real record for the day, not a choice. A winner picked
+     from a pool of more than one gets genericised to "nearby" instead: its
+     specific bearing belonged to only that record, and the others that day
+     were at other, different distances, so presenting one of them as "the"
+     distance overstates precision that merging already gave up. Never
+     applies to "here", which never carried a distance to begin with. */
+  function awayFor(record, poolSize) {
+    if (record.here) return "in your area";
+    return poolSize > 1 ? "nearby" : record.away;
+  }
+
+  function hailClause(cells, reports) {
+    if (!cells.length && !reports.length) return null;
+    var bestReport = reports.length
+      ? reports.slice().sort(function (a, b) { return (b.val || 0) - (a.val || 0); })[0]
+      : null;
+    var bestCell = cells.length
+      ? (cells.filter(function (c) { return c.here; })[0] ||
+         cells.slice().sort(function (a, b) { return b.size - a.size; })[0])
+      : null;
+
+    if (bestReport && bestCell) {
+      var reportPart = (bestReport.val ? bestReport.val + '" ' : "") +
+        "hail observed " + awayFor(bestReport, reports.length);
+      var cellPart = "with radar estimating up to " + fmtIn(bestCell.size) + '" ' +
+        awayFor(bestCell, cells.length);
+      return { label: reportPart + ", " + cellPart, source: bestReport.source + " + " + bestCell.source };
+    }
+    if (bestReport) {
+      return {
+        label: (bestReport.val ? bestReport.val + '" ' : "") +
+          "hail observed " + awayFor(bestReport, reports.length),
+        source: bestReport.source,
+      };
+    }
+    return {
+      label: fmtIn(bestCell.size) + '" hail (radar estimate) ' + awayFor(bestCell, cells.length),
+      source: bestCell.source,
+    };
+  }
+
+  function windClause(reports) {
+    if (!reports.length) return null;
+    /* No radar estimate exists for wind in this system — every wind record
+       is already observed, so this is the same "pick the strongest, reuse
+       its own wording, drop the count" rule as a radar-only hail day. */
+    var withVal = reports.filter(function (r) { return r.val; });
+    var pool = withVal.length ? withVal : reports;
+    var best = pool.slice().sort(function (a, b) { return (b.val || 0) - (a.val || 0); })[0];
+    return {
+      label: best.val
+        ? best.val + " mph gust observed " + awayFor(best, pool.length)
+        : "wind damage observed " + awayFor(best, pool.length),
+      source: best.source,
+    };
+  }
+
+  function summarizeDate(dateEvents) {
+    var warningRows = dateEvents
+      .filter(function (e) { return e.kind === "warning"; })
+      .map(function (w) { return { label: w.label, source: w.source, here: w.here }; });
+
+    var cells = dateEvents.filter(function (e) { return e.kind === "hail" && e.estimated; });
+    var hailReports = dateEvents.filter(function (e) { return e.kind === "hail" && !e.estimated; });
+    var windReports = dateEvents.filter(function (e) { return e.kind === "wind"; });
+
+    var parts = [];
+    var hail = hailClause(cells, hailReports);
+    if (hail) parts.push(hail);
+    var wind = windClause(windReports);
+    if (wind) parts.push(wind);
+
+    var hazardRow = parts.length
+      ? {
+          label: parts.map(function (p) { return p.label; }).join("; "),
+          source: parts.map(function (p) { return p.source; }).join(" + "),
+          here: cells.some(function (c) { return c.here; }),
+        }
+      : null;
+
+    return hazardRow ? [hazardRow].concat(warningRows) : warningRows;
+  }
+
+  function groupByDate(events) {
+    var order = [];
+    var byDate = {};
+    events.forEach(function (e) {
+      if (!byDate[e.date]) { byDate[e.date] = []; order.push(e.date); }
+      byDate[e.date].push(e);
+    });
+    var rows = [];
+    order.forEach(function (date) {
+      summarizeDate(byDate[date]).forEach(function (row) {
+        row.date = date;
+        rows.push(row);
+      });
+    });
+    return rows;
   }
 
   /* Back to the state before any address was checked. Leaving the previous
@@ -1013,6 +1134,10 @@
        is reading down it in time order. The count line above keeps the split
        visible as a summary.
 
+       One row per storm day (see groupByDate/summarizeDate above), not one
+       per underlying record — so the count below counts rows, the same
+       thing the list actually shows, not raw observations.
+
        Sorted on a parsed timestamp rather than on the string. These dates are
        ISO, so lexical order happens to agree, but that is a property of the
        format and not of the data — the moment anything upstream hands over a
@@ -1020,10 +1145,10 @@
        December". This is the third time the order has had to be fixed; sorting
        the actual value is what stops it being fixed a fourth. */
     var ts = function (e) { return Date.parse(e.date + "T00:00:00Z"); };
-    var rows = events.slice().sort(function (a, b) { return ts(b) - ts(a); });
+    var rows = groupByDate(events).sort(function (a, b) { return ts(b) - ts(a); });
 
-    var here = events.filter(function (e) { return e.here; }).length;
-    var near = events.length - here;
+    var here = rows.filter(function (e) { return e.here; }).length;
+    var near = rows.length - here;
 
     panelSub.textContent =
       here
