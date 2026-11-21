@@ -10,28 +10,27 @@ name: Update storm data
 # `tools/deploy.sh --prod` (or set up the GitHub integration — see README)
 # to ship a commit this workflow made.
 #
-# Two schedules share one script — tools/build-storm-data.mjs decides what to
-# do based on MODE, computed below from which cron fired:
+# Three schedules share one script — tools/build-storm-data.mjs decides what
+# to do based on MODE, computed below from which cron fired:
 #   09:00 UTC daily   full pass: SWDI backfill, Storm Events, LSR, CoCoRaHS,
 #                     ASOS gusts.
 #   every 4 hours     MRMS MESH + the NWS warnings poll only — both describe
 #                     conditions that are only hours old and would be stale
 #                     well before the next daily run otherwise.
-# Two more manual-only modes verify parsing against known-good dates instead
-# of touching data/ or committing anything:
-#   verify-mesh-fixture   decodes a known historical hail date and checks the
-#                         result against what that file is expected to
-#                         contain — see tools/verify-mesh-fixture.mjs. Run it
-#                         after touching MESH decoding, or any time the
-#                         eccodes install below changes.
-#   verify-wind-fixture   fetches a known wind-report date from IEM's LSR
-#                         feed and checks the parsed result against a
-#                         confirmed record — see tools/verify-wind-fixture.mjs
-#                         and tools/lsr.mjs. Run it after touching LSR
-#                         parsing. This is what catches an ingest that fetches
-#                         successfully but silently returns zero records —
-#                         wind.last_success alone cannot tell that apart from
-#                         a genuinely quiet stretch.
+#   10:00 UTC Monday  weekly-verify — runs verify-mesh-fixture.mjs and
+#                     verify-wind-fixture.mjs (below) and commits a heartbeat.
+#                     Touches no data/ files and runs no fetch against live
+#                     sources beyond the two fixture dates those scripts
+#                     check.
+# verify-mesh-fixture and verify-wind-fixture also run standalone, on manual
+# dispatch, for use right after touching the relevant parsing code — see
+# their own entries below. Either way, what they catch: an ingest that
+# fetches successfully but silently returns the wrong thing (a field
+# renamed upstream, a decode regression) — a failure last_success alone
+# cannot tell apart from a genuinely quiet stretch, because the fetch itself
+# didn't error. These two scripts are the only thing on this page checking
+# the *content* is still right, not just that a request succeeded, and
+# weekly-verify is what makes that check run even when nobody remembers to.
 #
 # Attribution (NOAA open data terms require this be stated somewhere on the
 # page — see the methodology note in storm-history.html, not just here):
@@ -44,12 +43,13 @@ on:
   schedule:
     - cron: "0 9 * * *"    # daily — see MODE below
     - cron: "0 */4 * * *"  # frequent — MRMS MESH + warnings only
+    - cron: "0 10 * * 1"   # weekly-verify — Monday, an hour after the daily run
   workflow_dispatch:
     inputs:
       mode:
         description: "Which pass to run"
         type: choice
-        options: [daily, frequent, verify-mesh-fixture, verify-wind-fixture]
+        options: [daily, frequent, weekly-verify, verify-mesh-fixture, verify-wind-fixture]
         default: daily
 
 # No API keys are configured here because none are needed: every source
@@ -111,20 +111,50 @@ jobs:
             echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "0 9 * * *" ]; then
             echo "mode=daily" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 10 * * 1" ]; then
+            echo "mode=weekly-verify" >> "$GITHUB_OUTPUT"
           else
             echo "mode=frequent" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Verify MESH decoding against known fixture
-        if: steps.mode.outputs.mode == 'verify-mesh-fixture'
+        if: steps.mode.outputs.mode == 'verify-mesh-fixture' || steps.mode.outputs.mode == 'weekly-verify'
         run: node tools/verify-mesh-fixture.mjs
 
       - name: Verify LSR wind parsing against known fixture
-        if: steps.mode.outputs.mode == 'verify-wind-fixture'
+        if: steps.mode.outputs.mode == 'verify-wind-fixture' || steps.mode.outputs.mode == 'weekly-verify'
         run: node tools/verify-wind-fixture.mjs
 
+      # GitHub auto-disables a scheduled workflow after 60 days with no
+      # repository activity — and a *run* of the schedule doesn't count as
+      # activity, only an actual commit does (confirmed: this is exactly
+      # what community "keepalive" Actions exist to work around). The storm
+      # job only commits when new data shows up, so a long quiet stretch
+      # with nothing to report — like the one this archive is in right now —
+      # is also a long stretch with no commits, right up until the schedule
+      # itself silently dies with no warning. This commits every week
+      # regardless, specifically to keep the lights on. Runs with always()
+      # so it still happens even if one of the two verify steps above just
+      # failed — losing the schedule in the middle of an actual problem,
+      # the one time it matters most, is the exact failure this exists to
+      # prevent.
+      - name: Record a heartbeat (keeps the schedule itself alive)
+        if: always() && steps.mode.outputs.mode == 'weekly-verify'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p .github
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/last-verified
+          git add .github/last-verified
+          if git diff --cached --quiet; then
+            echo "Heartbeat unchanged — nothing to commit."
+            exit 0
+          fi
+          git commit -m "Weekly verify heartbeat ($(date -u +%F))"
+          git push
+
       - name: Regenerate storm data
-        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture'
+        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture' && steps.mode.outputs.mode != 'weekly-verify'
         env:
           MODE: ${{ steps.mode.outputs.mode }}
           # Incremental in both modes: refetches the last 2 calendar months
@@ -138,7 +168,7 @@ jobs:
         run: node tools/build-storm-data.mjs data
 
       - name: Commit if changed
-        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture'
+        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture' && steps.mode.outputs.mode != 'weekly-verify'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -149,3 +179,35 @@ jobs:
           git add data/
           git commit -m "Update storm data (${{ steps.mode.outputs.mode }}, $(date -u +%F))"
           git push
+
+      # Threshold is 2 missed consecutive daily runs, not STALE_DAYS (4) from
+      # storm-history.js — that number is calibrated for a homeowner's
+      # tolerance for "no storms"; this one is calibrated for "someone should
+      # look at this soon". Runs via always() so it still fires even when
+      # "Regenerate storm data" above failed and exited before writing
+      # anything — in that case data/storm-index.json on disk is still
+      # whatever the last successful run committed, which is exactly the
+      # value this needs to read. wind.last_success and mesh.last_success
+      # both advance on every successful run regardless of mode (daily and
+      # frequent alike — see build-storm-data.mjs), so either one sitting
+      # more than 2 days behind today means real, repeated failures, not one
+      # bad run — a single transient failure already won't trip this, and
+      # already got its own GitHub failure email as whichever step it broke.
+      - name: Fail loudly if the pipeline has gone quiet
+        if: always() && steps.mode.outputs.mode == 'daily'
+        run: |
+          node -e '
+            const fs = require("fs");
+            const idx = JSON.parse(fs.readFileSync("data/storm-index.json", "utf8"));
+            const daysSince = (iso) => iso
+              ? Math.floor((Date.now() - new Date(iso + "T00:00:00Z").getTime()) / 86400000)
+              : Infinity;
+            const meshDays = daysSince(idx.mesh && idx.mesh.last_success);
+            const windDays = daysSince(idx.wind && idx.wind.last_success);
+            const worst = Math.max(meshDays, windDays);
+            console.log(`mesh.last_success is ${meshDays} day(s) old, wind.last_success is ${windDays} day(s) old`);
+            if (worst > 2) {
+              console.error(`Pipeline has not completed successfully in ${worst} day(s) — see data/storm-index.json`);
+              process.exit(1);
+            }
+          '

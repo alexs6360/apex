@@ -155,6 +155,43 @@ is available via `WINDOW_MONTHS`:
 WINDOW_MONTHS=2 node tools/build-storm-data.mjs data
 ```
 
+### Scheduled pipeline and alerting
+
+`.github/workflows/update-storm-data.yml` runs the incremental pull
+automatically — daily at 09:00 UTC (the full source set: SWDI, Storm
+Events, LSR, CoCoRaHS, ASOS) and every 4 hours (MRMS MESH and NWS warnings
+only, since those describe conditions only hours old). It commits straight
+to `main`; getting a new commit onto the live site still needs the usual
+deploy step (see Deploying above), since this repo has no Netlify GitHub
+integration.
+
+**Failure alerting depends on GitHub Actions email being enabled on the
+repo owner's account** (github.com/settings/notifications → Actions) — a
+failed scheduled run only reaches anyone because GitHub emails the account
+by default when a workflow run fails; nothing in the workflow sends a
+notification itself. A source fetch failing outright already fails the
+job loudly this way, no extra code involved.
+
+What that doesn't catch: a source's response silently changing shape — a
+renamed field, a decode regression — without the fetch itself erroring.
+That returns 200, parses fine, and never trips the failure path, so
+`last_success` keeps advancing even though the content is wrong.
+`tools/verify-mesh-fixture.mjs` and `tools/verify-wind-fixture.mjs` exist
+specifically to catch this (parsing a known-good historical date and
+checking the result matches), and a third schedule — `weekly-verify`,
+Monday 10:00 UTC — runs both automatically so this gets checked even when
+nobody remembers to run it by hand.
+
+That same weekly run also commits a heartbeat (`.github/last-verified`,
+just a timestamp) regardless of the verify outcome. GitHub auto-disables a
+repo's scheduled workflows after 60 days with no repository activity, and
+running the schedule doesn't itself count as activity — only a commit
+does. The storm pipeline only commits when new data actually shows up, so
+a long quiet stretch (no qualifying storms) is also a long stretch with no
+commits, which is exactly when the schedule could silently die with
+nobody noticing until severe season starts and the archive has stopped
+updating. The heartbeat exists purely to keep that from happening.
+
 ## Lead capture
 
 Two Netlify Forms are wired up:
