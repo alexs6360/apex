@@ -22,11 +22,17 @@
 }
 
 .sh-intro {
-  /* Standardized to canonical #000000 (background-alternation audit) —
-     .sh-tool right below was literally the same var(--ink) value, an
-     actual adjacent-section collision, not just the same broad "dark"
-     family. .sh-tool takes the #1c1c1c variant instead. */
-  background: #000000;
+  /* Same faint grid as .services (white-on-black, 48px, 0.06 alpha) —
+     this page never had it, and with .sh-tool below also now at flat
+     #000000 (was #1c1c1c, a near-black standing in for separation the
+     grid provides instead — see .sh-tool's own comment), the grid is
+     what keeps two adjacent same-color sections from reading as one
+     undifferentiated block, same job it already does between .services
+     and its neighbors on the homepage. */
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    #000000;
   color: var(--paper);
   overflow: hidden;
   /* .sh-rain and .sh-bolt are position:absolute and need this as their
@@ -45,7 +51,7 @@
   padding-bottom: 96px;
 }
 
-/* Fades the hero's own black into .sh-tool's exact #1c1c1c — not the
+/* Fades the hero's own black into .sh-tool's exact #000000 — not the
    reverse (a fade sitting on top of .sh-tool, colored as the hero, which
    is the pattern used everywhere else on the site) because this was
    asked for specifically as a pseudo-element on the hero. Ending at
@@ -54,7 +60,10 @@
    arrives, so there's no seam to trade for another. Contained inside
    .sh-intro's own box (.sh-intro has overflow: hidden for the rain), not
    bleeding into .sh-tool — the "starts below the fade" requirement is
-   handled by .sh-tool's own increased padding-top instead. */
+   handled by .sh-tool's own increased padding-top instead. An element's
+   own background always paints beneath its children regardless of
+   z-index, so this still fully covers .sh-intro's grid near the bottom
+   edge without needing to say so explicitly. */
 .sh-intro::after {
   content: "";
   position: absolute;
@@ -62,7 +71,7 @@
   right: 0;
   bottom: 0;
   height: 160px;
-  background: linear-gradient(to bottom, transparent, #1c1c1c);
+  background: linear-gradient(to bottom, transparent, #000000);
   pointer-events: none;
   z-index: 1;
 }
@@ -72,7 +81,7 @@
    gradient layered on top of the image (first in the background list, so
    it paints above it) does two jobs: keeps the headline/subhead readable
    against whatever's brightest in the photo, and darkens the bottom edge
-   enough that .sh-intro::after's own fade to #1c1c1c doesn't have to
+   enough that .sh-intro::after's own fade to #000000 doesn't have to
    fight a bright sky right where it starts.
    Oversized (inset: -20%) and drifts via transform rather than
    repositioning the image itself, so the edges never show as it moves.
@@ -251,7 +260,15 @@
 /* ---- the address form -------------------------------------------------- */
 
 .sh-tool {
-  background: #1c1c1c;
+  /* Was #1c1c1c, a near-black standing in for separation from .sh-intro
+     right above (same color would have been a flat, collision-prone
+     repeat of it). Now flat #000000 with the same grid .sh-intro carries
+     — the grid is what distinguishes the two sections, not the color,
+     same as .services/.storm-check on the homepage. */
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0px, rgba(255, 255, 255, 0.06) 1px, transparent 1px, transparent 48px),
+    #000000;
   color: var(--paper);
   /* Section boundary to search bar. Set independently of .sh-intro's own
      padding-bottom (96px) without accounting for the two combined — an
@@ -461,9 +478,17 @@
   background: #eab308;
 }
 
+/* bottom:48px, not 12px — Mapbox draws its own logo (bottom-left) and the
+   attribution bar (bottom-right) flush to the map's bottom edge, each
+   around 20-29px tall. At 12px this box's own bottom edge landed inside
+   both of them (measured: 93% of the logo's width and 74% of its height
+   covered). 48px clears the taller of the two (the logo container) with
+   an ~8px margin at the narrowest width this page supports (~390px); the
+   existing mobile padding/font-size reduction below still applies on top
+   of this, it just no longer changes the anchor itself. */
 .sh-legend {
   position: absolute;
-  bottom: 12px;
+  bottom: 48px;
   left: 12px;
   z-index: 2;
   padding: 10px 14px;
