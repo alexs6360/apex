@@ -249,7 +249,10 @@
 }
 
 .sh-intro .lede {
-  color: #c7cad2;
+  /* Was a flat #c7cad2 — a separately-chosen value instead of the
+     homepage hero's own lede treatment on the same kind of background
+     (black, photo behind it). Matches that exactly now. */
+  color: rgba(255, 255, 255, 0.72);
   max-width: 56ch;
   /* Tighter than the inherited 1.5: at this font size that line-height put
      enough half-leading above the first line that the subhead read as
