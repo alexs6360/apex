@@ -245,6 +245,14 @@
      bucket indices rather than drawn around the detection's coordinate — the
      detection can sit anywhere inside the cell. */
   var HAIL_BANDS = [1.0, 1.5, 1.75, 2.0, 2.5];
+  /* Purple severity ramp, light to dark by band. The site's four brand
+     colours (#000000/#FF8200/#4B5563/#FFFFFF) govern chrome — nav, buttons,
+     text, backgrounds — not map data. A severity ramp has to encode
+     magnitude across several steps, which a four-colour palette can't do;
+     this ramp (and the gold/yellow one for wind below) is its own
+     documented exception, intentional, not drift. The legend swatches in
+     storm-history.css mirror these exact values — keep them in sync if
+     either changes. See also README.md's "Design conventions" note. */
   var HAIL_COLORS = ["#cdb6ee", "#b189e6", "#9a63dd", "#8340d2", "#6b21c0"];
 
   /* Fade timings. The bands finish at 4 * 60 + 360 = 600ms — the shape builds
@@ -649,7 +657,11 @@
            close to the map's own imagery colors at a glance. Darker at the
            top of the range (weaker reports are more common, so keeping
            those the brightest keeps the whole layer from reading as an
-           undifferentiated wall of dark gold). */
+           undifferentiated wall of dark gold). Same exception as
+           HAIL_COLORS above: a severity ramp, outside the four brand
+           colours by design — see that comment. Mirrored in the legend
+           swatch (storm-history.css) and the wind envelope fill/line
+           (#d4a017, this file). */
         "circle-color": [
           "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
           45, "#fde047",
