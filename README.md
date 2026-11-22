@@ -72,6 +72,22 @@ The gate lives in tools/netlify-build.sh, keyed on CONTEXT=production.
 Branch deploys and deploy previews are not production context, which is
 why the real site shows there.
 
+## Design conventions
+
+The site's four brand colours — `#000000`, `#FF8200`, `#4B5563`,
+`#FFFFFF` (`--ink`/`--signal`/`--slate`/`--paper` in styles.css) — govern
+chrome: nav, buttons, section backgrounds, body text. They do not apply
+to map data visualization.
+
+`storm-history.js` draws hail and wind severity as colour ramps (purple,
+light to dark, for hail; gold/yellow, light to dark, for wind gust
+strength) — `HAIL_COLORS` and the wind layer's `circle-color`
+interpolation in that file, mirrored in storm-history.css's legend
+swatches (`.sh-swatch-hail`/`.sh-swatch-wind`) and chip dots. A ramp has
+to encode magnitude across several steps, which a four-colour palette
+can't do, so this is an intentional, documented exception rather than
+drift — keep the two files' values in sync if either ramp changes.
+
 ## DNS
 
 - `apexexteriorsmidsouth.com` is registered at Squarespace Domains but uses

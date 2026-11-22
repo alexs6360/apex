@@ -501,6 +501,11 @@
   border-radius: 4px;
 }
 
+/* These two gradients are the endpoints of the hail/wind severity ramps
+   defined in storm-history.js (HAIL_COLORS and the wind circle-color
+   interpolation) — intentionally outside the site's four brand colours,
+   which govern chrome, not map data. Keep in sync with those; see the
+   comments there and README.md's "Design conventions" note. */
 .sh-swatch-hail {
   background: linear-gradient(90deg, #cdb6ee, #6b21c0);
 }
