@@ -2586,6 +2586,286 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   }
 }
 
+/* ---- live radar result (replaces the static map+ping once a search
+   resolves) --------------------------------------------------------------
+
+   Sits in the same grid cell as .storm-check-map-frame, swapped in by
+   hiding one and un-hiding the other — no layout shift between them since
+   both live in storm-check-media. Only ever shown post-search, which
+   already requires JS, so there is no no-JS state of this block to keep
+   honest; the static frame + working native form stays the entire no-JS
+   story, untouched. */
+.storm-radar {
+  background: #ffffff;
+  border: 1px solid rgba(75, 85, 99, 0.25);
+  border-radius: 4px;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+/* Container entrance: opacity/scale only, no transform clash to guard
+   against here (nothing on .storm-radar competes for it). Gated the same
+   .js-reveal way as every other entrance on this page, even though JS is
+   already a hard requirement to reach this state at all — consistent
+   handling beats a one-off exception, and a reduced-motion visitor still
+   gets the pin-to-final-value treatment below. */
+.js-reveal .storm-radar.is-entering {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.storm-radar {
+  opacity: 1;
+  transform: none;
+  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.storm-radar-count {
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0 0 1rem;
+  opacity: 1;
+  transform: none;
+  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 80ms;
+}
+
+.js-reveal .storm-radar-count.is-entering {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.storm-radar-body {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.storm-radar-panel {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(200px, 42vw);
+  aspect-ratio: 1;
+}
+
+.storm-radar-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.storm-radar-ring {
+  fill: none;
+  stroke: var(--slate);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+}
+
+.storm-radar-ring--mid {
+  stroke-opacity: 0.2;
+  stroke-dasharray: 2 2;
+}
+
+.storm-radar-home {
+  fill: var(--ink);
+}
+
+/* ---- dots ----------------------------------------------------------------
+
+   .storm-dot-stack sits at the one fixed, honest position a coordinate maps
+   to — set once via the SVG transform attribute in home-storm-search.js,
+   never touched again (no jitter, nothing here ever moves to avoid an
+   overlap). Everything that DOES move lives one level in, on
+   .storm-dot-group (one per event sharing that coordinate), via the CSS
+   --fx/--fy fan offset below. */
+
+.storm-dot-badge {
+  pointer-events: none;
+}
+
+/* Co-located count ring — "more than one storm here", read without a
+   label. Shown only while its stack is collapsed; a stack of one never
+   gets one at all (home-storm-search.js only renders .storm-dot-badge
+   when a coordinate has more than one event). */
+.storm-dot-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+.storm-dot-count {
+  font-size: 4.5px;
+  fill: var(--ink);
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0.6;
+}
+
+.storm-dot-stack.is-open .storm-dot-badge {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.storm-dot-core {
+  fill: var(--slate);
+  opacity: 0.3;
+  transition: opacity 0.2s ease, fill 0.2s ease;
+}
+
+/* One rule, one transition listing every animated property — transform
+   (the fan, --fx/--fy, default 0/0 until a stack opens), opacity and scale
+   (the entrance pop). A second rule setting its own `transition` shorthand
+   would silently drop whatever this one already listed rather than merge
+   with it; that exact trap bit the services-tile entrance earlier this
+   project and is the reason this stays one block. Values set in px by JS
+   for --fx/--fy resolve 1:1 against this SVG's own user units on an inner
+   (non-viewport) element — not CSS pixels — so the offset is correct
+   whatever size the panel renders at. transition-delay for the entrance is
+   set per-dot inline by home-storm-search.js (dynamic: N varies by
+   address), not listed here. */
+.storm-dot-group {
+  cursor: pointer;
+  transform: translate(var(--fx, 0px), var(--fy, 0px));
+  opacity: 1;
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Selected: the stack holding it is raised to the top of paint order in the
+   DOM (see home-storm-search.js), ignited white against the signal halo —
+   the only place signal paints as a fill/stroke rather than the brand
+   accent it is everywhere else on the page. */
+.storm-dot-group.is-selected .storm-dot-core {
+  fill: var(--paper);
+  opacity: 1;
+  stroke: var(--signal);
+  stroke-width: 1.4;
+}
+
+.storm-dot-halo {
+  fill: none;
+  stroke: var(--signal);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.storm-dot-group.is-selected .storm-dot-halo {
+  animation: stormDotPulse 1.8s ease-out infinite;
+}
+
+@keyframes stormDotPulse {
+  0% { r: 3px; stroke-width: 2px; opacity: 0.8; }
+  100% { r: 11px; stroke-width: 0.2px; opacity: 0; }
+}
+
+.js-reveal .storm-dot-group.is-entering {
+  opacity: 0;
+  scale: 0.4;
+}
+
+.storm-radar-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  opacity: 1;
+  transform: none;
+  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 80ms;
+}
+
+.js-reveal .storm-radar-list.is-entering {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.storm-radar-row {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.18);
+  padding: 0.5rem 0.25rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.storm-radar-row:last-child {
+  border-bottom: none;
+}
+
+.storm-radar-row-date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.storm-radar-row-label {
+  font-size: 0.78rem;
+  color: var(--slate);
+}
+
+.storm-radar-row.is-selected .storm-radar-row-date {
+  color: var(--signal);
+}
+
+/* ---- callout -------------------------------------------------------------
+   Bound to whichever dot is currently ignited. Positioned by JS (inline
+   left/top, in the panel's own percentage space) so it can sit near the
+   selected dot without the panel growing to fit it at every position.
+   --clampx and .storm-radar-callout--below are also set by JS, after
+   measuring the rendered box against the panel: the default placement
+   (centered above the dot) overflows the panel — into whatever sits above
+   it on the page, or past either side — whenever the selected dot is near
+   that edge of the circle. */
+.storm-radar-callout {
+  position: absolute;
+  max-width: 9rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  padding: 0.4rem 0.55rem;
+  border-radius: 3px;
+  pointer-events: none;
+  transform: translate(calc(-50% + var(--clampx, 0px)), -100%);
+  margin-top: -8px;
+}
+
+.storm-radar-callout--below {
+  transform: translate(calc(-50% + var(--clampx, 0px)), 0);
+  margin-top: 8px;
+}
+
+.storm-radar-callout-date {
+  display: block;
+  font-weight: 600;
+}
+
+/* No reduced-motion override needed here: unlike the scroll-triggered
+   reveals elsewhere, this entrance is driven entirely by JS (see
+   home-storm-search.js), which checks prefers-reduced-motion itself and
+   simply never adds the .is-entering classes below when it matches —
+   content lands in its final state with no transition to skip. */
+
+@media (max-width: 600px) {
+  .storm-radar-body {
+    flex-direction: column;
+  }
+
+  .storm-radar-panel {
+    width: min(260px, 70vw);
+    margin: 0 auto;
+  }
+}
+
 /* ============================================================
    Section transitions
    A short fade at the top of each section, from the section above's
