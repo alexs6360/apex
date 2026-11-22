@@ -1440,42 +1440,100 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
 }
 
-/* .reveal's own opacity/transform pair is left alone everywhere else on
-   the site; overridden here (higher-specificity compound selector, so it
-   wins regardless of source order between the two rules) to move the
-   entrance off translateY and onto the separate `translate` property —
-   `transform` is needed free for the hover lift below, and one property
-   can't run two different transitions (a slow staggered entrance, a fast
-   uniform hover) at once. Same no-js defect class as the base .reveal rule
-   (see Scroll reveal below) — gated the same way, under .js-reveal, so a
-   failed/missing script.js never leaves these permanently hidden. The
-   .js-reveal prefix also keeps this at higher specificity (0,3,0) than the
-   base .js-reveal .reveal rule (0,2,0), so it still wins regardless of
-   source order, same as before. */
-.js-reveal .service-tile.reveal {
-  opacity: 0;
+/* Services section entrance choreography, exported from Figma: one
+   IntersectionObserver trigger (the section itself — .services carries
+   .reveal directly in the markup, see Scroll reveal below for the shared
+   observer/is-visible mechanism this reuses) stages all six pieces
+   (heading, lede, four tiles) via transition-delay, not six separate
+   observers — six observers would each cross the viewport threshold at
+   its own scroll position and break the single-trigger cascade that is
+   the whole point of a choreographed entrance. Same no-js defect class as
+   the base .reveal rule — gated under .js-reveal throughout, so a
+   failed/missing script.js never leaves these permanently hidden. */
+
+/* The section's own box (background, padding) never animates — only the
+   six pieces inside it do. (0,3,0) beats the base .js-reveal .reveal
+   rule's (0,2,0) outright, regardless of source order, so this wins
+   whether it's written before or after that rule. */
+.js-reveal .services.reveal {
+  opacity: 1;
   transform: none;
-  translate: 0 18px;
+}
+
+.js-reveal .services-head h2,
+.js-reveal .services-head .lede {
+  opacity: 0;
+  transform: translateY(26px) scale(0.985);
   transition:
-    opacity 200ms ease-out,
-    translate 200ms ease-out,
+    opacity 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.services.is-visible .services-head h2,
+.services.is-visible .services-head .lede {
+  opacity: 1;
+  transform: none;
+}
+
+.js-reveal .services-head h2 { transition-delay: 0ms; }
+.js-reveal .services-head .lede { transition-delay: 90ms; }
+
+/* Tiles use the separate translate/scale properties, not transform, for
+   the entrance — transform stays free for the hover lift below
+   (.service-tile:hover{transform:translateY(-4px)}), same split this file
+   already used before this pass, so hovering a tile never fights its own
+   entrance. Both the entrance (opacity/translate/scale) and the hover
+   (transform/box-shadow/border-color) transitions have to live in this one
+   declaration — two separate rules each setting their own `transition`
+   shorthand for the same element don't merge, the more specific one wins
+   outright and silently drops whichever properties it didn't list. */
+.js-reveal .service-tile {
+  opacity: 0;
+  translate: 0 26px;
+  scale: 0.985;
+  transition:
+    opacity 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    translate 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 560ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 200ms ease-out,
     box-shadow 200ms ease-out,
     border-color 200ms ease-out;
 }
 
-.js-reveal .service-tile.reveal.is-visible {
+.services.is-visible .service-tile {
   opacity: 1;
   translate: 0 0;
+  scale: 1;
 }
 
-/* Staggered 80ms apart — only opacity/translate (the entrance) carry a
-   delay; transform/box-shadow/border-color (hover) always fire at 0ms so
+/* Positional delays line up with the transition list above: the first
+   three values (opacity/translate/scale, the entrance) get the Figma
+   stagger; transform/box-shadow/border-color (hover) stay at 0ms so
    hovering a card never feels laggy. */
-.service-tile:nth-child(1) { transition-delay: 0ms, 0ms, 0ms, 0ms, 0ms; }
-.service-tile:nth-child(2) { transition-delay: 80ms, 80ms, 0ms, 0ms, 0ms; }
-.service-tile:nth-child(3) { transition-delay: 160ms, 160ms, 0ms, 0ms, 0ms; }
-.service-tile:nth-child(4) { transition-delay: 240ms, 240ms, 0ms, 0ms, 0ms; }
+.js-reveal .service-tile:nth-child(1) { transition-delay: 240ms, 240ms, 240ms, 0ms, 0ms, 0ms; }
+.js-reveal .service-tile:nth-child(2) { transition-delay: 330ms, 330ms, 330ms, 0ms, 0ms, 0ms; }
+.js-reveal .service-tile:nth-child(3) { transition-delay: 420ms, 420ms, 420ms, 0ms, 0ms, 0ms; }
+.js-reveal .service-tile:nth-child(4) { transition-delay: 510ms, 510ms, 510ms, 0ms, 0ms, 0ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Pinned to the final state unconditionally — not .is-visible-gated —
+     so there is nothing left to transition from no matter when .is-visible
+     lands, and nothing to stagger. transition itself is left alone rather
+     than set to none: that same declaration also carries the hover
+     transform/box-shadow/border-color transitions, which reduced motion
+     has no reason to flatten too. */
+  .js-reveal .services-head h2,
+  .js-reveal .services-head .lede {
+    opacity: 1;
+    transform: none;
+  }
+
+  .js-reveal .service-tile {
+    opacity: 1;
+    translate: none;
+    scale: none;
+  }
+}
 
 /* A 3px signal strip along the top, present but invisible by default so
    it never shifts layout — hover reveals it with a color fade rather
@@ -1511,22 +1569,48 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 
 /* Icons draw themselves in rather than just appearing — each path/rect
    carries pathLength="1" in the markup so dasharray/dashoffset can be
-   set to a flat 1 regardless of the shape's actual geometry. Delayed
-   past the card's own fade/rise (that stagger is already handled per
-   nth-child on .service-tile) so the card settles first, then the icon
-   traces itself. */
+   set to a flat 1 regardless of the shape's actual geometry. Each tile's
+   icon delay is that tile's own entrance delay (see .service-tile:nth-
+   child above) plus a flat 250ms, so the trace starts partway through
+   that specific card's own fade/rise rather than racing ahead of it — a
+   flat 250ms for every tile would have left the later cards' icons fully
+   drawn in before the card itself had even started appearing, once the
+   per-tile entrance delays went past 250ms with the new Figma timing.
+   Triggered off .services.is-visible, not .service-tile.is-visible — the
+   section is the one and only observed element now (see above), tiles no
+   longer carry .is-visible themselves.
+
+   The hidden start state (stroke-dashoffset:1) is .js-reveal-gated, same
+   no-js defect class as opacity:0 everywhere else on this page — found
+   while verifying this pass's own no-js state: it isn't opacity, so it
+   didn't turn up in a grep for opacity:0, but a failed/missing script.js
+   would have left every icon stroke permanently undrawn exactly the same
+   way. dasharray and the transition itself are left ungated — neither
+   hides anything on its own without the dashoffset change. */
 .service-tile-icon path,
 .service-tile-icon rect {
   stroke-dasharray: 1;
-  stroke-dashoffset: 1;
   transition: stroke-dashoffset 0.7s ease;
-  transition-delay: 250ms;
 }
 
-.service-tile.is-visible .service-tile-icon path,
-.service-tile.is-visible .service-tile-icon rect {
+.js-reveal .service-tile-icon path,
+.js-reveal .service-tile-icon rect {
+  stroke-dashoffset: 1;
+}
+
+.services.is-visible .service-tile-icon path,
+.services.is-visible .service-tile-icon rect {
   stroke-dashoffset: 0;
 }
+
+.service-tile:nth-child(1) .service-tile-icon path,
+.service-tile:nth-child(1) .service-tile-icon rect { transition-delay: 490ms; }
+.service-tile:nth-child(2) .service-tile-icon path,
+.service-tile:nth-child(2) .service-tile-icon rect { transition-delay: 580ms; }
+.service-tile:nth-child(3) .service-tile-icon path,
+.service-tile:nth-child(3) .service-tile-icon rect { transition-delay: 670ms; }
+.service-tile:nth-child(4) .service-tile-icon path,
+.service-tile:nth-child(4) .service-tile-icon rect { transition-delay: 760ms; }
 
 .service-tile h3 {
   font-size: 1.15rem;
@@ -2565,6 +2649,14 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   margin-top: var(--space-16);
   font-size: 0.85rem;
   color: #4b5563;
+}
+
+/* Ink, not signal: orange-on-white measures ~2.5:1 on this section, same
+   fix already applied to .storm-check-note a below. */
+.storm-check-error {
+  margin-top: 0.75rem;
+  color: var(--ink);
+  font-size: 0.85rem;
 }
 
 /* Orange text measures ~2.5:1 on this section's white background —
