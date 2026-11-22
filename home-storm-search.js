@@ -29,12 +29,8 @@
   var placeholderEl = document.getElementById("storm-check-placeholder");
   var radarEl = document.getElementById("storm-radar");
   var countEl = document.getElementById("storm-radar-count");
-  var panelEl = document.getElementById("storm-radar-panel");
   var dotsG = document.getElementById("storm-radar-dots");
   var radarListEl = document.getElementById("storm-radar-list");
-  var calloutEl = document.getElementById("storm-radar-callout");
-  var calloutDateEl = document.getElementById("storm-radar-callout-date");
-  var calloutLabelEl = document.getElementById("storm-radar-callout-label");
 
   if (!radarEl || !dotsG || !radarListEl) return;
 
@@ -51,9 +47,31 @@
   var PANEL_R_SVG = 55;
   var SCALE = PANEL_R_SVG / REPORT_RADIUS_KM;
   /* How far a co-located stack's members spread out once opened, in the
-     same viewBox units — small enough to stay inside the ring, large
-     enough to read as separate dots rather than a thicker one. */
-  var FAN_R = 9;
+     same viewBox units. Fixed at 9 units originally clears a 4-member fan
+     against the ignite halo's full 11-unit reach (spacing 12.7) but not a
+     7-member one (spacing 7.8) — full clearance at 7 would need ~12.7
+     units, over a kilometre of apparent displacement on this 5km panel,
+     which misrepresents the data worse than a little overlap would.
+     Scaled modestly instead (9-11 units) and paired with a SEPARATE,
+     smaller halo reach specifically for fanned members (see
+     stormDotPulseFanned in styles.css) — between the two, every member
+     count through at least 7 clears with margin to spare; see the
+     comment on openStack() below for the actual numbers. */
+  function fanRadiusFor(n) {
+    if (n <= 4) return 9;
+    if (n >= 7) return 11;
+    return 9 + (n - 4) * (2 / 3);
+  }
+
+  /* The fan exists to make co-located dots individually clickable. Past
+     this many members the ring runs out of circumference no matter the
+     radius — the real archive has grid cells with up to 18 distinct
+     storm dates, and 8 is where the ring still comfortably works, not
+     where it merely survives (checked against bare dot-core overlap, not
+     just the halo). Past it, the dot stays a single point carrying a
+     prominent count; which specific date is selected becomes the list's
+     job, not the map's — see renderList's group-row handling below. */
+  var LARGE_STACK_THRESHOLD = 8;
 
   /* Entrance timing — approved before this was built. Total envelope is
      measured from the section's own appearance (t=0), not from when dots
@@ -252,40 +270,124 @@
     if (placeholderEl) placeholderEl.hidden = true;
     radarEl.hidden = false;
 
-    var fromYear = new Date().getUTCFullYear() - YEARS_BACK;
-    countEl.textContent = rows.length
-      ? rows.length + (rows.length === 1 ? " storm" : " storms") + " since " + fromYear
-      : "No recorded storms since " + fromYear;
+    var built = buildStacks(rows);
+    var locations = built.order.length;
 
-    renderList(rows);
-    renderDots(lon, lat, rows);
+    /* States the count-vs-dots relationship up front rather than leaving
+       it for a badge to explain after the fact — a visitor shouldn't have
+       to reconcile "27 storms" against "12ish dots" by counting. Only
+       said when they differ: a single-event-per-location address has
+       nothing to reconcile, so the plain count stands on its own. */
+    var fromYear = new Date().getUTCFullYear() - YEARS_BACK;
+    if (!rows.length) {
+      countEl.textContent = "No recorded storms since " + fromYear;
+    } else if (locations === rows.length) {
+      countEl.textContent = rows.length + (rows.length === 1 ? " storm" : " storms") + " since " + fromYear;
+    } else {
+      countEl.textContent = rows.length + " storms across " + locations +
+        (locations === 1 ? " location" : " locations") + " since " + fromYear;
+    }
+
+    renderList(rows, built);
+    renderDots(lon, lat, built);
 
     if (rows.length) selectRow(rows[0].id);
   }
 
-  function renderList(rows) {
+  function rowButton(row, extraClass) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "storm-radar-row" + (extraClass ? " " + extraClass : "");
+    btn.dataset.id = row.id;
+
+    var d = document.createElement("span");
+    d.className = "storm-radar-row-date";
+    d.textContent = window.StormEvents.prettyDate(row.date);
+    var v = document.createElement("span");
+    v.className = "storm-radar-row-label";
+    v.textContent = row.label;
+    btn.appendChild(d);
+    btn.appendChild(v);
+    btn.addEventListener("click", function () { selectRow(row.id); });
+    return btn;
+  }
+
+  /* Past LARGE_STACK_THRESHOLD, the map dot stops distinguishing members
+     (see renderDots) — this is where that distinction actually lives
+     instead. One row for the whole location, collapsed by default,
+     expanding to its own dates on click. Rendered at the position of its
+     newest member (the first one reached walking rows newest-first), so
+     the list's overall chronological order doesn't change for a visitor
+     who never expands anything. */
+  function renderGroupRow(stack) {
+    var li = document.createElement("li");
+    li.className = "storm-radar-group";
+
+    var header = document.createElement("button");
+    header.type = "button";
+    header.className = "storm-radar-row storm-radar-row--group";
+    var count = document.createElement("span");
+    count.className = "storm-radar-row-date";
+    count.textContent = stack.members.length + " storms at this location";
+    var hint = document.createElement("span");
+    hint.className = "storm-radar-row-label storm-radar-group-hint";
+    hint.textContent = "Same spot, different dates — tap to see each one";
+    header.appendChild(count);
+    header.appendChild(hint);
+
+    var sub = document.createElement("ol");
+    sub.className = "storm-radar-sublist";
+    stack.members.forEach(function (row) {
+      var subLi = document.createElement("li");
+      subLi.appendChild(rowButton(row, "storm-radar-row--sub"));
+      sub.appendChild(subLi);
+    });
+
+    header.addEventListener("click", function () {
+      li.classList.toggle("is-expanded");
+    });
+
+    li.appendChild(header);
+    li.appendChild(sub);
+    stack.groupEl = li;
+    radarListEl.appendChild(li);
+  }
+
+  function renderList(rows, built) {
     radarListEl.innerHTML = "";
+    var renderedGroup = {};
+
     rows.forEach(function (row) {
+      var key = stackKeyFor(row);
+      var stack = built.byKey[key];
+
+      if (stack && stack.isLarge) {
+        if (renderedGroup[key]) return;
+        renderedGroup[key] = true;
+        renderGroupRow(stack);
+        return;
+      }
+
       var li = document.createElement("li");
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "storm-radar-row";
-      btn.dataset.id = row.id;
-
-      var d = document.createElement("span");
-      d.className = "storm-radar-row-date";
-      d.textContent = window.StormEvents.prettyDate(row.date);
-      var v = document.createElement("span");
-      v.className = "storm-radar-row-label";
-      v.textContent = row.label;
-      btn.appendChild(d);
-      btn.appendChild(v);
-      btn.addEventListener("click", function () { selectRow(row.id); });
-
-      li.appendChild(btn);
+      li.appendChild(rowButton(row));
       radarListEl.appendChild(li);
     });
+
+    updateListScrollState();
   }
+
+  /* The list clips with no visible affordance otherwise — can-scroll shows
+     the bottom-edge fade (CSS) only while there's actually more to see,
+     is-at-bottom drops it once scrolled all the way down. Re-checked on
+     every scroll and every re-render (row count changes per search). */
+  function updateListScrollState() {
+    var canScroll = radarListEl.scrollHeight > radarListEl.clientHeight + 1;
+    radarListEl.classList.toggle("can-scroll", canScroll);
+    var atBottom = radarListEl.scrollTop + radarListEl.clientHeight >= radarListEl.scrollHeight - 2;
+    radarListEl.classList.toggle("is-at-bottom", atBottom);
+  }
+
+  radarListEl.addEventListener("scroll", updateListScrollState);
 
   function svgEl(tag) {
     return document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -306,21 +408,32 @@
     return [km[0] * SCALE, -km[1] * SCALE];
   }
 
-  function renderDots(lon, lat, rows) {
-    dotsG.innerHTML = "";
-    stacks = {};
-
-    var frame = window.StormGrid.kmFrame(lon, lat);
-    var order = []; // stack keys in first-occurrence (newest-first) order
-
+  /* Distinct coordinates, not events — the thing the headline restatement
+     and the dot count both need before any SVG exists. Newest-first
+     first-occurrence order, same as the dots themselves end up in. */
+  function buildStacks(rows) {
+    var byKey = {};
+    var order = [];
     rows.forEach(function (row) {
       var key = stackKeyFor(row);
-      if (!stacks[key]) {
-        stacks[key] = { members: [] };
+      if (!byKey[key]) {
+        byKey[key] = { members: [] };
         order.push(key);
       }
-      stacks[key].members.push(row);
+      byKey[key].members.push(row);
     });
+    order.forEach(function (key) {
+      byKey[key].isLarge = byKey[key].members.length > LARGE_STACK_THRESHOLD;
+    });
+    return { byKey: byKey, order: order };
+  }
+
+  function renderDots(lon, lat, built) {
+    dotsG.innerHTML = "";
+    stacks = built.byKey;
+    var order = built.order;
+
+    var frame = window.StormGrid.kmFrame(lon, lat);
 
     order.forEach(function (key) {
       var stack = stacks[key];
@@ -332,18 +445,54 @@
 
       if (stack.members.length > 1) {
         var badge = svgEl("g");
-        badge.setAttribute("class", "storm-dot-badge");
+        badge.setAttribute("class", "storm-dot-badge" + (stack.isLarge ? " storm-dot-badge--large" : ""));
         var ring = svgEl("circle");
         ring.setAttribute("class", "storm-dot-ring");
-        ring.setAttribute("r", "5.5");
         var count = svgEl("text");
         count.setAttribute("class", "storm-dot-count");
-        count.setAttribute("x", "9");
-        count.setAttribute("y", "-7");
+        if (stack.isLarge) {
+          /* Bigger ring, further-out count position (same offset
+             direction as the small badge, just scaled so the number
+             clears the larger ring) — "18 storms at this one spot" is
+             the strongest fact this tool shows a homeowner, so this one
+             is sized to read instantly, not matched to the small badge. */
+          ring.setAttribute("r", "9");
+          count.setAttribute("x", "14");
+          count.setAttribute("y", "-11");
+        } else {
+          ring.setAttribute("r", "5.5");
+          count.setAttribute("x", "9");
+          count.setAttribute("y", "-7");
+        }
         count.textContent = String(stack.members.length);
         badge.appendChild(ring);
         badge.appendChild(count);
         g.appendChild(badge);
+
+        /* Tethers + anchor only below the large-stack threshold: past it
+           the fan never opens (see selectRow), so there is no spread to
+           tether back to — the badge alone carries "one place, N dates"
+           at that size. These sit under the dots (appended first) and
+           are hidden except while the stack is open (see
+           .storm-dot-stack.is-open in styles.css). One tether per member,
+           positioned in openStack() once the fan angles are known. */
+        if (!stack.isLarge) {
+          stack.anchorEl = svgEl("circle");
+          stack.anchorEl.setAttribute("class", "storm-dot-anchor");
+          stack.anchorEl.setAttribute("r", "1.5");
+          g.appendChild(stack.anchorEl);
+
+          stack.tetherEls = stack.members.map(function () {
+            var line = svgEl("line");
+            line.setAttribute("class", "storm-dot-tether");
+            line.setAttribute("x1", "0");
+            line.setAttribute("y1", "0");
+            line.setAttribute("x2", "0");
+            line.setAttribute("y2", "0");
+            g.appendChild(line);
+            return line;
+          });
+        }
       }
 
       stack.members.forEach(function (row) {
@@ -429,15 +578,27 @@
     openStackKey = null;
   }
 
+  /* Newest member always lands at angle 0 (12 o'clock in screen terms,
+     since SVG y grows downward); later members proceed clockwise from
+     there. That fixed origin is what makes the fan read as a direction
+     ("time, radiating out") rather than an arbitrary scatter — members
+     arrive in newest-first order already (see buildStacks), so index 0
+     is always the newest regardless of which coordinate this is. */
   function openStack(key) {
     var stack = stacks[key];
     if (!stack || stack.members.length < 2) return;
     stack.el.classList.add("is-open");
     var n = stack.members.length;
+    var r = fanRadiusFor(n);
     stack.members.forEach(function (row, i) {
       var angle = (i / n) * Math.PI * 2 - Math.PI / 2;
-      row._groupEl.style.setProperty("--fx", (Math.cos(angle) * FAN_R).toFixed(2) + "px");
-      row._groupEl.style.setProperty("--fy", (Math.sin(angle) * FAN_R).toFixed(2) + "px");
+      var fx = Math.cos(angle) * r;
+      var fy = Math.sin(angle) * r;
+      row._groupEl.style.setProperty("--fx", fx.toFixed(2) + "px");
+      row._groupEl.style.setProperty("--fy", fy.toFixed(2) + "px");
+      var tether = stack.tetherEls[i];
+      tether.setAttribute("x2", fx.toFixed(2));
+      tether.setAttribute("y2", fy.toFixed(2));
     });
     openStackKey = key;
   }
@@ -459,59 +620,21 @@
     var key = selectedRow ? selectedRow._stackKey : null;
 
     if (key !== openStackKey) closeOpenStack();
-    if (key && stacks[key] && stacks[key].members.length > 1) openStack(key);
+    if (key && stacks[key] && !stacks[key].isLarge && stacks[key].members.length > 1) openStack(key);
+
+    /* A large stack's selected member lives inside a collapsed group row
+       (see renderList) — expand it so the answer is visible without an
+       extra click, same reasoning as the newest event arriving already
+       ignited on load. Never auto-collapses a group the visitor opened
+       themselves; only ever opens the one that now needs to be seen. */
+    if (key && stacks[key] && stacks[key].isLarge && stacks[key].groupEl) {
+      stacks[key].groupEl.classList.add("is-expanded");
+    }
 
     /* Raise the whole stack to the end of #storm-radar-dots so the
        selected dot (and its fanned siblings, if any) paint above every
        other stack on the panel — never hidden under a neighbour. */
     if (key && stacks[key]) dotsG.appendChild(stacks[key].el);
-
-    positionCallout(id, selectedGroup);
-  }
-
-  function positionCallout(id, groupEl) {
-    var row = findRowById(id);
-    if (!row || !calloutEl) return;
-    calloutDateEl.textContent = window.StormEvents.prettyDate(row.date);
-    calloutLabelEl.textContent = row.label;
-
-    /* The panel is a 120x120 viewBox; translate the dot's own transform
-       (stack position) plus its current fan offset into the same 0-100%
-       space the callout's absolutely-positioned box sits in. */
-    var stackTransform = groupEl.closest(".storm-dot-stack").getAttribute("transform");
-    var m = /translate\(([-\d.]+),([-\d.]+)\)/.exec(stackTransform || "");
-    var baseX = m ? parseFloat(m[1]) : 0;
-    var baseY = m ? parseFloat(m[2]) : 0;
-    var fx = parseFloat(getComputedStyle(groupEl).getPropertyValue("--fx")) || 0;
-    var fy = parseFloat(getComputedStyle(groupEl).getPropertyValue("--fy")) || 0;
-
-    var x = baseX + fx;
-    var y = baseY + fy;
-    var leftPct = ((x + 60) / 120) * 100;
-    var topPct = ((y + 60) / 120) * 100;
-
-    calloutEl.style.left = leftPct + "%";
-    calloutEl.style.top = topPct + "%";
-    calloutEl.style.removeProperty("--clampx");
-    calloutEl.classList.remove("storm-radar-callout--below");
-    calloutEl.hidden = false;
-
-    /* The box is centered and sits above the point by default, which
-       overflows the panel — into the count line above, or past either
-       side — whenever the selected dot is near that edge of the circle.
-       Measured and nudged back inside after layout rather than guessed in
-       advance, since the overflow depends on the callout's own rendered
-       size (the label text varies) as much as the dot's position. */
-    var panelBox = panelEl.getBoundingClientRect();
-    var calloutBox = calloutEl.getBoundingClientRect();
-    if (calloutBox.top < panelBox.top) {
-      calloutEl.classList.add("storm-radar-callout--below");
-      calloutBox = calloutEl.getBoundingClientRect();
-    }
-    var dx = 0;
-    if (calloutBox.left < panelBox.left) dx = panelBox.left - calloutBox.left;
-    else if (calloutBox.right > panelBox.right) dx = panelBox.right - calloutBox.right;
-    if (dx) calloutEl.style.setProperty("--clampx", dx + "px");
   }
 
   var _rowsCache = [];

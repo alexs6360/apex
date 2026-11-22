@@ -2686,10 +2686,20 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
    both live in storm-check-media. Only ever shown post-search, which
    already requires JS, so there is no no-JS state of this block to keep
    honest; the static frame + working native form stays the entire no-JS
-   story, untouched. */
+   story, untouched.
+
+   --ink, not --paper: the card it replaces (.storm-check-map-frame) is a
+   dark slate card showing a dark basemap, and the rest of the page outside
+   this one light .storm-check section is black (hero, nav, footer). A flat
+   white panel here read as a settings dialog, not a radar readout, and
+   fought both neighbors. Child text/strokes below are repainted for a dark
+   surface to match — --mist (white at 58%, already the site's token for
+   body copy on black) for secondary text, --paper for the ring/dots/home
+   marker that used to be --ink/--slate against white. */
 .storm-radar {
-  background: #ffffff;
-  border: 1px solid rgba(75, 85, 99, 0.25);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--line-on-dark);
   border-radius: 4px;
   padding: clamp(1rem, 2.5vw, 1.5rem);
 }
@@ -2747,18 +2757,18 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 
 .storm-radar-ring {
   fill: none;
-  stroke: var(--slate);
-  stroke-opacity: 0.35;
+  stroke: var(--paper);
+  stroke-opacity: 0.28;
   stroke-width: 1;
 }
 
 .storm-radar-ring--mid {
-  stroke-opacity: 0.2;
+  stroke-opacity: 0.16;
   stroke-dasharray: 2 2;
 }
 
 .storm-radar-home {
-  fill: var(--ink);
+  fill: var(--paper);
 }
 
 /* ---- dots ----------------------------------------------------------------
@@ -2780,17 +2790,32 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
    when a coordinate has more than one event). */
 .storm-dot-ring {
   fill: none;
-  stroke: var(--ink);
+  stroke: var(--paper);
   stroke-width: 1;
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 .storm-dot-count {
   font-size: 4.5px;
-  fill: var(--ink);
+  fill: var(--paper);
   text-anchor: middle;
   dominant-baseline: central;
-  opacity: 0.6;
+  opacity: 0.7;
+}
+
+/* Past LARGE_STACK_THRESHOLD the fan never opens (see renderDots/
+   selectRow in home-storm-search.js) — this badge is the only thing on
+   the panel saying "many storms, one place," so it's sized to be read at
+   a glance, not matched to the small co-location badge above it. */
+.storm-dot-badge--large .storm-dot-ring {
+  stroke-width: 1.5;
+  opacity: 0.85;
+}
+
+.storm-dot-badge--large .storm-dot-count {
+  font-size: 8px;
+  font-weight: 600;
+  opacity: 0.95;
 }
 
 .storm-dot-stack.is-open .storm-dot-badge {
@@ -2798,8 +2823,35 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   transition: opacity 150ms ease;
 }
 
+/* Anchor + tethers: shown only while a stack is open, replacing the badge
+   (which already says "more than one here" while collapsed). These seven
+   events are one place and seven dates — the fan encodes time, not
+   position, and without a visible line back to the shared coordinate it
+   reads as seven separate locations. */
+.storm-dot-anchor {
+  fill: var(--paper);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.storm-dot-stack.is-open .storm-dot-anchor {
+  opacity: 0.6;
+}
+
+.storm-dot-tether {
+  stroke: var(--paper);
+  stroke-width: 0.6;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.storm-dot-stack.is-open .storm-dot-tether {
+  opacity: 0.35;
+}
+
 .storm-dot-core {
-  fill: var(--slate);
+  fill: var(--paper);
   opacity: 0.3;
   transition: opacity 0.2s ease, fill 0.2s ease;
 }
@@ -2852,6 +2904,25 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   100% { r: 11px; stroke-width: 0.2px; opacity: 0; }
 }
 
+/* A fanned member gets a smaller pulse than a lone dot on open ground —
+   the full 11-unit reach was sized for a dot with nothing nearby and
+   overlaps a neighbor at fan spacings as wide as ~9.5 units (a 7-member
+   fan at its scaled 11-unit radius). Inside a fan, the ignited white vs.
+   the rest at 30% opacity already identifies the selection, so the halo
+   only needs to read as "lit," not to reach as far. At every member count
+   through 7 this clears its neighbors with margin — see fanRadiusFor() in
+   home-storm-search.js for the numbers this was checked against.
+   Higher specificity than the base rule above (4 classes vs. 3) so it
+   wins regardless of source order whenever the ancestor stack is open. */
+.storm-dot-stack.is-open .storm-dot-group.is-selected .storm-dot-halo {
+  animation: stormDotPulseFanned 1.8s ease-out infinite;
+}
+
+@keyframes stormDotPulseFanned {
+  0% { r: 3px; stroke-width: 1.5px; opacity: 0.8; }
+  100% { r: 7px; stroke-width: 0.15px; opacity: 0; }
+}
+
 .js-reveal .storm-dot-group.is-entering {
   opacity: 0;
   scale: 0.4;
@@ -2876,12 +2947,22 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   transform: translateY(8px);
 }
 
+/* Scroll affordance: the list was clipping mid-sentence with nothing to
+   show there was more below it. can-scroll is set by home-storm-search.js
+   whenever the content actually overflows; is-at-bottom while scrolled all
+   the way down, so the fade doesn't keep implying more content once
+   there's none left. */
+.storm-radar-list.can-scroll:not(.is-at-bottom) {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent 100%);
+}
+
 .storm-radar-row {
   width: 100%;
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid rgba(75, 85, 99, 0.18);
+  border-bottom: 1px solid var(--line-on-dark);
   padding: 0.5rem 0.25rem;
   cursor: pointer;
   display: flex;
@@ -2896,49 +2977,68 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 .storm-radar-row-date {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--paper);
 }
 
 .storm-radar-row-label {
   font-size: 0.78rem;
-  color: var(--slate);
+  color: var(--mist);
 }
 
 .storm-radar-row.is-selected .storm-radar-row-date {
   color: var(--signal);
 }
 
-/* ---- callout -------------------------------------------------------------
-   Bound to whichever dot is currently ignited. Positioned by JS (inline
-   left/top, in the panel's own percentage space) so it can sit near the
-   selected dot without the panel growing to fit it at every position.
-   --clampx and .storm-radar-callout--below are also set by JS, after
-   measuring the rendered box against the panel: the default placement
-   (centered above the dot) overflows the panel — into whatever sits above
-   it on the page, or past either side — whenever the selected dot is near
-   that edge of the circle. */
-.storm-radar-callout {
+/* ---- large-stack group row -------------------------------------------
+   Past LARGE_STACK_THRESHOLD the map dot stops distinguishing members
+   (one point, a count badge) — this is where picking a specific date
+   actually happens instead. Collapsed by default; expands on its own
+   click, independent of selection, and auto-expands when one of its
+   dates gets selected some other way (see selectRow). */
+.storm-radar-row--group {
+  position: relative;
+  padding-right: 1.5rem;
+}
+
+.storm-radar-row--group::after {
+  content: "";
   position: absolute;
-  max-width: 9rem;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 0.72rem;
-  line-height: 1.3;
-  padding: 0.4rem 0.55rem;
-  border-radius: 3px;
-  pointer-events: none;
-  transform: translate(calc(-50% + var(--clampx, 0px)), -100%);
-  margin-top: -8px;
+  right: 0.35rem;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--mist);
+  border-bottom: 1.5px solid var(--mist);
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 150ms ease;
 }
 
-.storm-radar-callout--below {
-  transform: translate(calc(-50% + var(--clampx, 0px)), 0);
-  margin-top: 8px;
+.storm-radar-group.is-expanded .storm-radar-row--group::after {
+  transform: translateY(-35%) rotate(225deg);
 }
 
-.storm-radar-callout-date {
+.storm-radar-group-hint {
+  font-style: italic;
+}
+
+.storm-radar-sublist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: none;
+}
+
+.storm-radar-group.is-expanded .storm-radar-sublist {
   display: block;
-  font-weight: 600;
+}
+
+.storm-radar-row--sub {
+  padding-left: 1rem;
+  border-bottom-color: var(--line-on-dark);
+}
+
+.storm-radar-row--sub .storm-radar-row-date {
+  font-size: 0.76rem;
 }
 
 /* No reduced-motion override needed here: unlike the scroll-triggered
