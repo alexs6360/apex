@@ -102,6 +102,7 @@ jobs:
       # check will hard-fail the run either way, but failing here first
       # gives a clearer error than tracing it through the generator's log.
       - name: Install eccodes (MRMS GRIB2 decoding)
+        id: eccodes
         run: pip install eccodes
 
       - name: Determine mode
@@ -154,7 +155,20 @@ jobs:
           git push
 
       - name: Regenerate storm data
-        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture' && steps.mode.outputs.mode != 'weekly-verify'
+        id: regenerate
+        # steps.eccodes.outcome == 'success' is explicit, not implied: this
+        # if: already replaces the default success()-only gate (any custom
+        # if: does), so without that clause, a failed eccodes install would
+        # not stop this step from running — build-storm-data.mjs's own
+        # hasEccodes() check would likely catch a wholly-missing install and
+        # refuse to write anyway, but that's a second-hand inference, not
+        # something this workflow asserts for itself, and it wouldn't catch
+        # a partial install that imports but decodes wrong.
+        if: >
+          steps.mode.outputs.mode != 'verify-mesh-fixture' &&
+          steps.mode.outputs.mode != 'verify-wind-fixture' &&
+          steps.mode.outputs.mode != 'weekly-verify' &&
+          steps.eccodes.outcome == 'success'
         env:
           MODE: ${{ steps.mode.outputs.mode }}
           # Incremental in both modes: refetches the last 2 calendar months
@@ -168,7 +182,15 @@ jobs:
         run: node tools/build-storm-data.mjs data
 
       - name: Commit if changed
-        if: steps.mode.outputs.mode != 'verify-mesh-fixture' && steps.mode.outputs.mode != 'verify-wind-fixture' && steps.mode.outputs.mode != 'weekly-verify'
+        id: commit
+        # Same reasoning as Regenerate storm data above — this if: already
+        # replaces the default gate, so the eccodes check has to be
+        # repeated here explicitly rather than inherited.
+        if: >
+          steps.mode.outputs.mode != 'verify-mesh-fixture' &&
+          steps.mode.outputs.mode != 'verify-wind-fixture' &&
+          steps.mode.outputs.mode != 'weekly-verify' &&
+          steps.eccodes.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -211,3 +233,42 @@ jobs:
               process.exit(1);
             }
           '
+
+      # External dead man's switch (healthchecks.io) — answers only "did the
+      # scheduler run today", deliberately independent of the staleness
+      # check above and everything else past this point. Routes on
+      # eccodes/regenerate/commit's own outcomes specifically, not success()
+      # or the job's overall conclusion, which would also fold in the
+      # staleness check — a quiet season with nothing to report (the one
+      # this archive is in right now) must not look like a dead cron. Each
+      # step guards on PING_URL being set so this is safe to ship before the
+      # secret exists — a no-op, not a failing step, until it does.
+      - name: Ping healthcheck — scheduler ran, fetch succeeded
+        if: >
+          always() && steps.mode.outputs.mode == 'daily' &&
+          steps.eccodes.outcome == 'success' &&
+          steps.regenerate.outcome == 'success' &&
+          steps.commit.outcome == 'success'
+        env:
+          PING_URL: ${{ secrets.STORM_HEALTHCHECK_PING_URL }}
+        run: |
+          if [ -z "$PING_URL" ]; then
+            echo "STORM_HEALTHCHECK_PING_URL not set yet — skipping ping."
+            exit 0
+          fi
+          curl -fsS -m 10 --retry 3 "$PING_URL"
+
+      - name: Ping healthcheck /fail — something actually broke
+        if: >
+          always() && steps.mode.outputs.mode == 'daily' &&
+          (steps.eccodes.outcome == 'failure' ||
+          steps.regenerate.outcome == 'failure' ||
+          steps.commit.outcome == 'failure')
+        env:
+          PING_URL: ${{ secrets.STORM_HEALTHCHECK_PING_URL }}
+        run: |
+          if [ -z "$PING_URL" ]; then
+            echo "STORM_HEALTHCHECK_PING_URL not set yet — skipping ping."
+            exit 0
+          fi
+          curl -fsS -m 10 --retry 3 "$PING_URL/fail"
