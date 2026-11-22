@@ -2749,7 +2749,34 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   aspect-ratio: 1;
 }
 
+/* Backdrop sits under the SVG (ring guides, dots) — both absolutely
+   positioned so they overlap exactly rather than stacking in flow, now
+   that the panel has two children instead of one. */
+.storm-radar-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+
+.storm-radar-backdrop.is-loaded {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storm-radar-backdrop {
+    transition: none;
+  }
+}
+
 .storm-radar-svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   overflow: visible;

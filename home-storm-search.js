@@ -31,6 +31,7 @@
   var countEl = document.getElementById("storm-radar-count");
   var dotsG = document.getElementById("storm-radar-dots");
   var radarListEl = document.getElementById("storm-radar-list");
+  var backdropEl = document.getElementById("storm-radar-backdrop");
 
   if (!radarEl || !dotsG || !radarListEl) return;
 
@@ -166,8 +167,7 @@
         "?session_token=" + encodeURIComponent(self.sessionToken()) +
         "&access_token=" + MAPBOX_TOKEN;
 
-      loadData()
-        .then(function () { return fetch(url); })
+      fetch(url)
         .then(function (r) { return r.json(); })
         .then(function (data) {
           var f = data && data.features && data.features[0];
@@ -206,8 +206,7 @@
       "&access_token=" + MAPBOX_TOKEN;
 
     form.classList.add("is-busy");
-    loadData()
-      .then(function () { return fetch(url); })
+    fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         var f = data && data.features && data.features[0];
@@ -239,19 +238,73 @@
       return;
     }
 
-    var addrBucket = window.StormEvents.bucketOf(lat, lon);
-    var allEvents = window.StormEvents.eventsAt(lon, lat, addrBucket, hail, reports, warnings, REPORT_RADIUS_KM);
+    /* Fired here, not awaited: the backdrop is a separate request on a
+       separate failure path from the data this page actually needs to
+       answer the question. It must never gate or slow the count, the
+       list, or the dot entrance — see loadBackdrop's own comment for the
+       fallback it degrades to. */
+    loadBackdrop(lon, lat);
 
-    var cutoff = new Date();
-    cutoff.setUTCFullYear(cutoff.getUTCFullYear() - YEARS_BACK);
-    var cutoffIso = cutoff.toISOString().slice(0, 10);
-    var recent = allEvents.filter(function (e) { return e.date >= cutoffIso; });
+    loadData().then(function () {
+      var addrBucket = window.StormEvents.bucketOf(lat, lon);
+      var allEvents = window.StormEvents.eventsAt(lon, lat, addrBucket, hail, reports, warnings, REPORT_RADIUS_KM);
 
-    var rows = window.StormEvents.groupByDate(recent);
-    rows.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
-    rows.forEach(function (r, i) { r.id = "r" + i; });
+      var cutoff = new Date();
+      cutoff.setUTCFullYear(cutoff.getUTCFullYear() - YEARS_BACK);
+      var cutoffIso = cutoff.toISOString().slice(0, 10);
+      var recent = allEvents.filter(function (e) { return e.date >= cutoffIso; });
 
-    render(rows, lon, lat);
+      var rows = window.StormEvents.groupByDate(recent);
+      rows.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+      rows.forEach(function (r, i) { r.id = "r" + i; });
+
+      render(rows, lon, lat);
+    });
+  }
+
+  /* ---- backdrop ------------------------------------------------------------
+     A real Mapbox Static Images API export (dark-v11 — the Standard style
+     GL JS uses on storm-history.html isn't supported by this API), bbox'd
+     to the exact same ±REPORT_RADIUS_KM square the dots are projected
+     into via kmFrame, so the two agree without any separate projection
+     math. One request per search, square (the circular crop in CSS takes
+     care of the rest), @2x for retina.
+
+     Entirely independent of the data path above: no render() call waits
+     on this, and its own fade-in (CSS, triggered on the <img>'s load
+     event) runs on its own clock, whenever the network delivers it —
+     before the dot entrance, mid-way through it, or well after. A 403, a
+     timeout, a rate limit, or a plain network failure all land on
+     the same onerror path, which does nothing: the backdrop <img> simply
+     never gains .is-loaded and the panel stays exactly what it already
+     was before this existed — rings and dots on the dark card. No broken-
+     image icon (the element stays at opacity:0, never shown unstyled)
+     and no error text (this failure is invisible to a visitor on
+     purpose — the radar still answers the question without it). */
+  var BACKDROP_SIZE = 200;
+  var backdropSeq = 0;
+
+  function loadBackdrop(lon, lat) {
+    if (!backdropEl || !hasToken()) return;
+    var seq = ++backdropSeq;
+    backdropEl.classList.remove("is-loaded");
+
+    var frame = window.StormGrid.kmFrame(lon, lat);
+    var sw = frame.inv([-REPORT_RADIUS_KM, -REPORT_RADIUS_KM]);
+    var ne = frame.inv([REPORT_RADIUS_KM, REPORT_RADIUS_KM]);
+    var bbox = "[" + sw[0].toFixed(5) + "," + sw[1].toFixed(5) + "," +
+      ne[0].toFixed(5) + "," + ne[1].toFixed(5) + "]";
+    var url = "https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/" + bbox +
+      "/" + BACKDROP_SIZE + "x" + BACKDROP_SIZE + "@2x?access_token=" + MAPBOX_TOKEN;
+
+    backdropEl.onload = function () {
+      /* A slow response from a superseded search landing after a newer
+         one must not paint over the newer address's dots. */
+      if (seq !== backdropSeq) return;
+      backdropEl.classList.add("is-loaded");
+    };
+    backdropEl.onerror = function () { /* stays hidden — see comment above */ };
+    backdropEl.src = url;
   }
 
   /* ---- rendering ----------------------------------------------------------- */
