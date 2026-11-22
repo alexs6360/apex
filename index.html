@@ -142,13 +142,31 @@
     <div class="wrap">
       <div class="storm-check-grid">
         <div class="storm-check-media">
-          <div class="storm-check-map-frame">
+          <div class="storm-check-map-frame" id="storm-check-placeholder">
             <img src="/images/storm-map-preview.png" alt="Map of the Memphis metro area" loading="lazy" data-parallax>
+          </div>
+          <div class="storm-radar" id="storm-radar" hidden>
+            <p class="storm-radar-count" id="storm-radar-count"></p>
+            <div class="storm-radar-body">
+              <div class="storm-radar-panel" id="storm-radar-panel">
+                <svg class="storm-radar-svg" viewBox="-60 -60 120 120" aria-hidden="true">
+                  <circle class="storm-radar-ring" cx="0" cy="0" r="55"></circle>
+                  <circle class="storm-radar-ring storm-radar-ring--mid" cx="0" cy="0" r="27.5"></circle>
+                  <g id="storm-radar-dots"></g>
+                  <circle class="storm-radar-home" cx="0" cy="0" r="2.5"></circle>
+                </svg>
+                <div class="storm-radar-callout" id="storm-radar-callout" hidden>
+                  <span class="storm-radar-callout-date" id="storm-radar-callout-date"></span>
+                  <span class="storm-radar-callout-label" id="storm-radar-callout-label"></span>
+                </div>
+              </div>
+              <ol class="storm-radar-list" id="storm-radar-list"></ol>
+            </div>
           </div>
         </div>
         <div class="storm-check-inner reveal">
           <h2>What storms have hit your address?</h2>
-          <p class="lede">See the hail and wind events recorded near your address over the last ten years.</p>
+          <p class="lede">See the hail and wind events recorded near your address over the last five years.</p>
           <form class="storm-check-form" id="storm-check-form" action="/storm-history.html" method="get" autocomplete="off">
             <label class="visually-hidden" for="storm-check-address">Street Address</label>
             <div class="sh-lookup-row storm-check-combo">
@@ -170,8 +188,9 @@
               </div>
               <button type="submit" class="btn btn-solid btn-sans">Check My Address</button>
             </div>
+            <p class="storm-check-error" id="storm-check-error" hidden></p>
           </form>
-          <p class="storm-check-note">Free, no obligation. Opens your full storm history. Or <a href="/storm-history.html">browse the full storm map</a>.</p>
+          <p class="storm-check-note">Free, no obligation. Or <a href="/storm-history.html">browse the full ten-year storm map</a>.</p>
         </div>
       </div>
     </div>
@@ -405,6 +424,8 @@
 
 <a class="mobile-call-bar" href="tel:__PHONE_TEL__">Call __PHONE_DISPLAY__</a>
 
+<script src="/storm-events.js"></script>
+<script src="/storm-grid.js"></script>
 <script src="/storm-autocomplete.js"></script>
 <script src="/home-storm-search.js"></script>
 <script src="/script.js?v=__ASSET_VER__"></script>

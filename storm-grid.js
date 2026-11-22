@@ -6,26 +6,21 @@
 
    Behaviour is unchanged; this is a move, not a rewrite. */
 
-const GRID_DEG = 0.05;   // ~5km: three radars see one storm and report
-                                // it two or three times a minute apart
+/* GRID_DEG/bucketOf/cellKey themselves now live in storm-events.js — the
+   homepage radar needs them without the 600 lines of shape-fitting below
+   that only the big interactive map uses, and duplicating three lines
+   elsewhere is exactly the kind of re-derivation this file's own header
+   used to warn against. Read back here so every existing window.StormGrid
+   caller keeps working unchanged. storm-events.js must load first.
 
-/* A detection's cell is a function of its own raw coordinate and nothing else.
-   Note what is NOT an input: the comparator, the arrival order, the contents
-   of any other detection. */
-function cellKey(day, lat, lon) {
-  const [by, bx] = bucketOf(lat, lon);
-  return `${day}|${by}|${bx}`;
-}
-
-/* The bucket a coordinate falls in, as [latIndex, lonIndex].
-
-   Emitted with every cell so the browser reads the indices instead of
-   recomputing them from a 3-decimal coordinate. Reconstructing this arithmetic
-   downstream produced five wrong answers in one session; the fix is to stop
-   reconstructing it. */
-function bucketOf(lat, lon) {
-  return [Math.round(lat / GRID_DEG), Math.round(lon / GRID_DEG)];
-}
+   var, not const: storm-events.js's top-level `var`/`function` declarations
+   of these same names are already global bindings by the time this runs —
+   two plain <script> tags share one global scope — and redeclaring a `var`
+   binding as `const` is a SyntaxError even across separate script files.
+   `var` re-pointing the same binding is not. */
+var GRID_DEG = window.StormEvents.GRID_DEG;
+var bucketOf = window.StormEvents.bucketOf;
+var cellKey = window.StormEvents.cellKey;
 
 /* Which of two detections in the same cell survives. Size decides first and
    unconditionally; position and time only break exact size ties. Ties used to
