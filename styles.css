@@ -2504,17 +2504,19 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 /* ============================================================
    Storm history teaser (homepage)
    ============================================================ */
+/* Was a flat light section (white bg, black text) specifically so
+   hero/storm/services/... alternated instead of running two dark
+   sections in a row (see the background-alternation comments elsewhere
+   in this file). Reusing storm-history.html's sky treatment
+   (storm-weather.css) makes this dark again, which puts
+   hero/storm-check/services three dark in a row. Flagged, not resolved
+   here — "build the sky, show me" was the explicit scope of this pass;
+   the alternation consequence is a panel-phase (or services-phase)
+   decision, not this one. */
 .storm-check {
-  /* Two dark sections in a row (hero, storm) is what made the page feel
-     heavy — this one flips to light so hero/storm/services/process/...
-     actually alternates instead of running two-then-one. A faint grid
-     brings back the "modern squares" texture the black version had,
-     just in dark-on-white instead of white-on-black. */
-  background:
-    repeating-linear-gradient(0deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
-    repeating-linear-gradient(90deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
-    #ffffff;
-  color: #000000;
+  position: relative;
+  overflow: hidden;
+  color: var(--paper);
   /* The 90px fade above now fits comfortably inside this on its own —
      no extra padding needed just to clear it. */
   padding-top: clamp(4rem, 9vw, 7.5rem);
@@ -2525,61 +2527,200 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   padding-bottom: clamp(6rem, 6vw, 7rem);
 }
 
-.storm-check-grid {
-  display: grid;
-  gap: clamp(2rem, 5vw, 3.5rem);
-  align-items: center;
+/* Sky treatment — clouds/rain/lightning markup and classes are shared
+   with storm-history.html's .sh-intro via storm-weather.css; this is
+   just the container they anchor to here. .sh-clouds carries --defer
+   (see storm-weather.css) since this section sits below the hero's own
+   video and shouldn't compete with it for bandwidth on first load. */
+.storm-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
-.storm-check-map-frame {
+.storm-check .wrap {
   position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: 4px;
+  z-index: 2;
+}
+
+/* Capped so the copy column leaves clear space for .storm-radar-panel on
+   the right — measured live against the panel's real 740x430 size (see
+   .storm-radar-panel below), not assumed. 640px collided with the panel
+   by ~120-130px across the whole 1180-1560px range once the panel was
+   sized correctly; 460px was the value that actually cleared it,
+   confirmed the same way (rendered at 1180/1280/1400/1560/1920px and
+   measured the real gap between .storm-check-inner's right edge and
+   .storm-radar-panel's left edge at each). */
+@media (min-width: 1180px) {
+  .storm-check-inner {
+    max-width: 460px;
+  }
+}
+
+/* Radar panel — real geometry from Figma node 22:3: 740x430 at a 1560px
+   section, given directly rather than pulled from the file (no fetch
+   access to Figma from here). Scales with the section's own width via
+   vw, pinned to that 740px size at 1560px and capped there — doesn't
+   grow past the design size on wider screens. Rectangular, not square:
+   aspect-ratio keeps width and height locked to the same 740:430 ratio
+   at every size, so .storm-sweep__line's length (below) can be a fixed
+   multiple of the width alone. Still provisional below 1180px: Figma
+   only gave this one panel size, not the full two-column composition at
+   intermediate widths, so the breakpoint and gap are my own judgment,
+   not the file's. */
+.storm-radar-panel {
+  --radar-w: clamp(360px, 47.4vw, 740px);
+  position: absolute;
+  top: 50%;
+  right: clamp(1.5rem, 5vw, 4rem);
+  z-index: 1;
+  width: var(--radar-w);
+  aspect-ratio: 740 / 430;
+  transform: translateY(-50%);
+  border-radius: 20px;
   overflow: hidden;
-  background: #4b5563;
-  border: 1px solid rgba(75, 85, 99, 0.25);
-  transition: transform 0.4s ease, border-color 0.4s ease;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
 }
 
-.storm-check-map-frame:hover {
-  transform: scale(1.015);
-  border-color: var(--signal);
+/* No room for a right-side panel once the copy needs the full width —
+   dropped rather than shrunk further; a thumbnail-sized radar reads as
+   clutter, not atmosphere. */
+@media (max-width: 1179px) {
+  .storm-radar-panel {
+    display: none;
+  }
 }
 
-.storm-check-map-frame img {
+.storm-radar-rings {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  /* Same reasoning as .founder-photo img — buffer for the scroll parallax. */
-  transform: scale(1.12);
 }
 
-/* A radar ping over Memphis on the static preview — /images/storm-map-preview.png
-   is a Mapbox Static Images API export (dark-v11, centered on Memphis at
-   zoom 8.6), regenerate it with the same center if this image is ever
-   swapped so the ping's position keeps lining up. */
-.storm-check-map-frame::before,
-.storm-check-map-frame::after {
-  content: "";
+.storm-radar-rings circle,
+.storm-radar-rings line {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-width: 0.5;
+}
+
+/* The only animated element in the sweep — everything else (the wedge,
+   the line) is a static child that visually rotates purely by being
+   nested inside this one transform, so there's exactly one running
+   animation driving the whole effect. */
+.storm-sweep {
   position: absolute;
-  left: 48%;
-  top: 60%;
-  width: 10px;
-  height: 10px;
-  margin: -5px;
+  inset: 0;
+  transform-origin: 50% 50%;
+  animation: storm-sweep-rotate 6s linear infinite;
+  animation-play-state: paused;
+}
+
+.storm-check.is-radar-active .storm-sweep {
+  animation-play-state: running;
+}
+
+@keyframes storm-sweep-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Trailing persistence wedge: bright at the leading edge (0deg, the same
+   edge .storm-sweep__line sits on), fading to nothing by ~110deg. Static
+   itself — it rotates only because .storm-sweep, its parent, does. */
+.storm-sweep__wedge {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    rgba(255, 255, 255, 0.28) 0deg,
+    rgba(255, 255, 255, 0) 110deg,
+    rgba(255, 255, 255, 0) 360deg
+  );
+}
+
+/* Centre to beyond the panel's own corners. The panel is 740x430, fixed
+   by aspect-ratio, so its half-diagonal is a constant multiple of its
+   width alone: sqrt(740^2 + 430^2) / 2 / 740 = 0.578. 0.62 adds ~7% past
+   that so the line visibly clears the corner rather than just touching
+   it, at every angle as it sweeps through the diagonals. Static; rotates
+   with .storm-sweep.
+
+   Anchored at the BOTTOM, not the top, so the unrotated line points up
+   (12 o'clock) — matching conic-gradient's own 0deg reference, which is
+   always up regardless of what edge .storm-sweep__wedge is anchored at.
+   Anchoring this at top instead (so it grows downward, 6 o'clock) was
+   the bug caught live: wedge and line sat 180deg apart at every rotation
+   instead of the wedge trailing the line's leading edge. */
+.storm-sweep__line {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 2px;
+  height: calc(var(--radar-w) * 0.62);
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
+}
+
+/* Dots — one per distinct storm-report location (data/radar-points.json,
+   generated by tools/build-radar-points.mjs), positioned by script.js via
+   left/top percentages from each point's lon/lat. All 394 render as this
+   plain, static span — inert DOM costs nothing after paint, which is why
+   the full count stays instead of being thinned. */
+.storm-radar-dot {
+  position: absolute;
+  z-index: 1;
+  width: 4px;
+  height: 4px;
+  margin: -2px;
   border-radius: 50%;
-  background: var(--signal);
-  animation: stormCheckPing 2.8s ease-out infinite;
+  background: #ffffff;
+  opacity: 0.3;
 }
 
-.storm-check-map-frame::after {
-  animation-delay: 1.4s;
+/* Only the top 60 by severity (script.js slices the pre-sorted list) get
+   this modifier — the significant events are the ones that flare as the
+   sweep passes, not all 394. animation-delay syncs each to the moment
+   .storm-sweep's rotation reaches its bearing: --angle is set once per
+   dot, inline, by script.js. Paused by default and released by the same
+   .is-radar-active toggle that runs .storm-sweep, so a dot mid-cycle
+   freezes in place rather than drifting out of sync across a pause. */
+.storm-radar-dot--ping {
+  animation: radar-ping 6s linear infinite;
+  animation-delay: calc(var(--angle) / -360 * 6s);
+  animation-play-state: paused;
 }
 
-@keyframes stormCheckPing {
-  0% { transform: scale(1); opacity: 0.85; }
-  70% { opacity: 0.12; }
-  100% { transform: scale(7); opacity: 0; }
+.storm-check.is-radar-active .storm-radar-dot--ping {
+  animation-play-state: running;
+}
+
+/* Peak at 0%/100% (the loop boundary), not mid-cycle — animation-delay's
+   maths above assumes the flash lands exactly on that boundary, confirmed
+   against .storm-sweep's own rotation in an isolated test before this
+   shipped (two unrelated elements, same duration, delay set from one's
+   target angle, sampled until the flash and the sweep crossing lined up)
+   rather than trusted on the arithmetic alone. */
+@keyframes radar-ping {
+  0% { opacity: 1; }
+  12% { opacity: 0.3; }
+  100% { opacity: 0.3; }
+}
+
+/* prefers-reduced-motion: no rotation, no ping. Rings plus a static line
+   beat dropping the sweep entirely — the panel still reads as "radar,"
+   just stilled rather than absent. Dots stay, at resting opacity same as
+   every other dot — .storm-radar-dot itself was never animated. */
+@media (prefers-reduced-motion: reduce) {
+  .storm-sweep,
+  .storm-radar-dot--ping {
+    animation: none;
+  }
 }
 
 /* Children step in one after another instead of the block arriving as one
@@ -2622,7 +2763,10 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 }
 
 .storm-check-inner .lede {
-  color: #4b5563;
+  /* Same treatment as .sh-intro .lede (storm-history.css) — same kind of
+     background (black, photo behind it) for the same reason: a flat
+     #4b5563 was tuned for the light version of this section. */
+  color: rgba(255, 255, 255, 0.72);
   /* ~60 characters, so the shortened copy wraps to two lines instead of
      stretching thin across three. */
   max-width: 60ch;
@@ -2633,41 +2777,22 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   margin-top: var(--space-32);
 }
 
-/* The shared .sh-combo input (white fill, transparent border) is right for
-   the storm-history page's dark .sh-tool section, but on this now-light
-   section a transparent border leaves it with no visible edge at all — a
-   real border stands in for the underline treatment used on dark. */
-.storm-check-combo .sh-combo input {
-  border: 1px solid rgba(75, 85, 99, 0.35);
-}
-
-.storm-check-combo .sh-combo input:focus {
-  border-color: var(--signal);
-}
-
 .storm-check-note {
   margin-top: var(--space-16);
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--mist);
 }
 
-/* Orange text measures ~2.5:1 on this section's white background —
-   fails, same fix as every other orange-on-light instance this pass. */
 .storm-check-note a {
-  color: #000000;
+  color: var(--signal);
   text-decoration: underline;
   text-decoration-color: var(--signal);
 }
 
 .storm-check-note a:hover,
 .storm-check-note a:focus-visible {
-  text-decoration-color: var(--signal-dim);
-}
-
-@media (min-width: 960px) {
-  .storm-check-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+  color: var(--signal-light);
+  text-decoration-color: var(--signal-light);
 }
 
 /* ============================================================

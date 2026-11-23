@@ -195,70 +195,244 @@
     });
   });
 
-  /* Storm history hero: falling rain streaks plus an occasional lightning
-     flash behind the headline — fits the page's subject (a storm-history
-     lookup tool) better than a static hero. Generated here rather than
-     hand-written in markup since dozens of randomized positions/speeds
-     aren't maintainable as HTML. No-ops entirely on every other page
-     (elements just don't exist) and under prefers-reduced-motion. */
-  var rainContainer = document.querySelector(".sh-rain");
-  if (rainContainer && !reduceMotion) {
-    var dropCount = 70;
-    for (var i = 0; i < dropCount; i++) {
-      var drop = document.createElement("span");
-      drop.className = "sh-raindrop";
-      drop.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "%");
-      drop.style.setProperty("--h", (40 + Math.random() * 60).toFixed(0) + "px");
-      drop.style.setProperty("--w", (1 + Math.random() * 1).toFixed(2) + "px");
-      drop.style.setProperty("--o", (0.35 + Math.random() * 0.4).toFixed(2));
-      drop.style.setProperty("--duration", (0.6 + Math.random() * 0.9).toFixed(2) + "s");
-      drop.style.setProperty("--delay", (Math.random() * -2).toFixed(2) + "s");
-      rainContainer.appendChild(drop);
-    }
-  }
+  /* Storm sky treatment: falling rain streaks, drifting clouds, and
+     occasional lightning — shared between storm-history.html's page
+     header (.sh-intro) and the homepage's storm-check section
+     (.storm-sky); storm-weather.css has the CSS half. Generated here
+     rather than hand-written in markup since dozens of randomized
+     positions/speeds aren't maintainable as HTML. No-ops entirely on
+     every other page (elements just don't exist). Rain and the cloud
+     drift are ambient and run under prefers-reduced-motion's exclusion
+     like everything else here; the clouds photo itself still loads
+     either way (see the --defer branch below) since fetching an image
+     isn't motion. */
+  (function () {
+    var cloudsEl = document.querySelector(".sh-clouds");
+    var rainContainer = document.querySelector(".sh-rain");
+    var lightningEl = document.querySelector(".sh-lightning");
+    var boltEl = document.querySelector(".sh-bolt");
+    var boltPath = boltEl ? boltEl.querySelector("path") : null;
 
-  /* Lightning: a visible bolt plus a soft ambient flash, at random
-     intervals (3-8s apart), never a rapid strobe — each flicker resolves
-     in under a second via the CSS animations, and animationend removes
-     the trigger classes so they can fire again later instead of looping.
-     Even at the fast end of this range, strikes are always several
-     seconds apart, nowhere near the "flashes within one second" strobe
-     threshold. Three jagged path variants (viewBox 0 0 100 400, so they
-     scale with .sh-bolt's own height) picked at random each strike so
-     it isn't the same bolt every time. */
-  var lightningEl = document.querySelector(".sh-lightning");
-  var boltEl = document.querySelector(".sh-bolt");
-  var boltPath = boltEl ? boltEl.querySelector("path") : null;
-  var boltVariants = [
-    "M52,0 L38,90 L56,96 L26,220 L44,226 L14,400",
-    "M30,0 L47,80 L27,87 L58,205 L36,212 L64,400",
-    "M62,0 L46,60 L66,67 L32,180 L52,187 L20,320 L40,327 L10,400"
-  ];
-  if ((lightningEl || boltEl) && !reduceMotion) {
-    var scheduleLightning = function () {
-      var delay = 3000 + Math.random() * 5000;
-      setTimeout(function () {
-        if (boltEl && boltPath) {
-          boltPath.setAttribute("d", boltVariants[Math.floor(Math.random() * boltVariants.length)]);
-          boltEl.style.setProperty("--bolt-x", (15 + Math.random() * 70).toFixed(0) + "%");
-          boltEl.classList.add("is-striking");
-          boltEl.addEventListener("animationend", function onBoltEnd() {
-            boltEl.classList.remove("is-striking");
-            boltEl.removeEventListener("animationend", onBoltEnd);
+    if (rainContainer && !reduceMotion) {
+      var dropCount = 70;
+      for (var i = 0; i < dropCount; i++) {
+        var drop = document.createElement("span");
+        drop.className = "sh-raindrop";
+        drop.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "%");
+        drop.style.setProperty("--h", (40 + Math.random() * 60).toFixed(0) + "px");
+        drop.style.setProperty("--w", (1 + Math.random() * 1).toFixed(2) + "px");
+        drop.style.setProperty("--o", (0.35 + Math.random() * 0.4).toFixed(2));
+        drop.style.setProperty("--duration", (0.6 + Math.random() * 0.9).toFixed(2) + "s");
+        drop.style.setProperty("--delay", (Math.random() * -2).toFixed(2) + "s");
+        rainContainer.appendChild(drop);
+      }
+    }
+
+    /* --defer (storm-weather.css): the clouds photo loads only once this
+       element is near the viewport, for a section that sits below its
+       own page's other hero media (the homepage's video) rather than
+       being the page's own header the way storm-history.html's is. A
+       bandwidth choice, independent of prefers-reduced-motion — the
+       photo still loads under reduced motion, it just doesn't drift. */
+    if (cloudsEl && cloudsEl.classList.contains("sh-clouds--defer")) {
+      if ("IntersectionObserver" in window) {
+        /* A negative bottom margin, not 0 or a positive lead-in. .hero is
+           exactly 100vh, so storm-check's top edge sits precisely at the
+           fold on every device — a touching-but-zero-height "overlap"
+           that both a positive margin (tried 200px first) and 0px itself
+           still count as intersecting (confirmed live: it fired at
+           scroll position 0, before any actual scrolling). Shrinking the
+           effective viewport by 150px instead means the section's real
+           edge has to cross 150px inside the actual viewport — i.e. the
+           visitor has genuinely scrolled toward it — before this loads. */
+        var cloudsObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            cloudsEl.classList.add("is-loaded");
+            cloudsObserver.disconnect();
           });
-        }
-        if (lightningEl) {
-          lightningEl.classList.add("is-flashing");
-          lightningEl.addEventListener("animationend", function onFlashEnd() {
-            lightningEl.classList.remove("is-flashing");
-            lightningEl.removeEventListener("animationend", onFlashEnd);
-          });
-        }
-        scheduleLightning();
-      }, delay);
+        }, { rootMargin: "0px 0px -150px 0px" });
+        cloudsObserver.observe(cloudsEl);
+      } else {
+        cloudsEl.classList.add("is-loaded");
+      }
+    }
+
+    /* Lightning: a visible bolt plus a soft ambient flash. Each flicker
+       resolves in under a second via the CSS animations, and
+       animationend removes the trigger classes so they can fire again
+       later instead of looping — never a rapid strobe either way this
+       fires. Three jagged path variants (viewBox 0 0 100 400, so they
+       scale with .sh-bolt's own height) picked at random each strike so
+       it isn't the same bolt every time. */
+    var boltVariants = [
+      "M52,0 L38,90 L56,96 L26,220 L44,226 L14,400",
+      "M30,0 L47,80 L27,87 L58,205 L36,212 L64,400",
+      "M62,0 L46,60 L66,67 L32,180 L52,187 L20,320 L40,327 L10,400"
+    ];
+    var strikeOnce = function () {
+      if (boltEl && boltPath) {
+        boltPath.setAttribute("d", boltVariants[Math.floor(Math.random() * boltVariants.length)]);
+        boltEl.style.setProperty("--bolt-x", (15 + Math.random() * 70).toFixed(0) + "%");
+        boltEl.classList.add("is-striking");
+        boltEl.addEventListener("animationend", function onBoltEnd() {
+          boltEl.classList.remove("is-striking");
+          boltEl.removeEventListener("animationend", onBoltEnd);
+        });
+      }
+      if (lightningEl) {
+        lightningEl.classList.add("is-flashing");
+        lightningEl.addEventListener("animationend", function onFlashEnd() {
+          lightningEl.classList.remove("is-flashing");
+          lightningEl.removeEventListener("animationend", onFlashEnd);
+        });
+      }
     };
-    scheduleLightning();
-  }
+
+    if ((lightningEl || boltEl) && !reduceMotion) {
+      var root = (boltEl || lightningEl).closest(".sh-intro, .storm-sky");
+
+      if (root && root.classList.contains("storm-sky")) {
+        /* Homepage: one strike when the section first arrives, then
+           stopped for good — repeating every 3-8s would mean it's still
+           flashing while a visitor is reading the headline and typing
+           their address. One strike catches the eye on arrival and then
+           leaves them alone to do that. */
+        if ("IntersectionObserver" in window) {
+          var lightningObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              strikeOnce();
+              lightningObserver.disconnect();
+            });
+          }, { threshold: 0.3 });
+          lightningObserver.observe(root);
+        } else {
+          strikeOnce();
+        }
+      } else {
+        /* storm-history.html's page header: repeats every 3-8s for as
+           long as the visitor is on the page — this page's own subject
+           is the storm tool itself, so continuous atmosphere is earned
+           here in a way it isn't on a homepage teaser section. */
+        var scheduleLightning = function () {
+          var delay = 3000 + Math.random() * 5000;
+          setTimeout(function () {
+            strikeOnce();
+            scheduleLightning();
+          }, delay);
+        };
+        scheduleLightning();
+      }
+    }
+  })();
+
+  /* Radar sweep (homepage storm-check only): pauses via
+     animation-play-state whenever the panel is off-screen, using the same
+     threshold the lightning strike above uses to decide "arrived." Unlike
+     that observer this one never disconnects — the sweep needs to pause
+     and resume every time the section leaves and re-enters, not just
+     once. A spinning radar in a section nobody can see is pure battery
+     cost for no visible effect. No-ops on storm-history.html, which has
+     no .storm-check element. */
+  (function () {
+    var stormCheckEl = document.querySelector(".storm-check");
+    if (!stormCheckEl || !("IntersectionObserver" in window)) return;
+
+    var radarObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        stormCheckEl.classList.toggle("is-radar-active", entry.isIntersecting);
+      });
+    }, { threshold: 0.3 });
+    radarObserver.observe(stormCheckEl);
+  })();
+
+  /* Radar panel dots (homepage only — storm-history.html has no
+     .storm-radar-panel, so this no-ops there via the panel == null
+     check below). Own deferred-load trigger rather than piggybacking on
+     the clouds photo's: same near-viewport moment in practice, but a
+     separate concern — this fetches archive data, that loads an image —
+     so kept as its own observer rather than coupling two unrelated
+     things to one callback. Same negative-bottom-margin rootMargin as
+     that one, for the same reason: .hero is exactly 100vh, so a
+     positive or zero margin fires immediately on load instead of on
+     real scroll (see the clouds-defer comment above for how that was
+     confirmed).
+
+     The panel's aspect ratio (740x430, locked by styles.css's
+     aspect-ratio) is hardcoded below rather than read from
+     getBoundingClientRect(). Angle only depends on that ratio, not the
+     panel's absolute rendered size, and the two must already match —
+     it's one CSS declaration, not something expected to drift. */
+  (function () {
+    var panel = document.querySelector(".storm-radar-panel");
+    if (!panel) return;
+
+    var PANEL_W = 740;
+    var PANEL_H = 430;
+    var PING_COUNT = 60; // see styles.css's .storm-radar-dot--ping comment
+
+    function loadRadarPoints() {
+      if (getComputedStyle(panel).display === "none") return; // below 1180px: no panel, nothing to fetch
+
+      fetch("/data/radar-points.json")
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) {
+          if (!data || !panel.isConnected) return;
+          var bbox = data.bbox;
+          var lonSpan = bbox.maxLon - bbox.minLon;
+          var latSpan = bbox.maxLat - bbox.minLat;
+          var frag = document.createDocumentFragment();
+
+          data.points.forEach(function (p, i) {
+            var xFrac = (p.lon - bbox.minLon) / lonSpan;
+            var yFrac = (bbox.maxLat - p.lat) / latSpan; // lat increases north; top:% increases south
+            var dot = document.createElement("span");
+            dot.className = "storm-radar-dot";
+            dot.style.left = (xFrac * 100).toFixed(2) + "%";
+            dot.style.top = (yFrac * 100).toFixed(2) + "%";
+
+            if (i < PING_COUNT) {
+              /* Bearing from panel centre, 0deg = up, clockwise — the
+                 same reference .storm-sweep's rotation and the wedge's
+                 conic-gradient both use. dx/dy are in the panel's own
+                 740x430 units, not raw percent, so the angle accounts
+                 for the panel being a rectangle, not a square: a point
+                 at (75%, 75%) is not at a naive-percent 45deg once width
+                 and height differ. */
+              var dx = (xFrac - 0.5) * PANEL_W;
+              var dy = (yFrac - 0.5) * PANEL_H;
+              var bearing = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+              /* --angle feeds styles.css's calc(var(--angle) / -360 * 6s)
+                 directly, so it's set here as bearing's complement
+                 (counterclockwise-from-up), not the clockwise bearing
+                 itself — confirmed against an isolated rotate/opacity
+                 test rather than assumed, see that rule's comment. */
+              dot.style.setProperty("--angle", ((360 - bearing) % 360).toFixed(1));
+              dot.className += " storm-radar-dot--ping";
+            }
+
+            frag.appendChild(dot);
+          });
+
+          panel.appendChild(frag);
+        })
+        .catch(function () {}); // decorative; a failed fetch just means no dots, not an error state
+    }
+
+    if ("IntersectionObserver" in window) {
+      var dotsObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          loadRadarPoints();
+          dotsObserver.disconnect();
+        });
+      }, { rootMargin: "0px 0px -150px 0px" });
+      dotsObserver.observe(panel);
+    } else {
+      loadRadarPoints();
+    }
+  })();
 
   /* Estimate form: inline validation on blur (not just on submit), and
      the submit button disables itself with a spinner so a slow
