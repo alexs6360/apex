@@ -2504,17 +2504,19 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 /* ============================================================
    Storm history teaser (homepage)
    ============================================================ */
+/* Was a flat light section (white bg, black text) specifically so
+   hero/storm/services/... alternated instead of running two dark
+   sections in a row (see the background-alternation comments elsewhere
+   in this file). Reusing storm-history.html's sky treatment
+   (storm-weather.css) makes this dark again, which puts
+   hero/storm-check/services three dark in a row. Flagged, not resolved
+   here — "build the sky, show me" was the explicit scope of this pass;
+   the alternation consequence is a panel-phase (or services-phase)
+   decision, not this one. */
 .storm-check {
-  /* Two dark sections in a row (hero, storm) is what made the page feel
-     heavy — this one flips to light so hero/storm/services/process/...
-     actually alternates instead of running two-then-one. A faint grid
-     brings back the "modern squares" texture the black version had,
-     just in dark-on-white instead of white-on-black. */
-  background:
-    repeating-linear-gradient(0deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
-    repeating-linear-gradient(90deg, rgba(75, 85, 99, 0.08) 0px, rgba(75, 85, 99, 0.08) 1px, transparent 1px, transparent 48px),
-    #ffffff;
-  color: #000000;
+  position: relative;
+  overflow: hidden;
+  color: var(--paper);
   /* The 90px fade above now fits comfortably inside this on its own —
      no extra padding needed just to clear it. */
   padding-top: clamp(4rem, 9vw, 7.5rem);
@@ -2525,61 +2527,20 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   padding-bottom: clamp(6rem, 6vw, 7rem);
 }
 
-.storm-check-grid {
-  display: grid;
-  gap: clamp(2rem, 5vw, 3.5rem);
-  align-items: center;
-}
-
-.storm-check-map-frame {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: 4px;
-  overflow: hidden;
-  background: #4b5563;
-  border: 1px solid rgba(75, 85, 99, 0.25);
-  transition: transform 0.4s ease, border-color 0.4s ease;
-}
-
-.storm-check-map-frame:hover {
-  transform: scale(1.015);
-  border-color: var(--signal);
-}
-
-.storm-check-map-frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Same reasoning as .founder-photo img — buffer for the scroll parallax. */
-  transform: scale(1.12);
-}
-
-/* A radar ping over Memphis on the static preview — /images/storm-map-preview.png
-   is a Mapbox Static Images API export (dark-v11, centered on Memphis at
-   zoom 8.6), regenerate it with the same center if this image is ever
-   swapped so the ping's position keeps lining up. */
-.storm-check-map-frame::before,
-.storm-check-map-frame::after {
-  content: "";
+/* Sky treatment — clouds/rain/lightning markup and classes are shared
+   with storm-history.html's .sh-intro via storm-weather.css; this is
+   just the container they anchor to here. .sh-clouds carries --defer
+   (see storm-weather.css) since this section sits below the hero's own
+   video and shouldn't compete with it for bandwidth on first load. */
+.storm-sky {
   position: absolute;
-  left: 48%;
-  top: 60%;
-  width: 10px;
-  height: 10px;
-  margin: -5px;
-  border-radius: 50%;
-  background: var(--signal);
-  animation: stormCheckPing 2.8s ease-out infinite;
+  inset: 0;
+  z-index: 0;
 }
 
-.storm-check-map-frame::after {
-  animation-delay: 1.4s;
-}
-
-@keyframes stormCheckPing {
-  0% { transform: scale(1); opacity: 0.85; }
-  70% { opacity: 0.12; }
-  100% { transform: scale(7); opacity: 0; }
+.storm-check .wrap {
+  position: relative;
+  z-index: 2;
 }
 
 /* Children step in one after another instead of the block arriving as one
@@ -2622,7 +2583,10 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 }
 
 .storm-check-inner .lede {
-  color: #4b5563;
+  /* Same treatment as .sh-intro .lede (storm-history.css) — same kind of
+     background (black, photo behind it) for the same reason: a flat
+     #4b5563 was tuned for the light version of this section. */
+  color: rgba(255, 255, 255, 0.72);
   /* ~60 characters, so the shortened copy wraps to two lines instead of
      stretching thin across three. */
   max-width: 60ch;
@@ -2633,41 +2597,22 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   margin-top: var(--space-32);
 }
 
-/* The shared .sh-combo input (white fill, transparent border) is right for
-   the storm-history page's dark .sh-tool section, but on this now-light
-   section a transparent border leaves it with no visible edge at all — a
-   real border stands in for the underline treatment used on dark. */
-.storm-check-combo .sh-combo input {
-  border: 1px solid rgba(75, 85, 99, 0.35);
-}
-
-.storm-check-combo .sh-combo input:focus {
-  border-color: var(--signal);
-}
-
 .storm-check-note {
   margin-top: var(--space-16);
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--mist);
 }
 
-/* Orange text measures ~2.5:1 on this section's white background —
-   fails, same fix as every other orange-on-light instance this pass. */
 .storm-check-note a {
-  color: #000000;
+  color: var(--signal);
   text-decoration: underline;
   text-decoration-color: var(--signal);
 }
 
 .storm-check-note a:hover,
 .storm-check-note a:focus-visible {
-  text-decoration-color: var(--signal-dim);
-}
-
-@media (min-width: 960px) {
-  .storm-check-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+  color: var(--signal-light);
+  text-decoration-color: var(--signal-light);
 }
 
 /* ============================================================
