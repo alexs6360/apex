@@ -195,70 +195,137 @@
     });
   });
 
-  /* Storm history hero: falling rain streaks plus an occasional lightning
-     flash behind the headline — fits the page's subject (a storm-history
-     lookup tool) better than a static hero. Generated here rather than
-     hand-written in markup since dozens of randomized positions/speeds
-     aren't maintainable as HTML. No-ops entirely on every other page
-     (elements just don't exist) and under prefers-reduced-motion. */
-  var rainContainer = document.querySelector(".sh-rain");
-  if (rainContainer && !reduceMotion) {
-    var dropCount = 70;
-    for (var i = 0; i < dropCount; i++) {
-      var drop = document.createElement("span");
-      drop.className = "sh-raindrop";
-      drop.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "%");
-      drop.style.setProperty("--h", (40 + Math.random() * 60).toFixed(0) + "px");
-      drop.style.setProperty("--w", (1 + Math.random() * 1).toFixed(2) + "px");
-      drop.style.setProperty("--o", (0.35 + Math.random() * 0.4).toFixed(2));
-      drop.style.setProperty("--duration", (0.6 + Math.random() * 0.9).toFixed(2) + "s");
-      drop.style.setProperty("--delay", (Math.random() * -2).toFixed(2) + "s");
-      rainContainer.appendChild(drop);
-    }
-  }
+  /* Storm sky treatment: falling rain streaks, drifting clouds, and
+     occasional lightning — shared between storm-history.html's page
+     header (.sh-intro) and the homepage's storm-check section
+     (.storm-sky); storm-weather.css has the CSS half. Generated here
+     rather than hand-written in markup since dozens of randomized
+     positions/speeds aren't maintainable as HTML. No-ops entirely on
+     every other page (elements just don't exist). Rain and the cloud
+     drift are ambient and run under prefers-reduced-motion's exclusion
+     like everything else here; the clouds photo itself still loads
+     either way (see the --defer branch below) since fetching an image
+     isn't motion. */
+  (function () {
+    var cloudsEl = document.querySelector(".sh-clouds");
+    var rainContainer = document.querySelector(".sh-rain");
+    var lightningEl = document.querySelector(".sh-lightning");
+    var boltEl = document.querySelector(".sh-bolt");
+    var boltPath = boltEl ? boltEl.querySelector("path") : null;
 
-  /* Lightning: a visible bolt plus a soft ambient flash, at random
-     intervals (3-8s apart), never a rapid strobe — each flicker resolves
-     in under a second via the CSS animations, and animationend removes
-     the trigger classes so they can fire again later instead of looping.
-     Even at the fast end of this range, strikes are always several
-     seconds apart, nowhere near the "flashes within one second" strobe
-     threshold. Three jagged path variants (viewBox 0 0 100 400, so they
-     scale with .sh-bolt's own height) picked at random each strike so
-     it isn't the same bolt every time. */
-  var lightningEl = document.querySelector(".sh-lightning");
-  var boltEl = document.querySelector(".sh-bolt");
-  var boltPath = boltEl ? boltEl.querySelector("path") : null;
-  var boltVariants = [
-    "M52,0 L38,90 L56,96 L26,220 L44,226 L14,400",
-    "M30,0 L47,80 L27,87 L58,205 L36,212 L64,400",
-    "M62,0 L46,60 L66,67 L32,180 L52,187 L20,320 L40,327 L10,400"
-  ];
-  if ((lightningEl || boltEl) && !reduceMotion) {
-    var scheduleLightning = function () {
-      var delay = 3000 + Math.random() * 5000;
-      setTimeout(function () {
-        if (boltEl && boltPath) {
-          boltPath.setAttribute("d", boltVariants[Math.floor(Math.random() * boltVariants.length)]);
-          boltEl.style.setProperty("--bolt-x", (15 + Math.random() * 70).toFixed(0) + "%");
-          boltEl.classList.add("is-striking");
-          boltEl.addEventListener("animationend", function onBoltEnd() {
-            boltEl.classList.remove("is-striking");
-            boltEl.removeEventListener("animationend", onBoltEnd);
+    if (rainContainer && !reduceMotion) {
+      var dropCount = 70;
+      for (var i = 0; i < dropCount; i++) {
+        var drop = document.createElement("span");
+        drop.className = "sh-raindrop";
+        drop.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "%");
+        drop.style.setProperty("--h", (40 + Math.random() * 60).toFixed(0) + "px");
+        drop.style.setProperty("--w", (1 + Math.random() * 1).toFixed(2) + "px");
+        drop.style.setProperty("--o", (0.35 + Math.random() * 0.4).toFixed(2));
+        drop.style.setProperty("--duration", (0.6 + Math.random() * 0.9).toFixed(2) + "s");
+        drop.style.setProperty("--delay", (Math.random() * -2).toFixed(2) + "s");
+        rainContainer.appendChild(drop);
+      }
+    }
+
+    /* --defer (storm-weather.css): the clouds photo loads only once this
+       element is near the viewport, for a section that sits below its
+       own page's other hero media (the homepage's video) rather than
+       being the page's own header the way storm-history.html's is. A
+       bandwidth choice, independent of prefers-reduced-motion — the
+       photo still loads under reduced motion, it just doesn't drift. */
+    if (cloudsEl && cloudsEl.classList.contains("sh-clouds--defer")) {
+      if ("IntersectionObserver" in window) {
+        /* A negative bottom margin, not 0 or a positive lead-in. .hero is
+           exactly 100vh, so storm-check's top edge sits precisely at the
+           fold on every device — a touching-but-zero-height "overlap"
+           that both a positive margin (tried 200px first) and 0px itself
+           still count as intersecting (confirmed live: it fired at
+           scroll position 0, before any actual scrolling). Shrinking the
+           effective viewport by 150px instead means the section's real
+           edge has to cross 150px inside the actual viewport — i.e. the
+           visitor has genuinely scrolled toward it — before this loads. */
+        var cloudsObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            cloudsEl.classList.add("is-loaded");
+            cloudsObserver.disconnect();
           });
-        }
-        if (lightningEl) {
-          lightningEl.classList.add("is-flashing");
-          lightningEl.addEventListener("animationend", function onFlashEnd() {
-            lightningEl.classList.remove("is-flashing");
-            lightningEl.removeEventListener("animationend", onFlashEnd);
-          });
-        }
-        scheduleLightning();
-      }, delay);
+        }, { rootMargin: "0px 0px -150px 0px" });
+        cloudsObserver.observe(cloudsEl);
+      } else {
+        cloudsEl.classList.add("is-loaded");
+      }
+    }
+
+    /* Lightning: a visible bolt plus a soft ambient flash. Each flicker
+       resolves in under a second via the CSS animations, and
+       animationend removes the trigger classes so they can fire again
+       later instead of looping — never a rapid strobe either way this
+       fires. Three jagged path variants (viewBox 0 0 100 400, so they
+       scale with .sh-bolt's own height) picked at random each strike so
+       it isn't the same bolt every time. */
+    var boltVariants = [
+      "M52,0 L38,90 L56,96 L26,220 L44,226 L14,400",
+      "M30,0 L47,80 L27,87 L58,205 L36,212 L64,400",
+      "M62,0 L46,60 L66,67 L32,180 L52,187 L20,320 L40,327 L10,400"
+    ];
+    var strikeOnce = function () {
+      if (boltEl && boltPath) {
+        boltPath.setAttribute("d", boltVariants[Math.floor(Math.random() * boltVariants.length)]);
+        boltEl.style.setProperty("--bolt-x", (15 + Math.random() * 70).toFixed(0) + "%");
+        boltEl.classList.add("is-striking");
+        boltEl.addEventListener("animationend", function onBoltEnd() {
+          boltEl.classList.remove("is-striking");
+          boltEl.removeEventListener("animationend", onBoltEnd);
+        });
+      }
+      if (lightningEl) {
+        lightningEl.classList.add("is-flashing");
+        lightningEl.addEventListener("animationend", function onFlashEnd() {
+          lightningEl.classList.remove("is-flashing");
+          lightningEl.removeEventListener("animationend", onFlashEnd);
+        });
+      }
     };
-    scheduleLightning();
-  }
+
+    if ((lightningEl || boltEl) && !reduceMotion) {
+      var root = (boltEl || lightningEl).closest(".sh-intro, .storm-sky");
+
+      if (root && root.classList.contains("storm-sky")) {
+        /* Homepage: one strike when the section first arrives, then
+           stopped for good — repeating every 3-8s would mean it's still
+           flashing while a visitor is reading the headline and typing
+           their address. One strike catches the eye on arrival and then
+           leaves them alone to do that. */
+        if ("IntersectionObserver" in window) {
+          var lightningObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              strikeOnce();
+              lightningObserver.disconnect();
+            });
+          }, { threshold: 0.3 });
+          lightningObserver.observe(root);
+        } else {
+          strikeOnce();
+        }
+      } else {
+        /* storm-history.html's page header: repeats every 3-8s for as
+           long as the visitor is on the page — this page's own subject
+           is the storm tool itself, so continuous atmosphere is earned
+           here in a way it isn't on a homepage teaser section. */
+        var scheduleLightning = function () {
+          var delay = 3000 + Math.random() * 5000;
+          setTimeout(function () {
+            strikeOnce();
+            scheduleLightning();
+          }, delay);
+        };
+        scheduleLightning();
+      }
+    }
+  })();
 
   /* Estimate form: inline validation on blur (not just on submit), and
      the submit button disables itself with a spinner so a slow

@@ -23,6 +23,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap">
 <link rel="stylesheet" href="/styles.css?v=__ASSET_VER__">
+<link rel="stylesheet" href="/storm-weather.css?v=20261122-1">
 </head>
 <body class="anim">
 
@@ -139,40 +140,50 @@
   </section>
 
   <section class="storm-check" id="storm-check">
+    <!-- Sky treatment shared with storm-history.html — see storm-weather.css.
+         --defer: this section is below the hero's own video, so the photo
+         loads only once script.js's IntersectionObserver confirms the
+         section is near the viewport, not on initial page load. Provisional
+         container/layout — the copy/glass-panel layout from Figma ("Apex
+         Storm Check — Homepage", node 22:3) replaces what's below once
+         the sky itself is approved. -->
+    <div class="storm-sky" aria-hidden="true">
+      <div class="sh-clouds sh-clouds--defer" aria-hidden="true"></div>
+      <div class="sh-rain" aria-hidden="true"></div>
+      <!-- No .sh-lightning here on purpose — bolt only on the homepage
+           instance, no full-bleed flash. A flash mid-page read as a
+           glitch, not weather; storm-history keeps both, unchanged. -->
+      <svg class="sh-bolt" aria-hidden="true" viewBox="0 0 100 400" preserveAspectRatio="none">
+        <path></path>
+      </svg>
+    </div>
     <div class="wrap">
-      <div class="storm-check-grid">
-        <div class="storm-check-media">
-          <div class="storm-check-map-frame">
-            <img src="/images/storm-map-preview.png" alt="Map of the Memphis metro area" loading="lazy" data-parallax>
-          </div>
-        </div>
-        <div class="storm-check-inner reveal">
-          <h2>What storms have hit your address?</h2>
-          <p class="lede">See the hail and wind events recorded near your address over the last ten years.</p>
-          <form class="storm-check-form" id="storm-check-form" action="/storm-history.html" method="get" autocomplete="off">
-            <label class="visually-hidden" for="storm-check-address">Street Address</label>
-            <div class="sh-lookup-row storm-check-combo">
-              <div class="sh-combo">
-                <input
-                  type="text"
-                  id="storm-check-address"
-                  name="address"
-                  placeholder="Enter your address"
-                  enterkeyhint="search"
-                  autocomplete="off"
-                  role="combobox"
-                  aria-expanded="false"
-                  aria-controls="storm-check-suggest"
-                  aria-autocomplete="list"
-                  required
-                >
-                <ul class="sh-suggest" id="storm-check-suggest" role="listbox" aria-label="Address suggestions" hidden></ul>
-              </div>
-              <button type="submit" class="btn btn-solid btn-sans">Check My Address</button>
+      <div class="storm-check-inner reveal">
+        <h2>What storms have hit your address?</h2>
+        <p class="lede">See the hail and wind events recorded near your address over the last ten years.</p>
+        <form class="storm-check-form" id="storm-check-form" action="/storm-history.html" method="get" autocomplete="off">
+          <label class="visually-hidden" for="storm-check-address">Street Address</label>
+          <div class="sh-lookup-row storm-check-combo">
+            <div class="sh-combo">
+              <input
+                type="text"
+                id="storm-check-address"
+                name="address"
+                placeholder="Enter your address"
+                enterkeyhint="search"
+                autocomplete="off"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="storm-check-suggest"
+                aria-autocomplete="list"
+                required
+              >
+              <ul class="sh-suggest" id="storm-check-suggest" role="listbox" aria-label="Address suggestions" hidden></ul>
             </div>
-          </form>
-          <p class="storm-check-note">Free, no obligation. Opens your full storm history. Or <a href="/storm-history.html">browse the full storm map</a>.</p>
-        </div>
+            <button type="submit" class="btn btn-solid btn-sans">Check My Address</button>
+          </div>
+        </form>
+        <p class="storm-check-note">Free, no obligation. Opens your full storm history. Or <a href="/storm-history.html">browse the full storm map</a>.</p>
       </div>
     </div>
   </section>
