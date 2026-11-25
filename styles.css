@@ -2914,10 +2914,16 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 }
 
 .storm-check-inner h2 {
-  /* 52/55 at the mock's 1560px reference (52px = 3.33vw there); color is
-     already var(--paper) (white) via .storm-check's own rule — not
-     re-set here. */
-  font-size: clamp(2rem, 3.33vw, 3.25rem);
+  /* Mock was 52/55 at its 1560px reference, but that's measured against
+     a 427px copy column now (the panel rebalance above), not the
+     mock's own width — at 52px (clamp's old ceiling) this broke to 3
+     lines past ~1562px viewport, where 3.33vw's own growth exceeded 52
+     and the clamp capped it there anyway. Lowered the ceiling to 44px
+     instead, chosen by testing font-sizes directly against the real
+     427px column (not assumed): 44px holds 2 lines there, 48px still
+     does, 52px is what broke. Color is already var(--paper) (white) via
+     .storm-check's own rule — not re-set here. */
+  font-size: clamp(2rem, 3.33vw, 2.75rem);
   font-weight: 700;
   line-height: 1.058;
 }
