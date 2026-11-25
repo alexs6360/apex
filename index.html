@@ -143,10 +143,7 @@
     <!-- Sky treatment shared with storm-history.html — see storm-weather.css.
          --defer: this section is below the hero's own video, so the photo
          loads only once script.js's IntersectionObserver confirms the
-         section is near the viewport, not on initial page load. Provisional
-         container/layout — the copy/glass-panel layout from Figma ("Apex
-         Storm Check — Homepage", node 22:3) replaces what's below once
-         the sky itself is approved. -->
+         section is near the viewport, not on initial page load. -->
     <div class="storm-sky" aria-hidden="true">
       <div class="sh-clouds sh-clouds--defer" aria-hidden="true"></div>
       <div class="sh-rain" aria-hidden="true"></div>
@@ -157,52 +154,85 @@
         <path></path>
       </svg>
     </div>
-    <!-- Panel sized to Figma node 22:3's real dimensions (740x430 at a
-         1560px section — see styles.css). The surrounding two-column
-         composition (copy column width, exact breakpoint) is still
-         provisional: that size is all the file gave us, not the full
-         layout at every width. -->
-    <div class="storm-radar-panel" aria-hidden="true">
-      <svg class="storm-radar-rings" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <circle cx="50" cy="50" r="12.5" />
-        <circle cx="50" cy="50" r="25" />
-        <circle cx="50" cy="50" r="37.5" />
-        <circle cx="50" cy="50" r="50" />
-        <line x1="0" y1="50" x2="100" y2="50" />
-        <line x1="50" y1="0" x2="50" y2="100" />
-      </svg>
-      <div class="storm-sweep">
-        <div class="storm-sweep__wedge"></div>
-        <div class="storm-sweep__line"></div>
-      </div>
-    </div>
     <div class="wrap">
-      <div class="storm-check-inner reveal">
-        <h2>What storms have hit your address?</h2>
-        <p class="lede">See the hail and wind events recorded near your address over the last ten years.</p>
-        <form class="storm-check-form" id="storm-check-form" action="/storm-history.html" method="get" autocomplete="off">
-          <label class="visually-hidden" for="storm-check-address">Street Address</label>
-          <div class="sh-lookup-row storm-check-combo">
-            <div class="sh-combo">
-              <input
-                type="text"
-                id="storm-check-address"
-                name="address"
-                placeholder="Enter your address"
-                enterkeyhint="search"
-                autocomplete="off"
-                role="combobox"
-                aria-expanded="false"
-                aria-controls="storm-check-suggest"
-                aria-autocomplete="list"
-                required
-              >
-              <ul class="sh-suggest" id="storm-check-suggest" role="listbox" aria-label="Address suggestions" hidden></ul>
+      <!-- Fluid two-column grid, not a breakpoint picked by eye: copy
+           column minmax(0,1fr) capped at 560px, panel minmax(0,740px)
+           and allowed to shrink, 72px gap. Below the width where that
+           stops being workable, the media query in styles.css collapses
+           it to one column and hides the panel — see that comment for
+           the actual measured number, not a guess. -->
+      <div class="storm-check-grid">
+        <div class="storm-check-inner reveal">
+          <p class="storm-check-eyebrow">Storm Check</p>
+          <h2>What storms have hit your address?</h2>
+          <p class="lede">See the hail and wind events recorded near your address over the last ten years.</p>
+          <form class="storm-check-form" id="storm-check-form" action="/storm-history.html" method="get" autocomplete="off">
+            <label class="visually-hidden" for="storm-check-address">Street Address</label>
+            <div class="sh-lookup-row storm-check-combo">
+              <div class="sh-combo">
+                <input
+                  type="text"
+                  id="storm-check-address"
+                  name="address"
+                  placeholder="Enter your address"
+                  enterkeyhint="search"
+                  autocomplete="off"
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-controls="storm-check-suggest"
+                  aria-autocomplete="list"
+                  required
+                >
+                <ul class="sh-suggest" id="storm-check-suggest" role="listbox" aria-label="Address suggestions" hidden></ul>
+              </div>
+              <button type="submit" class="btn btn-solid btn-sans">Check My Address</button>
             </div>
-            <button type="submit" class="btn btn-solid btn-sans">Check My Address</button>
+          </form>
+          <p class="storm-check-note">Free, no obligation. Opens your full storm history. Or <a href="/storm-history.html">browse the full storm map</a>.</p>
+        </div>
+
+        <!-- Panel built to Figma node 22:3's geometry (aspect-ratio
+             74/43, matching the mock's 740x430 frame) and chrome (black
+             ~74%, white ~22% stroke, square corners — see styles.css).
+             The tag text is given verbatim; the legend labels and the
+             count's caption are specified too — only the exact wording
+             of anything not spelled out in chat would be a guess, and
+             there isn't any left unspecified at this point. Colours on
+             the legend/dots reuse storm-history.js's existing hail
+             (purple) and wind (gold) ramps rather than inventing new
+             ones. Rings/sweep/dots position in % of the panel, so they
+             scale with it; the tag/legend/count text sizes don't (fixed
+             sizes read better at a constant inset than ones that shrink
+             with the panel). Not what sets the mobile floor below,
+             though — see that media query for what actually does. -->
+        <div class="storm-radar-panel" aria-hidden="true">
+          <p class="storm-radar-tag">Memphis Metro &middot; North Mississippi</p>
+          <div class="storm-radar-legend">
+            <span class="storm-radar-legend__row">
+              <i class="storm-radar-legend__swatch storm-radar-legend__swatch--hail"></i>Hail
+            </span>
+            <span class="storm-radar-legend__row">
+              <i class="storm-radar-legend__swatch storm-radar-legend__swatch--wind"></i>Wind
+            </span>
           </div>
-        </form>
-        <p class="storm-check-note">Free, no obligation. Opens your full storm history. Or <a href="/storm-history.html">browse the full storm map</a>.</p>
+          <svg class="storm-radar-rings" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <circle cx="50" cy="50" r="12.5" />
+            <circle cx="50" cy="50" r="25" />
+            <circle cx="50" cy="50" r="37.5" />
+            <circle cx="50" cy="50" r="50" />
+            <line x1="0" y1="50" x2="100" y2="50" />
+            <line x1="50" y1="0" x2="50" y2="100" />
+          </svg>
+          <div class="storm-sweep">
+            <div class="storm-sweep__wedge"></div>
+            <div class="storm-sweep__line"></div>
+          </div>
+          <div class="storm-radar-scrim"></div>
+          <p class="storm-radar-count">
+            <span class="storm-radar-count__number" id="storm-radar-count">&mdash;</span>
+            <span class="storm-radar-count__label" id="storm-radar-count-label"></span>
+          </p>
+        </div>
       </div>
     </div>
   </section>

@@ -384,11 +384,23 @@
           var latSpan = bbox.maxLat - bbox.minLat;
           var frag = document.createDocumentFragment();
 
+          /* Big number is every report (data.reportCount) — the panel's
+             own distinct-location count (data.count) reads as understated
+             next to it, so it moves into the caption instead, matching
+             the phrasing the per-address result already uses. */
+          var countEl = document.getElementById("storm-radar-count");
+          var labelEl = document.getElementById("storm-radar-count-label");
+          if (countEl) countEl.textContent = data.reportCount.toLocaleString("en-US");
+          if (labelEl) {
+            labelEl.textContent =
+              "storms across " + data.count + " locations since " + data.sinceYear;
+          }
+
           data.points.forEach(function (p, i) {
             var xFrac = (p.lon - bbox.minLon) / lonSpan;
             var yFrac = (bbox.maxLat - p.lat) / latSpan; // lat increases north; top:% increases south
             var dot = document.createElement("span");
-            dot.className = "storm-radar-dot";
+            dot.className = "storm-radar-dot storm-radar-dot--" + p.kind;
             dot.style.left = (xFrac * 100).toFixed(2) + "%";
             dot.style.top = (yFrac * 100).toFixed(2) + "%";
 
