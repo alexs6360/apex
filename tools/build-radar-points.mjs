@@ -20,16 +20,22 @@
 
    Output is sorted by severity descending. The client takes the first 60
    for the sweep's ping animation and renders the rest static — see
-   script.js and the "60" the panel was asked to animate, not 394. */
+   script.js and the "60" the panel was asked to animate, not 394.
+
+   reportCount (every individual report, pre-dedup) and count (distinct
+   cells) are both real, both from this same pass — the panel's count
+   block shows "reportCount storms across count locations since
+   sinceYear", not just one of the two numbers alone. */
 
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { bucketOf, GRID_DEG } from "./storm-grid.mjs";
 
 const dataDir = new URL("../data/", import.meta.url);
 
-const { bbox } = JSON.parse(
+const { bbox, years } = JSON.parse(
   readFileSync(new URL("storm-index.json", dataDir), "utf8")
 );
+const sinceYear = Math.min(...years.map(Number));
 
 const reportFiles = readdirSync(dataDir).filter(
   (f) => f.startsWith("reports-") && f.endsWith(".json")
@@ -81,7 +87,14 @@ const points = [...cells.values()]
 
 writeFileSync(
   new URL("radar-points.json", dataDir),
-  JSON.stringify({ gridDeg: GRID_DEG, bbox, count: points.length, points }),
+  JSON.stringify({
+    gridDeg: GRID_DEG,
+    bbox,
+    sinceYear,
+    reportCount: allReports.length,
+    count: points.length,
+    points,
+  }),
   "utf8"
 );
 

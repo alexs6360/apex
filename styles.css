@@ -2541,57 +2541,183 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 .storm-check .wrap {
   position: relative;
   z-index: 2;
+  /* Reverted — widening this to 1560px (the Figma frame's own width)
+     put the copy column's left edge 190px right of every other
+     section's (measured against hero and .services live), since those
+     stay on the sitewide 1180px --container. The photo (.storm-sky)
+     stays full-bleed regardless, as it already was — only the content
+     column was ever on a different spine, and that's the part that
+     needs to match. */
 }
 
-/* Capped so the copy column leaves clear space for .storm-radar-panel on
-   the right — measured live against the panel's real 740x430 size (see
-   .storm-radar-panel below), not assumed. 640px collided with the panel
-   by ~120-130px across the whole 1180-1560px range once the panel was
-   sized correctly; 460px was the value that actually cleared it,
-   confirmed the same way (rendered at 1180/1280/1400/1560/1920px and
-   measured the real gap between .storm-check-inner's right edge and
-   .storm-radar-panel's left edge at each). */
-@media (min-width: 1180px) {
-  .storm-check-inner {
-    max-width: 460px;
-  }
+/* Fluid two-column grid. 740 and 560 were the Figma frame's own pixel
+   values at its one drawn width (1560px) — not a breakpoint spec, and
+   (560 specifically) not a requirement either: it was a hard cap that,
+   combined with the panel's 740px cap and the 72px gap, didn't fit
+   inside the sitewide 1180px container (short by ~300px) — so something
+   had to give, and a fixed copy cap meant the panel always lost that
+   argument, plateauing at 499px regardless of how the rest of the track
+   math was tuned.
+
+   Rebalanced instead of recapped: .storm-check-inner's max-width is
+   gone, so the 1fr track decides copy's share directly rather than
+   racing a 560px ceiling it could rarely reach anyway. The panel track
+   is clamp(380px, 54%, 680px) — percentage, not vw (vw keeps growing
+   past the viewport even after the container itself stops growing at
+   1180px; percentage grid tracks resolve against the grid's own content
+   width, so this plateaus exactly when the container does — found the
+   hard way, see git history). 680px rather than 740px, and 54% rather
+   than an even split, both per this rebalance, not re-derived from
+   scratch — see chat for the actual resulting widths at 1180/1440/1920.
+
+   Two earlier attempts, kept here since the reasoning still matters if
+   this ever gets re-tuned: minmax(0, 740px) looked elastic but wasn't —
+   beside a 1fr sibling with no competing flex factor, grid gives a
+   non-fr track its full size first and shrinks only the fr track
+   (confirmed live: panel sat at exactly 740px from 1920px down to
+   1050px while copy compressed to 154px). clamp(..., 42vw, ...) fixed
+   that but only while this section's own .wrap was widened past the
+   sitewide container — see .storm-check .wrap for why that reverted. */
+.storm-check-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(380px, 54%, 680px);
+  align-items: center;
+  gap: 72px;
 }
 
-/* Radar panel — real geometry from Figma node 22:3: 740x430 at a 1560px
-   section, given directly rather than pulled from the file (no fetch
-   access to Figma from here). Scales with the section's own width via
-   vw, pinned to that 740px size at 1560px and capped there — doesn't
-   grow past the design size on wider screens. Rectangular, not square:
-   aspect-ratio keeps width and height locked to the same 740:430 ratio
-   at every size, so .storm-sweep__line's length (below) can be a fixed
-   multiple of the width alone. Still provisional below 1180px: Figma
-   only gave this one panel size, not the full two-column composition at
-   intermediate widths, so the breakpoint and gap are my own judgment,
-   not the file's. */
+/* Radar panel — real geometry from Figma node 22:3: aspect-ratio 74/43
+   (740:430 simplified) so it scales as a unit with the grid track
+   above, never redrawn at a breakpoint. No more fixed position/size:
+   it's a normal grid item now, sized by its own track. Square corners,
+   black ~74%, white ~22% stroke per the mock. */
 .storm-radar-panel {
-  --radar-w: clamp(360px, 47.4vw, 740px);
-  position: absolute;
-  top: 50%;
-  right: clamp(1.5rem, 5vw, 4rem);
-  z-index: 1;
-  width: var(--radar-w);
-  aspect-ratio: 740 / 430;
-  transform: translateY(-50%);
-  border-radius: 20px;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 74 / 43;
+  border-radius: 0;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   pointer-events: none;
 }
 
-/* No room for a right-side panel once the copy needs the full width —
-   dropped rather than shrunk further; a thumbnail-sized radar reads as
-   clutter, not atmosphere. */
-@media (max-width: 1179px) {
+/* 800px — a judgment call on a gradient, not a hard collision. With the
+   panel track now percentage-based (46%, see .storm-check-grid above)
+   both tracks shrink together — confirmed nothing overlaps or overflows
+   anywhere down to 700px, that's guaranteed algebraically by minmax(0,
+   ...) and clamp()'s own floor, not just observed.
+
+   .storm-check-combo (the address input + button) wraps to two stacked
+   lines below a copy width of ~510px, which happens below ~1180px here
+   (copy and panel both plateau at the container's own cap right around
+   there — see .storm-check-grid's comment). That's not treated as the
+   floor: a stacked combo beside a proportionally-smaller panel still
+   reads as a normal responsive state, not a mismatch, down to 700px.
+
+   What actually degrades is the h2: 2 lines from 1180px down through
+   800px, 3 lines at 750px, 4 at 700px — checked across the same range,
+   unchanged by the copy/panel split above it. 800px is where it's still
+   reading as a normal headline rather than one word per line; a
+   different call than 800 here is reasonable too, this is the softest
+   of the numbers on this page. */
+@media (max-width: 799px) {
+  .storm-check-grid {
+    grid-template-columns: 1fr;
+  }
+
   .storm-radar-panel {
     display: none;
   }
+}
+
+/* Tag/legend/count sit above the rings+sweep+dots (no z-index needed
+   there — they're earlier in DOM order within the same stacking
+   context) but need to clear the dots explicitly, since script.js
+   appends those last. */
+.storm-radar-tag {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  z-index: 3;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.storm-radar-legend {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.storm-radar-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.storm-radar-legend__swatch {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+/* Same hail/wind colours as storm-history.js's HAIL_COLORS and wind
+   circle-color ramps (a mid-range stop from each, not the full ramp —
+   too small a dot to show a gradient) — not new colours invented for
+   this panel. */
+.storm-radar-legend__swatch--hail {
+  background: #9a63dd;
+}
+
+.storm-radar-legend__swatch--wind {
+  background: #eab308;
+}
+
+.storm-radar-scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 2;
+  height: 42%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.85));
+}
+
+.storm-radar-count {
+  position: absolute;
+  left: 18px;
+  bottom: 14px;
+  z-index: 3;
+  margin: 0;
+  line-height: 1;
+}
+
+.storm-radar-count__number {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.storm-radar-count__label {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .storm-radar-rings {
@@ -2643,12 +2769,18 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   );
 }
 
-/* Centre to beyond the panel's own corners. The panel is 740x430, fixed
-   by aspect-ratio, so its half-diagonal is a constant multiple of its
-   width alone: sqrt(740^2 + 430^2) / 2 / 740 = 0.578. 0.62 adds ~7% past
-   that so the line visibly clears the corner rather than just touching
-   it, at every angle as it sweeps through the diagonals. Static; rotates
-   with .storm-sweep.
+/* Centre to beyond the panel's own corners. Fixed aspect-ratio (74/43)
+   means its half-diagonal is a constant multiple of its width alone:
+   sqrt(74^2+43^2)/2/74 = 0.578. 0.62 adds ~7% past that so the line
+   visibly clears the corner rather than just touching it, at every
+   angle as it sweeps through the diagonals, and at every size now that
+   the panel has no fixed px/vw width to read a custom property from.
+
+   height can't be expressed directly as "62% of width" — percentage
+   height resolves against the parent's height, not its width — so this
+   converts through the fixed ratio instead: 0.62 * width equals
+   0.62 * (74/43) * height, i.e. ~106.7% of height. Any uniform resize
+   keeps this exact, since the ratio behind the conversion never changes.
 
    Anchored at the BOTTOM, not the top, so the unrotated line points up
    (12 o'clock) — matching conic-gradient's own 0deg reference, which is
@@ -2661,7 +2793,7 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   bottom: 50%;
   left: 50%;
   width: 2px;
-  height: calc(var(--radar-w) * 0.62);
+  height: 106.7%;
   transform: translateX(-50%);
   transform-origin: bottom center;
   background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
@@ -2681,6 +2813,16 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   border-radius: 50%;
   background: #ffffff;
   opacity: 0.3;
+}
+
+/* Same colours as .storm-radar-legend__swatch — kind determines colour,
+   script.js sets this class from each point's own "kind" field. */
+.storm-radar-dot--hail {
+  background: #9a63dd;
+}
+
+.storm-radar-dot--wind {
+  background: #eab308;
 }
 
 /* Only the top 60 by severity (script.js slices the pre-sorted list) get
