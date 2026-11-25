@@ -2730,15 +2730,61 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   color: rgba(255, 255, 255, 0.72);
 }
 
-.storm-radar-rings {
+/* Full-panel crosshair, separate from the rings on purpose: the rings
+   need a square box (below) so their circles don't stretch into
+   ellipses, but the crosshair's own lines should still reach every
+   edge of the actual (non-square, 74:43) panel. Two plain lines, not
+   SVG — simpler than fighting the same square-vs-panel mismatch twice. */
+.storm-radar-crosshair {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
 }
 
-.storm-radar-rings circle,
-.storm-radar-rings line {
+.storm-radar-crosshair::before,
+.storm-radar-crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.storm-radar-crosshair::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+
+.storm-radar-crosshair::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+/* Square, not stretched to the panel's own 74:43 shape — that was the
+   bug: a square viewBox forced non-uniformly into a wider-than-tall box
+   turns circles into ellipses. Sized off height (not width) and
+   centered horizontally; overflow:visible lets radii bigger than this
+   square's own box keep rendering instead of getting clipped at its
+   edge — real radar displays size rings to the shorter dimension and
+   let the outer ones run into the screen's corners on a wide housing,
+   clipped by the housing (here, .storm-radar-panel's own
+   overflow:hidden), not by an inscribed circle with dead space at the
+   sides. r=95 (vs. half-width's 86, in these same height-relative
+   units) is what actually reaches the side edges; r=65 exceeds the
+   panel's own half-height (50) so it clips top/bottom only; the two
+   inner rings stay fully inscribed. */
+.storm-radar-rings {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 100%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  overflow: visible;
+}
+
+.storm-radar-rings circle {
   fill: none;
   stroke: rgba(255, 255, 255, 0.09);
   stroke-width: 0.5;
