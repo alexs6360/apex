@@ -2813,13 +2813,25 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
 
 /* Trailing persistence wedge: bright at the leading edge (0deg, the same
    edge .storm-sweep__line sits on), fading to nothing by ~110deg. Static
-   itself — it rotates only because .storm-sweep, its parent, does. */
+   itself — it rotates only because .storm-sweep, its parent, does.
+
+   The two-stop version (0.28 straight to 0) was a real conic-gradient,
+   confirmed applying correctly and unclipped in isolated tests outside
+   the panel entirely — but a single linear fade from a fairly low peak
+   reads as flat for most of its range and only visibly drops in the
+   last ~20% before 110deg, which is exactly the "hard edge" it looked
+   like. Human brightness perception isn't linear with alpha; four stops
+   easing the curve (steep early, shallow late) reads as an actual
+   gradual fade instead — confirmed side by side against the old version
+   before replacing it. */
 .storm-sweep__wedge {
   position: absolute;
   inset: 0;
   background: conic-gradient(
     from 0deg at 50% 50%,
-    rgba(255, 255, 255, 0.28) 0deg,
+    rgba(255, 255, 255, 0.4) 0deg,
+    rgba(255, 255, 255, 0.18) 35deg,
+    rgba(255, 255, 255, 0.05) 75deg,
     rgba(255, 255, 255, 0) 110deg,
     rgba(255, 255, 255, 0) 360deg
   );
