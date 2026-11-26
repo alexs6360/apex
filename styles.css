@@ -2591,13 +2591,21 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
    it's a normal grid item now, sized by its own track. Square corners,
    white ~22% stroke per the mock.
 
-   Background is the baked Mapbox basemap (tools/build-radar-basemap.py,
-   /images/storm-radar-basemap.jpg) under a flat black tint — not the
-   mock's plain 74% black fill alone, since "a Mapbox dark basemap under
-   the dots" means the map has to actually read through it. 45%, not
-   74%: dark-v11 is already near-black, so even a moderate tint pushes
-   contrast down fast — checked live that road lines and city labels
-   stay legible at this value with the dots/rings/sweep on top. */
+   Background is the baked basemap (tools/render-radar-basemap.mjs,
+   /images/storm-radar-basemap.jpg — mapbox://styles/mapbox/standard,
+   night preset, the same style+preset storm-history.html renders live,
+   screenshotted once via headless Chromium and resampled into this
+   panel's shape) under a flat black tint — not the mock's plain 74%
+   black fill alone, since "a Mapbox dark basemap under the dots" means
+   the map has to actually read through it.
+
+   18%: checked at the actual panel size (1172x681, 2x the real ~586px
+   display width — not the full-resolution file) with the dots/rings/
+   sweep on top. Memphis and the surrounding towns (Bartlett, Germantown,
+   Collierville, Southaven, Olive Branch, Hernando, Holly Springs, ...)
+   all read clearly at this tint; this was a straightforward call this
+   time; no ceiling to work around — see chat for the screenshot this
+   was checked against. */
 .storm-radar-panel {
   position: relative;
   width: 100%;
@@ -2605,7 +2613,7 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   border-radius: 0;
   overflow: hidden;
   background:
-    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+    linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)),
     url("/images/storm-radar-basemap.jpg") center / cover no-repeat;
   border: 1px solid rgba(255, 255, 255, 0.22);
   pointer-events: none;
@@ -2728,6 +2736,31 @@ body.go .hero .band       { animation-name: apexCardY, apexCardO; }
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.72);
+}
+
+/* Bottom-right, same corner Mapbox's own attribution control defaults
+   to. pointer-events re-enabled here specifically — .storm-radar-panel
+   sets pointer-events:none on the whole decorative panel, which would
+   otherwise make these required links unclickable. */
+.storm-radar-attribution {
+  position: absolute;
+  right: 6px;
+  bottom: 2px;
+  z-index: 3;
+  margin: 0;
+  font-size: 0.56rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: auto;
+}
+
+.storm-radar-attribution a {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.storm-radar-attribution a:hover,
+.storm-radar-attribution a:focus-visible {
+  color: #ffffff;
 }
 
 /* Full-panel crosshair, separate from the rings on purpose: the rings

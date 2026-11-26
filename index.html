@@ -231,6 +231,21 @@
             <span class="storm-radar-count__number" id="storm-radar-count">&mdash;</span>
             <span class="storm-radar-count__label" id="storm-radar-count-label"></span>
           </p>
+          <!-- Required even though the map is a baked static image, not
+               a live map the visitor can pan — Mapbox requires this
+               attribution (with working links) on any rendered output
+               of their tiles, baked or live, and GL JS's own attribution
+               control is intentionally off for this render (see
+               tools/render-radar-basemap.mjs) since this is a static
+               image, not something that needs its own on-canvas control.
+               Bottom-right: the one corner not already holding the tag,
+               legend, or count/scrim, and Mapbox's own default position
+               for their attribution control. -->
+          <p class="storm-radar-attribution">
+            &copy; <a href="https://www.mapbox.com/about/maps" target="_blank" rel="noopener">Mapbox</a>
+            &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+            <a href="https://apps.mapbox.com/feedback/" target="_blank" rel="noopener"><strong>Improve this map</strong></a>
+          </p>
         </div>
       </div>
     </div>
